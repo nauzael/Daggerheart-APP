@@ -101,7 +101,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     <p className="text-slate-400 text-lg">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg">Back to Selection</button>
                     <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">Level Up!</button>
                 </div>
             </header>
@@ -213,6 +212,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <Card title="Notes & Background">
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} onBlur={handleNotesBlur} rows={10} className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200" />
                 </Card>
+            </div>
+            
+            <div className="mt-8 text-center">
+                <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-6 rounded-lg">
+                    Back to Selection
+                </button>
             </div>
 
             {isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
