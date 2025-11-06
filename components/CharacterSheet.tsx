@@ -136,6 +136,13 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <StatDisplay label="Evasion" value={character.evasion} />
                         </div>
                     </Card>
+                    <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
+                         <div className="grid grid-cols-1 gap-4">
+                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                         </div>
+                     </Card>
                     <Card title="Characteristics & Experiences">
                         {character.ancestryFeatures && (
                             <div className="mb-4">
@@ -191,13 +198,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
                 {/* Column 3 */}
                 <div className="flex flex-col gap-6">
-                    <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
-                         <div className="grid grid-cols-1 gap-4">
-                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
-                         </div>
-                     </Card>
                      <Card 
                         title="Domain Cards"
                         headerContent={
@@ -217,7 +217,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
                             <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
                         </div>
-                        <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                        <ul className="space-y-2 pr-2">
                             {inventory.map((item, i) => (
                                 <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
                                     <span>{item}</span>

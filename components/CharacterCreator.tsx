@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Character, Experience, Weapon, Armor, AncestryFeature } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
@@ -17,7 +17,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures'> = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory'> = {
     name: '',
     level: 1,
     subclass: '',
@@ -29,7 +29,6 @@ const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasi
     hope: 2,
     gold: 1, // Handful
     bolsa: 0,
-    inventory: ["A torch", "50 feet of rope", "Basic supplies", "Minor Health Potion"],
     domainCards: [],
 };
 
@@ -44,24 +43,39 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [mixedAncestryName, setMixedAncestryName] = useState('');
   const [firstAncestry, setFirstAncestry] = useState(ANCESTRIES[0].name);
   const [secondAncestry, setSecondAncestry] = useState(ANCESTRIES[0].name);
+  const [potionChoice, setPotionChoice] = useState('Minor Health Potion');
+  const [classItemChoice, setClassItemChoice] = useState('');
+  const [spellItem, setSpellItem] = useState('');
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
   
+  const classItemOptions = useMemo(() => {
+    if (!selectedClass) return [];
+    const itemsString = selectedClass.items;
+    return itemsString.split(' or ').map(s => s.trim());
+  }, [selectedClass]);
+
+  useEffect(() => {
+      setClassItemChoice('');
+      if(classItemOptions.length === 1) {
+          setClassItemChoice(classItemOptions[0]);
+      }
+  }, [selectedClass, classItemOptions]);
+
   const isFormValid = useMemo(() => {
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
     const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid;
-  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName]);
+    const classItemValid = classItemOptions.length === 1 || (classItemOptions.length > 1 && classItemChoice !== '');
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid;
+  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions]);
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newClassName = e.target.value;
-    const newClass = CLASSES.find(c => c.name === newClassName)!;
     setCharData(prev => ({
         ...prev,
         class: newClassName,
         subclass: '',
         domainCards: [],
-        inventory: [...(initialCharacterState.inventory || []), newClass.items],
     }));
   };
 
@@ -167,6 +181,12 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         }
     }
 
+    const finalInventory = ["A torch", "50 feet of rope", "Basic supplies"];
+    if (potionChoice) finalInventory.push(potionChoice);
+    if (classItemChoice) finalInventory.push(classItemChoice);
+    if (spellItem.trim()) finalInventory.push(`Spells carried in: ${spellItem.trim()}`);
+
+
     const finalCharacter: Character = {
         ...(initialCharacterState as any),
         ...charData,
@@ -180,6 +200,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         community: charData.community!,
         traits: finalTraits,
         experiences: charData.experiences!,
+        inventory: finalInventory,
         notes: notes.split('\n').filter(n => n.trim() !== ''),
         hp: { max: selectedClass.startingHP, current: selectedClass.startingHP },
         stress: { max: 6, current: 6},
@@ -315,6 +336,52 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                 selectedAbilities={charData.domainCards || []}
                 onAbilityToggle={handleAbilityToggle}
             />
+        </Card>
+
+        <Card title="Step 9: Starting Inventory">
+            <div className="space-y-4">
+                <div>
+                    <h4 className="font-semibold text-slate-300">You automatically get:</h4>
+                    <ul className="list-disc list-inside text-slate-400">
+                        <li>A torch, 50 feet of rope, basic supplies, and a handful of gold.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 className="font-semibold text-slate-300">Choose one potion:</h4>
+                    <div className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="potion" value="Minor Health Potion" checked={potionChoice === 'Minor Health Potion'} onChange={e => setPotionChoice(e.target.value)} className="form-radio bg-slate-700 border-slate-600 text-teal-500 focus:ring-teal-500"/>
+                            Minor Health Potion
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="potion" value="Minor Stamina Potion" checked={potionChoice === 'Minor Stamina Potion'} onChange={e => setPotionChoice(e.target.value)} className="form-radio bg-slate-700 border-slate-600 text-teal-500 focus:ring-teal-500"/>
+                            Minor Stamina Potion
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="font-semibold text-slate-300">Class Item:</h4>
+                    {classItemOptions.length > 1 ? (
+                        <div className="flex flex-col gap-2 mt-2">
+                             {classItemOptions.map(item => (
+                                 <label key={item} className="flex items-center gap-2 cursor-pointer">
+                                     <input type="radio" name="class-item" value={item} checked={classItemChoice === item} onChange={e => setClassItemChoice(e.target.value)} className="form-radio bg-slate-700 border-slate-600 text-teal-500 focus:ring-teal-500"/>
+                                     {item}
+                                 </label>
+                             ))}
+                        </div>
+                    ) : (
+                        <p className="text-slate-400 mt-1">{selectedClass.items}</p>
+                    )}
+                </div>
+
+                <div>
+                    <label htmlFor="spell-item" className="font-semibold text-slate-300">Decide what you carry your spells in (e.g., songbook, journal):</label>
+                    <input id="spell-item" type="text" value={spellItem} onChange={e => setSpellItem(e.target.value)} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                </div>
+            </div>
         </Card>
         
         <div className="mt-8 flex justify-center items-center gap-4">
