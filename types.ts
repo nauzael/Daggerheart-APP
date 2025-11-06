@@ -64,7 +64,7 @@ export interface Character {
     inventory: string[];
     domains: string[];
     domainCards: string[];
-    notes?: string;
+    notes: string[];
     hp: Stat;
     stress: Stat;
     armor: Stat;

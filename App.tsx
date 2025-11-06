@@ -30,6 +30,11 @@ const App: React.FC = () => {
             if (char.bolsa === undefined) {
                 char.bolsa = 0;
             }
+            
+            // Migrate notes from string to string[]
+            if (typeof char.notes === 'string' || char.notes === undefined || char.notes === null) {
+                char.notes = typeof char.notes === 'string' && char.notes.trim() !== '' ? char.notes.split('\n') : [];
+            }
 
             return char as Character;
         });

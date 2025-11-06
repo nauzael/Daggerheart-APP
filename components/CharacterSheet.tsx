@@ -21,9 +21,9 @@ const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'insti
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
-    const [notes, setNotes] = useState(character.notes || '');
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
+    const [newNote, setNewNote] = useState('');
 
     const handleStatChange = (stat: 'hp' | 'stress' | 'armor', value: number) => {
         const updatedCharacter = {
@@ -44,10 +44,17 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter(updatedCharacter);
     };
 
-    const handleNotesBlur = () => {
-        if (notes !== character.notes) {
-            onUpdateCharacter({ ...character, notes });
+    const handleAddNote = () => {
+        if (newNote.trim()) {
+            const newNotes = [...character.notes, newNote.trim()];
+            onUpdateCharacter({ ...character, notes: newNotes });
+            setNewNote('');
         }
+    };
+
+    const handleRemoveNote = (index: number) => {
+        const newNotes = character.notes.filter((_, i) => i !== index);
+        onUpdateCharacter({ ...character, notes: newNotes });
     };
     
     const handleAddItem = () => {
@@ -95,42 +102,24 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
     return (
         <div className="space-y-6">
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-4xl font-bold text-slate-100">{character.name}</h1>
-                    <p className="text-slate-400 text-lg">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                    <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">Level Up!</button>
+            <header className="text-center mb-6">
+                <h1 className="text-6xl font-bold text-teal-400">{character.name}</h1>
+                <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
+                 <div className="mt-4">
+                    <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
+                        Level Up!
+                    </button>
                 </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-6">
-                    <Card title="Core Stats">
+                {/* Column 1 */}
+                <div className="flex flex-col gap-6">
+                    <Card title="Traits">
                         <div className="grid grid-cols-2 gap-3">
                             {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={character.traits[trait]} />)}
-                            <StatDisplay label="Proficiency" value={character.proficiency} />
-                            <StatDisplay label="Evasion" value={character.evasion} />
                         </div>
                     </Card>
-                    <Card title="Vitals">
-                        <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} color="bg-red-500" />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} color="bg-purple-500" />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={character.armor.max} onSet={(v) => handleStatChange('armor', v)} color="bg-sky-500" />
-                            <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} color="bg-yellow-400" />
-                        </div>
-                    </Card>
-                </div>
-                <div className="lg:col-span-2 space-y-6">
-                     <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
-                         </div>
-                     </Card>
                     <Card title="Ancestry & Community">
                         {ancestryFeature && (
                             <div className="mb-4">
@@ -145,7 +134,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             </div>
                         )}
                     </Card>
-                    <Card title="Experiences">
+                     <Card title="Experiences">
                          {character.experiences.map((exp, i) => (
                             <EditableExperienceDisplay
                                 key={i}
@@ -155,63 +144,109 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                          ))}
                     </Card>
                 </div>
-            </div>
 
-            <Card title="Class, Subclass & Domain Features">
-                <div className="space-y-6">
-                     <div>
-                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Class Features</h3>
-                        <div className="space-y-2">
-                             {classFeatures.map(feature => (
-                                <div key={feature.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                    <h4 className="font-bold text-slate-100">{feature.name} <span className="text-xs font-light text-slate-400">({feature.type}{feature.type === 'Hope' ? ' - 3 Hope' : ''})</span></h4>
-                                    <p className="text-sm text-slate-300">{feature.description}</p>
+                {/* Column 2 */}
+                <div className="flex flex-col gap-6">
+                    <Card title="Combat Stats">
+                        <div className="space-y-4">
+                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', 0)} color="bg-red-500" />
+                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', 0)} color="bg-purple-500" />
+                            <ThresholdTracker label="Armor" current={character.armor.current} max={character.armor.max} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" />
+                            <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                            <StatDisplay label="Proficiency" value={character.proficiency} />
+                            <StatDisplay label="Evasion" value={character.evasion} />
+                        </div>
+                    </Card>
+                    <Card title="Class, Subclass & Domain Features">
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Class Features</h3>
+                                <div className="space-y-2">
+                                    {classFeatures.map(feature => (
+                                        <div key={feature.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                                            <h4 className="font-bold text-slate-100">{feature.name} <span className="text-xs font-light text-slate-400">({feature.type}{feature.type === 'Hope' ? ' - 3 Hope' : ''})</span></h4>
+                                            <p className="text-sm text-slate-300">{feature.description}</p>
+                                        </div>
+                                    ))}
                                 </div>
-                             ))}
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Subclass Features</h3>
-                        <div className="space-y-2">
-                             {character.subclassFeatures.map(feature => <SubclassFeatureItem key={feature.name} feature={feature} />)}
-                        </div>
-                    </div>
-                     <div>
-                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Domain Cards</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {characterDomainCards.map(card => (
-                                <div key={card.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                    <h4 className="font-bold">{card.name} <span className="text-xs font-normal text-slate-400">({card.domain} Lvl {card.level})</span></h4>
-                                    <p className="text-sm text-slate-300">{card.description}</p>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Subclass Features</h3>
+                                <div className="space-y-2">
+                                    {character.subclassFeatures.map(feature => <SubclassFeatureItem key={feature.name} feature={feature} />)}
                                 </div>
-                            ))}
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Domain Cards</h3>
+                                <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
+                                    {characterDomainCards.map(card => (
+                                        <div key={card.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                                            <h4 className="font-bold">{card.name} <span className="text-xs font-normal text-slate-400">({card.domain} Lvl {card.level})</span></h4>
+                                            <p className="text-sm text-slate-300">{card.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </Card>
                 </div>
-            </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card title="Inventory">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
-                        <StatDisplay label="Bolsa" value={character.bolsa} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
-                    </div>
-                    <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                        {inventory.map((item, i) => (
-                            <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
-                                <span>{item}</span>
-                                <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
-                            </li>
-                        ))}
-                    </ul>
-                    <div className="flex gap-2 mt-4">
-                        <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
-                        <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
-                    </div>
-                </Card>
-                <Card title="Notes & Background">
-                    <textarea value={notes} onChange={e => setNotes(e.target.value)} onBlur={handleNotesBlur} rows={10} className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200" />
-                </Card>
+                {/* Column 3 */}
+                <div className="flex flex-col gap-6">
+                    <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
+                         <div className="grid grid-cols-1 gap-4">
+                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                         </div>
+                     </Card>
+                     <Card title="Inventory">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
+                            <StatDisplay label="Bolsa" value={character.bolsa} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
+                        </div>
+                        <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            {inventory.map((item, i) => (
+                                <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
+                                    <span>{item}</span>
+                                    <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="flex gap-2 mt-4">
+                            <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
+                            <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
+                        </div>
+                    </Card>
+                    <Card title="Notes & Background">
+                        {character.notes && character.notes.length > 0 ? (
+                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
+                                {character.notes.map((note, i) => (
+                                    <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
+                                        <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
+                                        <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-slate-400 text-center mb-4">No notes yet.</p>
+                        )}
+                        <div className="flex flex-col gap-2 mt-2">
+                            <textarea 
+                                value={newNote} 
+                                onChange={e => setNewNote(e.target.value)} 
+                                placeholder="Add a new note..." 
+                                rows={3} 
+                                className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
+                            />
+                            <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
+                                Add Note
+                            </button>
+                        </div>
+                    </Card>
+                </div>
             </div>
             
             <div className="mt-8 text-center">

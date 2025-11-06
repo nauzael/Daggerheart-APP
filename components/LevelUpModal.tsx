@@ -179,13 +179,13 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
             <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-3xl font-bold text-slate-100">Level Up to {newLevel}!</h2>
+                    <h2 className="text-3xl font-bold text-teal-400">Level Up to {newLevel}!</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
                 </div>
                 
                 <div className="space-y-6">
                     <div>
-                        <h3 className="text-xl font-semibold text-teal-300 mb-2">Tier {newTier} Achievements</h3>
+                        <h3 className="text-xl font-semibold text-teal-400 mb-2">Tier {newTier} Achievements</h3>
                         <ul className="list-disc list-inside text-slate-300 space-y-1">
                             {tierAchievements.length > 0 ? tierAchievements.map((ach, i) => <li key={i}>{ach}</li>) : <li>No special achievements at this level.</li>}
                             <li>Increase all damage thresholds by 1 (automatic).</li>
@@ -193,7 +193,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                     </div>
 
                     <div>
-                        <h3 className="text-xl font-semibold text-teal-300 mb-2">Advancements (Choose 2 slots)</h3>
+                        <h3 className="text-xl font-semibold text-teal-400 mb-2">Advancements (Choose 2 slots)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {availableAdvancements.map(adv => {
                                 const count = selectedAdvancements.filter(sel => sel.startsWith(adv.id)).length;
@@ -216,7 +216,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
 
                     {increaseTraitsCount > 0 && (
                         <div>
-                            <h3 className="text-xl font-semibold text-teal-300 mb-2">Select Traits to Increase</h3>
+                            <h3 className="text-xl font-semibold text-teal-400 mb-2">Select Traits to Increase</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {Array.from({ length: increaseTraitsCount * 2 }).map((_, index) => (
                                     <select 
@@ -243,7 +243,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
 
                     <div className="space-y-4">
                         <div>
-                            <h3 className="text-xl font-semibold text-teal-300 mb-2">Level Up Domain Card (Step 4)</h3>
+                            <h3 className="text-xl font-semibold text-teal-400 mb-2">Level Up Domain Card (Step 4)</h3>
                              <select value={mandatoryDomainCard} onChange={e => setMandatoryDomainCard(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200">
                                  <option value="">Select a Domain Card</option>
                                  {availableDomainCards
@@ -255,7 +255,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                         
                         {advancementCardCount > 0 && (
                              <div>
-                                <h3 className="text-xl font-semibold text-teal-300 mb-2">Advancement Domain Cards</h3>
+                                <h3 className="text-xl font-semibold text-teal-400 mb-2">Advancement Domain Cards</h3>
                                 <div className="space-y-3">
                                     {Array.from({ length: advancementCardCount }).map((_, index) => (
                                         <select key={index} value={advancementDomainCards[index] || ''} onChange={e => handleAdvancementCardSelection(index, e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200">

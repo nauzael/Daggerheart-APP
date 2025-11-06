@@ -17,7 +17,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' > = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' > = {
     name: '',
     level: 1,
     subclass: '',
@@ -31,7 +31,6 @@ const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasi
     bolsa: 0,
     inventory: ["A torch", "50 feet of rope", "Basic supplies", "Minor Health Potion"],
     domainCards: [],
-    notes: '',
 };
 
 const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, onCancel }) => {
@@ -39,6 +38,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       ...initialCharacterState,
       class: CLASSES[0].name
   });
+  const [notes, setNotes] = useState('');
   const [assignedTraits, setAssignedTraits] = useState<Partial<Record<keyof Character['traits'], string>>>({});
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
@@ -146,7 +146,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === charData.subclass && f.type === 'Foundation');
     
     const finalCharacter: Character = {
-        ...initialCharacterState,
+        ...(initialCharacterState as any),
         ...charData,
         id: crypto.randomUUID(),
         class: selectedClass.name,
@@ -157,6 +157,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         community: charData.community!,
         traits: finalTraits,
         experiences: charData.experiences!,
+        notes: notes.split('\n').filter(n => n.trim() !== ''),
         hp: { max: selectedClass.startingHP, current: selectedClass.startingHP },
         stress: { max: 6, current: 6},
         armor: { max: armor.baseScore, current: armor.baseScore },
@@ -254,7 +255,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                     <input type="text" placeholder="Experience 2 (Title)*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                     <textarea placeholder="Detail (optional)" value={charData.experiences?.[1].description || ''} onChange={handleExperienceChange(1, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                  </div>
-                 <textarea placeholder="Background, Notes, Connections..." value={charData.notes || ''} onChange={handleSimpleChange('notes')} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                 <textarea placeholder="Background, Notes, Connections..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
         </Card>
 
