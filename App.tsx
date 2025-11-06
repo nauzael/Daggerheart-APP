@@ -94,6 +94,57 @@ const App: React.FC = () => {
     });
   };
 
+  const handleExportCharacters = () => {
+    const dataStr = JSON.stringify(characters, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'daggerheart-characters.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const handleImportCharacters = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (event.target.files && event.target.files[0]) {
+      fileReader.readAsText(event.target.files[0], "UTF-8");
+      fileReader.onload = e => {
+        if (e.target?.result) {
+          try {
+            const imported = JSON.parse(e.target.result as string);
+            if (Array.isArray(imported)) {
+              const validImportedCharacters: Character[] = [];
+              const existingIds = new Set(characters.map(c => c.id));
+              
+              imported.forEach((char: any) => {
+                // Basic validation
+                if (char.id && char.name && char.class) {
+                  let newChar = { ...char };
+                  // Ensure unique ID
+                  if (existingIds.has(newChar.id)) {
+                    newChar.id = crypto.randomUUID();
+                  }
+                  validImportedCharacters.push(newChar);
+                  existingIds.add(newChar.id);
+                }
+              });
+              
+              setCharacters(prev => [...prev, ...validImportedCharacters]);
+              alert(`${validImportedCharacters.length} personaje(s) importado(s) con éxito.`);
+            } else {
+              alert("Error: El archivo JSON no es un array de personajes válido.");
+            }
+          } catch (error) {
+            alert("Error al leer el archivo. Asegúrate de que es un JSON válido.");
+          }
+        }
+      };
+    }
+  };
+
+
   const renderContent = () => {
     switch(view) {
         case 'creator':
@@ -114,6 +165,8 @@ const App: React.FC = () => {
                       onSelectCharacter={handleCharacterSelect}
                       onDeleteCharacter={handleCharacterDelete}
                       onCreateNew={handleShowCreator}
+                      onImport={handleImportCharacters}
+                      onExport={handleExportCharacters}
                    />;
     }
   }
