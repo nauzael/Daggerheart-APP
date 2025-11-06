@@ -1,7 +1,7 @@
 {
   "short_name": "Daggerheart",
-  "name": "Hoja de Personaje Daggerheart",
-  "description": "Una aplicación para crear y gestionar tu personaje para el TTRPG Daggerheart.",
+  "name": "Daggerheart Character Sheet",
+  "description": "An application to create and manage your character for the TTRPG Daggerheart.",
   "icons": [
     {
       "src": "/icon-192.png",

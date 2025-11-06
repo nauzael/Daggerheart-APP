@@ -4,6 +4,7 @@ import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
+import { SUBCLASS_FEATURES } from './data/subclassFeatures';
 
 type View = 'selection' | 'creator' | 'sheet';
 
@@ -14,11 +15,29 @@ const App: React.FC = () => {
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
 
   useEffect(() => {
-    const savedCharacters = localStorage.getItem('daggerheart-characters');
-    if (savedCharacters) {
-      setCharacters(JSON.parse(savedCharacters));
+    const savedCharactersJSON = localStorage.getItem('daggerheart-characters');
+    if (savedCharactersJSON) {
+        const parsedCharacters: any[] = JSON.parse(savedCharactersJSON);
+
+        const migratedCharacters = parsedCharacters.map(char => {
+            // Ensure subclassFeatures exists and has foundation if it should.
+            if (!char.subclassFeatures || (Array.isArray(char.subclassFeatures) && char.subclassFeatures.length === 0)) {
+                const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === char.subclass && f.type === 'Foundation');
+                char.subclassFeatures = foundationFeature ? [foundationFeature] : [];
+            }
+            
+            // Add default for 'bolsa' if missing
+            if (char.bolsa === undefined) {
+                char.bolsa = 0;
+            }
+
+            return char as Character;
+        });
+
+        setCharacters(migratedCharacters);
     }
-  }, []);
+}, []);
+
 
   useEffect(() => {
     localStorage.setItem('daggerheart-characters', JSON.stringify(characters));
@@ -44,11 +63,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (view === 'sheet' && selectedCharacter) {
-      document.title = `${selectedCharacter.name} - Hoja de Personaje`;
+      document.title = `${selectedCharacter.name} - Character Sheet`;
     } else if (view === 'creator') {
-      document.title = 'Crear Personaje - Daggerheart';
+      document.title = 'Create Character - Daggerheart';
     } else {
-      document.title = 'Selección de Personaje - Daggerheart';
+      document.title = 'Character Selection - Daggerheart';
     }
   }, [view, selectedCharacter]);
 
@@ -132,12 +151,12 @@ const App: React.FC = () => {
               });
               
               setCharacters(prev => [...prev, ...validImportedCharacters]);
-              alert(`${validImportedCharacters.length} personaje(s) importado(s) con éxito.`);
+              alert(`${validImportedCharacters.length} character(s) imported successfully.`);
             } else {
-              alert("Error: El archivo JSON no es un array de personajes válido.");
+              alert("Error: JSON file is not a valid character array.");
             }
           } catch (error) {
-            alert("Error al leer el archivo. Asegúrate de que es un JSON válido.");
+            alert("Error reading file. Please ensure it's valid JSON.");
           }
         }
       };
@@ -178,16 +197,16 @@ const App: React.FC = () => {
             <DaggerheartLogo />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
-          Hoja de Personaje
+          Character Sheet
         </h1>
         {installPrompt && (
           <div className="mt-4">
             <button 
                 onClick={handleInstallClick}
                 className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300 transform hover:scale-105"
-                aria-label="Instalar la aplicación en tu dispositivo"
+                aria-label="Install App on your device"
             >
-                Instalar Aplicación
+                Install App
             </button>
           </div>
         )}
@@ -196,7 +215,7 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       <footer className="text-center mt-12 text-slate-500 text-sm">
-        <p>Daggerheart es una marca registrada de Darrington Press. Esta es una herramienta no oficial hecha por fans.</p>
+        <p>Daggerheart is a trademark of Darrington Press. This is an unofficial fan-made tool.</p>
       </footer>
     </div>
   );

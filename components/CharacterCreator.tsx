@@ -28,7 +28,8 @@ const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasi
     proficiency: 1,
     hope: 2,
     gold: 1, // Handful
-    inventory: ["Una antorcha", "50 pies de cuerda", "Suministros básicos", "Poción de Salud Menor"],
+    bolsa: 0,
+    inventory: ["A torch", "50 feet of rope", "Basic supplies", "Minor Health Potion"],
     domainCards: [],
     notes: '',
 };
@@ -169,14 +170,14 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-        <Card title="Paso 1 y 2: Clase y Herencia">
+        <Card title="Step 1 & 2: Class & Heritage">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <input type="text" placeholder="Nombre del Personaje*" value={charData.name || ''} onChange={handleSimpleChange('name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="text" placeholder="Character Name*" value={charData.name || ''} onChange={handleSimpleChange('name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 <select value={charData.class} onChange={handleClassChange} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
                     {CLASSES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                 </select>
                 <select value={charData.subclass} onChange={handleSimpleChange('subclass')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Selecciona una Subclase*</option>
+                    <option value="">Select a Subclass*</option>
                     {selectedClass.subclasses.map(sc => <option key={sc} value={sc}>{sc}</option>)}
                 </select>
                 <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
@@ -188,18 +189,18 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
             </div>
         </Card>
 
-        <Card title="Paso 3: Asignar Rasgos">
-            <p className="text-slate-400 mb-4 text-sm">Asigna un modificador a cada rasgo. Modificadores: <span className="font-mono">{TRAIT_MODIFIERS.join(', ')}</span></p>
+        <Card title="Step 3: Assign Traits">
+            <p className="text-slate-400 mb-4 text-sm">Assign a modifier to each trait. Modifiers: <span className="font-mono">{TRAIT_MODIFIERS.join(', ')}</span></p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {TRAIT_NAMES.map(traitName => (
                     <div key={traitName}>
-                        <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">{traitName === 'strength' ? 'Fuerza' : traitName === 'agility' ? 'Agilidad' : traitName === 'finesse' ? 'Finura' : traitName === 'instinct' ? 'Instinto' : traitName === 'presence' ? 'Presencia' : 'Conocimiento'}</label>
+                        <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">{traitName}</label>
                         <select
                             value={assignedTraits[traitName] || ''}
                             onChange={e => handleTraitAssignment(traitName, e.target.value)}
                             className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
                         >
-                            <option value="">Asignar Modificador*</option>
+                            <option value="">Assign Modifier*</option>
                             {TRAIT_MODIFIERS.map((mod, index) => {
                                 const modString = String(mod);
                                 const isCurrentValue = assignedTraits[traitName] === modString;
@@ -219,45 +220,45 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
             </div>
         </Card>
         
-        <Card title="Paso 4 y 5: Estadísticas y Equipo">
+        <Card title="Step 4 & 5: Stats & Equipment">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                 <div><span className="text-slate-400">PV:</span> <span className="font-bold text-slate-100">{selectedClass.startingHP}</span></div>
-                 <div><span className="text-slate-400">Evasión:</span> <span className="font-bold text-slate-100">{selectedClass.startingEvasion}</span></div>
-                 <div><span className="text-slate-400">Estrés:</span> <span className="font-bold text-slate-100">6</span></div>
-                 <div><span className="text-slate-400">Esperanza:</span> <span className="font-bold text-slate-100">2</span></div>
+                 <div><span className="text-slate-400">HP:</span> <span className="font-bold text-slate-100">{selectedClass.startingHP}</span></div>
+                 <div><span className="text-slate-400">Evasion:</span> <span className="font-bold text-slate-100">{selectedClass.startingEvasion}</span></div>
+                 <div><span className="text-slate-400">Stress:</span> <span className="font-bold text-slate-100">6</span></div>
+                 <div><span className="text-slate-400">Hope:</span> <span className="font-bold text-slate-100">2</span></div>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <select value={charData.activeArmor?.name || ''} onChange={handleEquipmentChange('activeArmor')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Seleccionar Armadura</option>
+                    <option value="">Select Armor</option>
                     {ARMORS.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
                  </select>
                  <select value={charData.primaryWeapon?.name || ''} onChange={handleEquipmentChange('primaryWeapon')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Seleccionar Arma Principal</option>
+                    <option value="">Select Primary Weapon</option>
                     {PRIMARY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}
                  </select>
                  <select value={charData.secondaryWeapon?.name || ''} onChange={handleEquipmentChange('secondaryWeapon')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" disabled={primaryWeapon?.burden === 'Two-Handed'}>
-                    <option value="">Seleccionar Arma Secundaria</option>
+                    <option value="">Select Secondary Weapon</option>
                     {SECONDARY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}
                  </select>
              </div>
         </Card>
 
-        <Card title="Paso 6 y 7: Trasfondo y Experiencias">
-            <p className="text-slate-400 mb-4 text-sm">Cada una de tus experiencias proporciona un modificador de <span className="font-mono">+2</span> cuando gastas una Esperanza en una tirada relevante.</p>
+        <Card title="Step 6 & 7: Background & Experiences">
+            <p className="text-slate-400 mb-4 text-sm">Each of your experiences provides a <span className="font-mono">+2</span> modifier when you spend a Hope on a relevant roll.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <input type="text" placeholder="Experiencia 1 (Título)*" value={charData.experiences?.[0].name || ''} onChange={handleExperienceChange(0, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                    <textarea placeholder="Detalle (opcional)" value={charData.experiences?.[0].description || ''} onChange={handleExperienceChange(0, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <input type="text" placeholder="Experience 1 (Title)*" value={charData.experiences?.[0].name || ''} onChange={handleExperienceChange(0, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <textarea placeholder="Detail (optional)" value={charData.experiences?.[0].description || ''} onChange={handleExperienceChange(0, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 </div>
                  <div>
-                    <input type="text" placeholder="Experiencia 2 (Título)*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                    <textarea placeholder="Detalle (opcional)" value={charData.experiences?.[1].description || ''} onChange={handleExperienceChange(1, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <input type="text" placeholder="Experience 2 (Title)*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <textarea placeholder="Detail (optional)" value={charData.experiences?.[1].description || ''} onChange={handleExperienceChange(1, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                  </div>
-                 <textarea placeholder="Trasfondo, Notas, Conexiones..." value={charData.notes || ''} onChange={handleSimpleChange('notes')} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                 <textarea placeholder="Background, Notes, Connections..." value={charData.notes || ''} onChange={handleSimpleChange('notes')} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
         </Card>
 
-        <Card title="Paso 8: Cartas de Dominio">
+        <Card title="Step 8: Domain Cards">
             <DomainSelector selectedClass={selectedClass} />
             <AbilitySelector
                 selectedDomains={selectedClass.domains}
@@ -272,17 +273,17 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                 onClick={onCancel}
                 className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300"
             >
-                Cancelar
+                Cancel
             </button>
             <button 
                 type="submit" 
                 disabled={!isFormValid}
                 className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 transform hover:scale-105 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
-                Crear Personaje
+                Create Character
             </button>
         </div>
-        {!isFormValid && <p className="text-red-400 text-sm mt-2 text-center">Por favor, rellena todos los campos requeridos (*).</p>}
+        {!isFormValid && <p className="text-red-400 text-sm mt-2 text-center">Please fill out all required fields (*).</p>}
     </form>
   );
 };

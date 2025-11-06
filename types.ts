@@ -1,68 +1,76 @@
-export interface Experience {
-  name: string;
-  modifier: number;
-  description?: string;
-}
+// Fix: Replaced the incorrect component definition with the correct type definitions.
+export type TraitName = 'strength' | 'agility' | 'finesse' | 'instinct' | 'knowledge' | 'presence';
 
-export interface Weapon {
-  name: string;
-  trait: string;
-  range: string;
-  damage: string;
-  burden: string;
-  tier: number;
-  feature?: string;
-  type: 'Primary' | 'Secondary';
-}
-
-export interface Armor {
-  name: string;
-  baseThresholds: string;
-  baseScore: number;
-  tier: number;
-  feature?: string;
-}
-
-export interface SubclassFeature {
-  name: string;
-  type: 'Foundation' | 'Specialization' | 'Mastery';
-  subclass: string;
-  description: string;
-}
-
-export interface Character {
-  id: string;
-  name: string;
-  level: number;
-  class: string;
-  subclass: string;
-  ancestry: string;
-  community: string;
-  experiences: Experience[];
-  domains: string[]; // Names of the two domains from the class
-  traits: {
+export interface Traits {
     strength: number;
     agility: number;
     finesse: number;
     instinct: number;
     knowledge: number;
     presence: number;
-  };
-  evasion: number;
-  proficiency: number;
-  hp: { current: number; max: number };
-  stress: { current: number; max: number };
-  armor: { current: number; max: number };
-  hope: number;
-  gold: number;
-  inventory: string[];
-  domainCards: string[]; // Names of the chosen cards
-  subclassFeatures: SubclassFeature[];
-  notes: string; 
-  
-  primaryWeapon?: Weapon;
-  secondaryWeapon?: Weapon;
-  activeArmor?: Armor;
 }
 
-export type TraitName = keyof Character['traits'];
+export interface Stat {
+    max: number;
+    current: number;
+}
+
+export interface Experience {
+    name: string;
+    modifier: number;
+    description?: string;
+}
+
+export interface Weapon {
+    name: string;
+    trait: string;
+    range: string;
+    damage: string;
+    burden: string;
+    tier: number;
+    feature?: string;
+    type: 'Primary' | 'Secondary';
+}
+
+export interface Armor {
+    name: string;
+    baseThresholds: string;
+    baseScore: number;
+    tier: number;
+    feature?: string;
+}
+
+export interface SubclassFeature {
+    name: string;
+    subclass: string;
+    type: 'Foundation' | 'Specialization' | 'Mastery';
+    description: string;
+}
+
+export interface Character {
+    id: string;
+    name: string;
+    level: number;
+    class: string;
+    subclass: string;
+    ancestry: string;
+    community: string;
+    experiences: Experience[];
+    traits: Traits;
+    proficiency: number;
+    hope: number;
+    gold: number;
+    bolsa: number;
+    inventory: string[];
+    domains: string[];
+    domainCards: string[];
+    notes?: string;
+    hp: Stat;
+    stress: Stat;
+    armor: Stat;
+    evasion: number;
+    subclassFeatures: SubclassFeature[];
+    primaryWeapon?: Weapon;
+    secondaryWeapon?: Weapon;
+    activeArmor?: Armor;
+}

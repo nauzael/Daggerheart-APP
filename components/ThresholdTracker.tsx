@@ -25,7 +25,7 @@ const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max
                     {current} / {max}
                 </span>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
                 {Array.from({ length: max }, (_, i) => (
                     <div
                         key={i}
@@ -33,7 +33,7 @@ const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max
                         aria-label={`${label} point ${i + 1}`}
                         role="checkbox"
                         aria-checked={i < current}
-                        className={`w-5 h-5 rounded-sm cursor-pointer border-2 transition-colors ${
+                        className={`w-6 h-6 rounded-full cursor-pointer border-2 transition-colors ${
                             i < current
                                 ? `${color} border-slate-400`
                                 : 'bg-slate-700 border-slate-600 hover:bg-slate-600'

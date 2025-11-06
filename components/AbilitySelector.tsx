@@ -49,12 +49,12 @@ const AbilitySelector: React.FC<AbilitySelectorProps> = ({ selectedDomains, sele
   return (
     <div className="flex flex-col gap-4 mt-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-             <h3 className="text-slate-300 font-semibold">Elige {selectionLimit} Cartas de Dominio de 1er nivel*</h3>
+             <h3 className="text-slate-300 font-semibold">Choose {selectionLimit} 1st-level Domain Cards*</h3>
              <span className={`font-mono px-3 py-1 rounded-md text-sm ${numSelected === selectionLimit ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
                 {numSelected} / {selectionLimit}
              </span>
         </div>
-        <p className="text-sm text-slate-400">Puedes tomar una carta de cada dominio o dos de un solo dominio.</p>
+        <p className="text-sm text-slate-400">You can take one card from each domain or two from a single domain.</p>
         
         {selectedDomains.map((domain, index) => {
             const cardsInThisDomain = index === 0 ? cardsFromDomain1 : cardsFromDomain2;
