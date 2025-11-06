@@ -1,11 +1,14 @@
+
 import React, { useState, useMemo } from 'react';
+// Fix: The DomainCard type is not exported from '../types'. It's defined in '../data/domainCards'.
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
 import StatDisplay from './StatDisplay';
 import LevelUpModal from './LevelUpModal';
 import AddEquipmentModal from './AddEquipmentModal';
-import { DOMAIN_CARDS } from '../data/domainCards';
+import AddDomainCardModal from './AddDomainCardModal';
+import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { ANCESTRIES } from '../data/ancestries';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
@@ -21,6 +24,7 @@ const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'insti
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+    const [isAddDomainCardModalOpen, setIsAddDomainCardModalOpen] = useState(false);
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
@@ -38,7 +42,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     };
 
     const handleSimpleValueChange = (field: 'gold' | 'bolsa', change: number) => {
-        const currentValue = character[field];
+        const currentValue = character[field] || 0;
         const updatedValue = Math.max(0, currentValue + change);
         const updatedCharacter = { ...character, [field]: updatedValue };
         onUpdateCharacter(updatedCharacter);
@@ -70,6 +74,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         const newInventory = inventory.filter((_, i) => i !== index);
         setInventory(newInventory);
         onUpdateCharacter({ ...character, inventory: newInventory });
+    };
+    
+    const handleAddDomainCard = (cardName: string) => {
+        onUpdateCharacter({ ...character, domainCards: [...character.domainCards, cardName] });
+        setIsAddDomainCardModalOpen(false);
     };
 
     const handleLevelUp = (updatedChar: Character) => {
@@ -104,7 +113,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         <div className="space-y-6">
             <header className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-6xl font-bold text-teal-400">{character.name}</h1>
+                    <h1 className="text-5xl font-bold text-teal-400">{character.name}</h1>
                     <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
                 </div>
                  <div>
@@ -191,13 +200,17 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
                          </div>
                      </Card>
-                     <Card title="Domain Cards">
-                        <div className="grid grid-cols-1 gap-3">
+                     <Card 
+                        title="Domain Cards"
+                        headerContent={
+                            <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
+                                + Add Card
+                            </button>
+                        }
+                    >
+                        <div className="space-y-3">
                             {characterDomainCards.map(card => (
-                                <div key={card.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                    <h4 className="font-bold">{card.name} <span className="text-xs font-normal text-slate-400">({card.domain} Lvl {card.level})</span></h4>
-                                    <p className="text-sm text-slate-300">{card.description}</p>
-                                </div>
+                                <DomainCardDisplay key={card.name} card={card} />
                             ))}
                         </div>
                     </Card>
@@ -256,6 +269,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
             {isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
             {isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
+            {isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddDomainCard} onClose={() => setIsAddDomainCardModalOpen(false)} />}
         </div>
     );
 };
@@ -341,5 +355,26 @@ const SubclassFeatureItem: React.FC<{feature: SubclassFeature}> = ({ feature }) 
         <p className="text-sm text-slate-300">{feature.description}</p>
     </div>
 );
+
+const DomainCardDisplay: React.FC<{card: DomainCard}> = ({ card }) => (
+    <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+        <div className="flex justify-between items-start">
+            <div>
+                <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
+                <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
+            </div>
+            {card.recallCost !== undefined && (
+                <div className="flex items-center gap-1 text-yellow-300 flex-shrink-0 ml-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-bold text-sm">{card.recallCost}</span>
+                </div>
+            )}
+        </div>
+        <p className="text-sm text-slate-300 mt-2">{card.description}</p>
+    </div>
+);
+
 
 export default CharacterSheet;
