@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 // Fix: The DomainCard type is not exported from '../types'. It's defined in '../data/domainCards'.
-import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience } from '../types';
+import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
 import StatDisplay from './StatDisplay';
@@ -9,7 +9,6 @@ import LevelUpModal from './LevelUpModal';
 import AddEquipmentModal from './AddEquipmentModal';
 import AddDomainCardModal from './AddDomainCardModal';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
-import { ANCESTRIES } from '../data/ancestries';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
 
@@ -97,7 +96,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, experiences: newExperiences });
     };
     
-    const ancestryFeature = ANCESTRIES.find(a => a.name === character.ancestry)?.features;
     const communityFeature = COMMUNITIES.find(c => c.name === character.community)?.feature;
 
     const classFeatures = useMemo(() => {
@@ -139,10 +137,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         </div>
                     </Card>
                     <Card title="Characteristics & Experiences">
-                        {ancestryFeature && (
+                        {character.ancestryFeatures && (
                             <div className="mb-4">
                                 <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
-                                {ancestryFeature.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
+                                {character.ancestryFeatures.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
                             </div>
                         )}
                         {communityFeature && (

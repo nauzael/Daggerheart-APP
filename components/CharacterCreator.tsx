@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Character, Experience, Weapon, Armor } from '../types';
+import { Character, Experience, Weapon, Armor, AncestryFeature } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
@@ -17,7 +17,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' > = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures'> = {
     name: '',
     level: 1,
     subclass: '',
@@ -40,13 +40,18 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   });
   const [notes, setNotes] = useState('');
   const [assignedTraits, setAssignedTraits] = useState<Partial<Record<keyof Character['traits'], string>>>({});
+  const [isMixedAncestry, setIsMixedAncestry] = useState(false);
+  const [mixedAncestryName, setMixedAncestryName] = useState('');
+  const [firstAncestry, setFirstAncestry] = useState(ANCESTRIES[0].name);
+  const [secondAncestry, setSecondAncestry] = useState(ANCESTRIES[0].name);
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
   
   const isFormValid = useMemo(() => {
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.length === 2 && charData.experiences?.every(e => e.name.trim());
-  }, [charData, assignedTraits]);
+    const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid;
+  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName]);
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newClassName = e.target.value;
@@ -145,6 +150,23 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     const armor = charData.activeArmor || { baseScore: 0 };
     const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === charData.subclass && f.type === 'Foundation');
     
+    let finalAncestryName = charData.ancestry!;
+    let finalAncestryFeatures: AncestryFeature[] = [];
+
+    if (isMixedAncestry) {
+        finalAncestryName = mixedAncestryName;
+        const ancestry1 = ANCESTRIES.find(a => a.name === firstAncestry);
+        const ancestry2 = ANCESTRIES.find(a => a.name === secondAncestry);
+        if (ancestry1 && ancestry2) {
+            finalAncestryFeatures = [ancestry1.features[0], ancestry2.features[1]];
+        }
+    } else {
+        const ancestryData = ANCESTRIES.find(a => a.name === charData.ancestry);
+        if (ancestryData) {
+            finalAncestryFeatures = ancestryData.features;
+        }
+    }
+
     const finalCharacter: Character = {
         ...(initialCharacterState as any),
         ...charData,
@@ -153,7 +175,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         domains: selectedClass.domains,
         evasion: selectedClass.startingEvasion,
         subclass: charData.subclass!,
-        ancestry: charData.ancestry!,
+        ancestry: finalAncestryName,
+        ancestryFeatures: finalAncestryFeatures,
         community: charData.community!,
         traits: finalTraits,
         experiences: charData.experiences!,
@@ -181,12 +204,34 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                     <option value="">Select a Subclass*</option>
                     {selectedClass.subclasses.map(sc => <option key={sc} value={sc}>{sc}</option>)}
                 </select>
-                <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                </select>
-                <select value={charData.community} onChange={handleSimpleChange('community')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    {COMMUNITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                </select>
+            </div>
+             <div className="mt-4 pt-4 border-t border-slate-700">
+                <div className="flex items-center gap-3 mb-4">
+                    <input type="checkbox" id="mixed-ancestry" checked={isMixedAncestry} onChange={e => setIsMixedAncestry(e.target.checked)} className="h-4 w-4 rounded bg-slate-700 border-slate-600 text-teal-500 focus:ring-teal-500" />
+                    <label htmlFor="mixed-ancestry" className="text-slate-300">Create Mixed Ancestry</label>
+                </div>
+                {isMixedAncestry ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" placeholder="Mixed Ancestry Name*" value={mixedAncestryName} onChange={e => setMixedAncestryName(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                        <select value={firstAncestry} onChange={e => setFirstAncestry(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                           <option value="" disabled>First Ancestry (for 1st feature)</option>
+                           {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                        </select>
+                        <select value={secondAncestry} onChange={e => setSecondAncestry(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="" disabled>Second Ancestry (for 2nd feature)</option>
+                           {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                        </select>
+                    </div>
+                ) : (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                        </select>
+                        <select value={charData.community} onChange={handleSimpleChange('community')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            {COMMUNITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                        </select>
+                     </div>
+                )}
             </div>
         </Card>
 

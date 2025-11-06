@@ -47,6 +47,11 @@ export interface SubclassFeature {
     description: string;
 }
 
+export interface AncestryFeature {
+    name: string;
+    description: string;
+}
+
 export interface Character {
     id: string;
     name: string;
@@ -54,6 +59,7 @@ export interface Character {
     class: string;
     subclass: string;
     ancestry: string;
+    ancestryFeatures: AncestryFeature[];
     community: string;
     experiences: Experience[];
     traits: Traits;

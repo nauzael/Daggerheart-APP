@@ -5,6 +5,7 @@ import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 import { SUBCLASS_FEATURES } from './data/subclassFeatures';
+import { ANCESTRIES } from './data/ancestries';
 
 type View = 'selection' | 'creator' | 'sheet';
 
@@ -34,6 +35,12 @@ const App: React.FC = () => {
             // Migrate notes from string to string[]
             if (typeof char.notes === 'string' || char.notes === undefined || char.notes === null) {
                 char.notes = typeof char.notes === 'string' && char.notes.trim() !== '' ? char.notes.split('\n') : [];
+            }
+
+            // Migrate to include ancestryFeatures for older characters
+            if (!char.ancestryFeatures) {
+                const ancestryData = ANCESTRIES.find(a => a.name === char.ancestry);
+                char.ancestryFeatures = ancestryData ? ancestryData.features : [];
             }
 
             return char as Character;
@@ -77,15 +84,13 @@ const App: React.FC = () => {
   }, [view, selectedCharacter]);
 
   const handleCharacterCreate = (newCharacter: Character) => {
-    const newCharacters = [...characters, newCharacter];
-    setCharacters(newCharacters);
+    setCharacters(prev => [...prev, newCharacter]);
     setSelectedCharacter(newCharacter);
     setView('sheet');
   };
 
   const handleCharacterUpdate = (updatedCharacter: Character) => {
-    const newCharacters = characters.map(c => c.id === updatedCharacter.id ? updatedCharacter : c);
-    setCharacters(newCharacters);
+    setCharacters(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
     setSelectedCharacter(updatedCharacter);
   };
 
@@ -98,7 +103,7 @@ const App: React.FC = () => {
   };
 
   const handleCharacterDelete = (characterId: string) => {
-    setCharacters(characters.filter(c => c.id !== characterId));
+    setCharacters(prev => prev.filter(c => c.id !== characterId));
   };
   
   const handleReturnToSelection = () => {
