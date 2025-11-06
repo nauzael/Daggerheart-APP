@@ -2,11 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Character } from './types';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
+import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 
+type View = 'selection' | 'creator' | 'sheet';
+
 const App: React.FC = () => {
-  const [character, setCharacter] = useState<Character | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [view, setView] = useState<View>('selection');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+
+  useEffect(() => {
+    const savedCharacters = localStorage.getItem('daggerheart-characters');
+    if (savedCharacters) {
+      setCharacters(JSON.parse(savedCharacters));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('daggerheart-characters', JSON.stringify(characters));
+  }, [characters]);
 
   useEffect(() => {
     const handleInstallPrompt = (e: Event) => {
@@ -27,23 +43,47 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (character) {
-      document.title = `${character.name} - Hoja de Personaje`;
-    } else {
+    if (view === 'sheet' && selectedCharacter) {
+      document.title = `${selectedCharacter.name} - Hoja de Personaje`;
+    } else if (view === 'creator') {
       document.title = 'Crear Personaje - Daggerheart';
+    } else {
+      document.title = 'Selección de Personaje - Daggerheart';
     }
-  }, [character]);
+  }, [view, selectedCharacter]);
 
   const handleCharacterCreate = (newCharacter: Character) => {
-    setCharacter(newCharacter);
+    const newCharacters = [...characters, newCharacter];
+    setCharacters(newCharacters);
+    setSelectedCharacter(newCharacter);
+    setView('sheet');
   };
 
   const handleCharacterUpdate = (updatedCharacter: Character) => {
-    setCharacter(updatedCharacter);
+    const newCharacters = characters.map(c => c.id === updatedCharacter.id ? updatedCharacter : c);
+    setCharacters(newCharacters);
+    setSelectedCharacter(updatedCharacter);
+  };
+
+  const handleCharacterSelect = (characterId: string) => {
+    const charToSelect = characters.find(c => c.id === characterId);
+    if (charToSelect) {
+        setSelectedCharacter(charToSelect);
+        setView('sheet');
+    }
+  };
+
+  const handleCharacterDelete = (characterId: string) => {
+    setCharacters(characters.filter(c => c.id !== characterId));
   };
   
-  const handleReset = () => {
-      setCharacter(null);
+  const handleReturnToSelection = () => {
+    setSelectedCharacter(null);
+    setView('selection');
+  }
+
+  const handleShowCreator = () => {
+    setView('creator');
   }
 
   const handleInstallClick = () => {
@@ -53,6 +93,30 @@ const App: React.FC = () => {
         setInstallPrompt(null);
     });
   };
+
+  const renderContent = () => {
+    switch(view) {
+        case 'creator':
+            return <CharacterCreator onCharacterCreate={handleCharacterCreate} onCancel={handleReturnToSelection} />;
+        case 'sheet':
+            if (selectedCharacter) {
+                return <CharacterSheet 
+                         character={selectedCharacter} 
+                         onUpdateCharacter={handleCharacterUpdate} 
+                         onReturnToSelection={handleReturnToSelection}
+                       />;
+            }
+            return null; // Should not happen
+        case 'selection':
+        default:
+            return <CharacterSelection 
+                      characters={characters}
+                      onSelectCharacter={handleCharacterSelect}
+                      onDeleteCharacter={handleCharacterDelete}
+                      onCreateNew={handleShowCreator}
+                   />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
@@ -76,15 +140,7 @@ const App: React.FC = () => {
         )}
       </header>
       <main className="container mx-auto max-w-7xl">
-        {character ? (
-          <CharacterSheet 
-            character={character} 
-            onUpdateCharacter={handleCharacterUpdate} 
-            onReset={handleReset}
-          />
-        ) : (
-          <CharacterCreator onCharacterCreate={handleCharacterCreate} />
-        )}
+        {renderContent()}
       </main>
       <footer className="text-center mt-12 text-slate-500 text-sm">
         <p>Daggerheart es una marca registrada de Darrington Press. Esta es una herramienta no oficial hecha por fans.</p>

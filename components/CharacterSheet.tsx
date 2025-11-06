@@ -13,7 +13,7 @@ import AddDomainCardModal from './AddDomainCardModal';
 interface CharacterSheetProps {
   character: Character;
   onUpdateCharacter: (character: Character) => void;
-  onReset: () => void;
+  onReturnToSelection: () => void;
 }
 
 const FeatureDisplay: React.FC<{title: string, description: string}> = ({title, description}) => (
@@ -128,7 +128,7 @@ const EditableExperienceDisplay: React.FC<{ experience: Experience, index: numbe
     )
 };
 
-const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReset }) => {
+const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
     const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
     const [newItem, setNewItem] = useState('');
@@ -238,15 +238,15 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     return (
     <div className="space-y-6">
         <Card title={character.name}>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center items-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center items-center">
                 <div className="flex items-center justify-center gap-2">
                     <div>
                         <h3 className="text-sm text-slate-400 uppercase">Nivel</h3>
                         <p className="text-lg font-semibold">{character.level}</p>
                     </div>
                     {character.level < 10 && (
-                        <button onClick={() => setIsLevelUpModalOpen(true)} className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold p-2 rounded-full text-xs leading-none">
-                            SUBIR NIVEL
+                        <button onClick={() => setIsLevelUpModalOpen(true)} className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-1 px-3 rounded-md text-sm">
+                            Subir Nivel
                         </button>
                     )}
                 </div>
@@ -254,6 +254,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div><h3 className="text-sm text-slate-400 uppercase">Subclase</h3><p className="text-lg font-semibold">{character.subclass}</p></div>
                 <div><h3 className="text-sm text-slate-400 uppercase">Ascendencia</h3><p className="text-lg font-semibold">{character.ancestry}</p></div>
                 <div><h3 className="text-sm text-slate-400 uppercase">Comunidad</h3><p className="text-lg font-semibold">{character.community}</p></div>
+                 <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg">
+                    Cambiar Personaje
+                </button>
             </div>
         </Card>
       

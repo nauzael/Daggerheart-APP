@@ -11,18 +11,19 @@ import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 
 interface CharacterCreatorProps {
   onCharacterCreate: (character: Character) => void;
+  onCancel: () => void;
 }
 
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' > = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' > = {
     name: '',
     level: 1,
     subclass: '',
     ancestry: ANCESTRIES[0].name,
     community: COMMUNITIES[0].name,
-    experiences: [{name: '', modifier: 2}, {name: '', modifier: 2}],
+    experiences: [{name: '', modifier: 2, description: ''}, {name: '', modifier: 2, description: ''}],
     traits: { strength: 0, agility: 0, finesse: 0, instinct: 0, knowledge: 0, presence: 0 },
     proficiency: 1,
     hope: 2,
@@ -32,7 +33,7 @@ const initialCharacterState: Omit<Character, 'class' | 'domains' | 'evasion' | '
     notes: '',
 };
 
-const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }) => {
+const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, onCancel }) => {
   const [charData, setCharData] = useState<Partial<Character>>({
       ...initialCharacterState,
       class: CLASSES[0].name
@@ -62,9 +63,9 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }
     setCharData(prev => ({ ...prev, [field]: e.target.value }));
   };
   
-  const handleExperienceChange = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newExperiences = [...(charData.experiences || [])];
-      newExperiences[index] = {...newExperiences[index], name: e.target.value};
+  const handleExperienceChange = (index: number, field: 'name' | 'description') => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const newExperiences = [...(charData.experiences || [])] as Experience[];
+      newExperiences[index] = {...newExperiences[index], [field]: e.target.value};
       setCharData(prev => ({...prev, experiences: newExperiences}));
   }
 
@@ -146,6 +147,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }
     const finalCharacter: Character = {
         ...initialCharacterState,
         ...charData,
+        id: crypto.randomUUID(),
         class: selectedClass.name,
         domains: selectedClass.domains,
         evasion: selectedClass.startingEvasion,
@@ -240,11 +242,17 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }
              </div>
         </Card>
 
-         <Card title="Paso 6 y 7: Trasfondo y Experiencias">
+        <Card title="Paso 6 y 7: Trasfondo y Experiencias">
             <p className="text-slate-400 mb-4 text-sm">Cada una de tus experiencias proporciona un modificador de <span className="font-mono">+2</span> cuando gastas una Esperanza en una tirada relevante.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <input type="text" placeholder="Experiencia 1*" value={charData.experiences?.[0].name || ''} onChange={handleExperienceChange(0)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                 <input type="text" placeholder="Experiencia 2*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <div>
+                    <input type="text" placeholder="Experiencia 1 (Título)*" value={charData.experiences?.[0].name || ''} onChange={handleExperienceChange(0, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <textarea placeholder="Detalle (opcional)" value={charData.experiences?.[0].description || ''} onChange={handleExperienceChange(0, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                </div>
+                 <div>
+                    <input type="text" placeholder="Experiencia 2 (Título)*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <textarea placeholder="Detalle (opcional)" value={charData.experiences?.[1].description || ''} onChange={handleExperienceChange(1, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                 </div>
                  <textarea placeholder="Trasfondo, Notas, Conexiones..." value={charData.notes || ''} onChange={handleSimpleChange('notes')} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
         </Card>
@@ -258,7 +266,14 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }
             />
         </Card>
         
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex justify-center items-center gap-4">
+            <button 
+                type="button" 
+                onClick={onCancel}
+                className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300"
+            >
+                Cancelar
+            </button>
             <button 
                 type="submit" 
                 disabled={!isFormValid}
@@ -266,8 +281,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate }
             >
                 Crear Personaje
             </button>
-             {!isFormValid && <p className="text-red-400 text-sm mt-2">Por favor, rellena todos los campos requeridos (*).</p>}
         </div>
+        {!isFormValid && <p className="text-red-400 text-sm mt-2 text-center">Por favor, rellena todos los campos requeridos (*).</p>}
     </form>
   );
 };

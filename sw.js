@@ -8,6 +8,7 @@ const URLS_TO_CACHE = [
   '/types.ts',
   '/components/CharacterCreator.tsx',
   '/components/CharacterSheet.tsx',
+  '/components/CharacterSelection.tsx',
   '/components/Card.tsx',
   '/components/ThresholdTracker.tsx',
   '/components/StatDisplay.tsx',

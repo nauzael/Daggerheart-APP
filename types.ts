@@ -31,6 +31,7 @@ export interface SubclassFeature {
 }
 
 export interface Character {
+  id: string;
   name: string;
   level: number;
   class: string;
