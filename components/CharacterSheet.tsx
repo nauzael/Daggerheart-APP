@@ -102,10 +102,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
     return (
         <div className="space-y-6">
-            <header className="text-center mb-6">
-                <h1 className="text-6xl font-bold text-teal-400">{character.name}</h1>
-                <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
-                 <div className="mt-4">
+            <header className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-6xl font-bold text-teal-400">{character.name}</h1>
+                    <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
+                </div>
+                 <div>
                     <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
                         Level Up!
                     </button>
@@ -114,38 +116,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Column 1 */}
-                <div className="flex flex-col gap-6">
-                    <Card title="Traits">
-                        <div className="grid grid-cols-2 gap-3">
-                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={character.traits[trait]} />)}
-                        </div>
-                    </Card>
-                    <Card title="Ancestry & Community">
-                        {ancestryFeature && (
-                            <div className="mb-4">
-                                <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
-                                {ancestryFeature.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
-                            </div>
-                        )}
-                        {communityFeature && (
-                            <div>
-                                <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
-                                <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
-                            </div>
-                        )}
-                    </Card>
-                     <Card title="Experiences">
-                         {character.experiences.map((exp, i) => (
-                            <EditableExperienceDisplay
-                                key={i}
-                                experience={exp}
-                                onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
-                            />
-                         ))}
-                    </Card>
-                </div>
-
-                {/* Column 2 */}
                 <div className="flex flex-col gap-6">
                     <Card title="Combat Stats">
                         <div className="space-y-4">
@@ -159,7 +129,37 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <StatDisplay label="Evasion" value={character.evasion} />
                         </div>
                     </Card>
-                    <Card title="Class, Subclass & Domain Features">
+                    <Card title="Characteristics & Experiences">
+                        {ancestryFeature && (
+                            <div className="mb-4">
+                                <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
+                                {ancestryFeature.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
+                            </div>
+                        )}
+                        {communityFeature && (
+                             <div className="mb-4">
+                                <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
+                                <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
+                            </div>
+                        )}
+                         {character.experiences.map((exp, i) => (
+                            <EditableExperienceDisplay
+                                key={i}
+                                experience={exp}
+                                onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
+                            />
+                         ))}
+                    </Card>
+                </div>
+
+                {/* Column 2 */}
+                <div className="flex flex-col gap-6">
+                     <Card title="Traits">
+                        <div className="grid grid-cols-2 gap-3">
+                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={character.traits[trait]} />)}
+                        </div>
+                    </Card>
+                     <Card title="Class & Subclass Features">
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Class Features</h3>
@@ -178,17 +178,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                     {character.subclassFeatures.map(feature => <SubclassFeatureItem key={feature.name} feature={feature} />)}
                                 </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Domain Cards</h3>
-                                <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
-                                    {characterDomainCards.map(card => (
-                                        <div key={card.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                            <h4 className="font-bold">{card.name} <span className="text-xs font-normal text-slate-400">({card.domain} Lvl {card.level})</span></h4>
-                                            <p className="text-sm text-slate-300">{card.description}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                     </Card>
                 </div>
@@ -202,10 +191,20 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
                          </div>
                      </Card>
+                     <Card title="Domain Cards">
+                        <div className="grid grid-cols-1 gap-3">
+                            {characterDomainCards.map(card => (
+                                <div key={card.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                                    <h4 className="font-bold">{card.name} <span className="text-xs font-normal text-slate-400">({card.domain} Lvl {card.level})</span></h4>
+                                    <p className="text-sm text-slate-300">{card.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
                      <Card title="Inventory">
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
-                            <StatDisplay label="Bolsa" value={character.bolsa} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
+                            <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
                         </div>
                         <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
                             {inventory.map((item, i) => (
