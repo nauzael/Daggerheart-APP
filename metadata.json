@@ -1,0 +1,5 @@
+{
+  "name": "Hoja de Personaje Daggerheart",
+  "description": "Una aplicación para crear y gestionar tu personaje para el TTRPG Daggerheart. Mantén un seguimiento de tus estadísticas, umbrales, habilidades e inventario en un lugar organizado.",
+  "requestFramePermissions": []
+}
