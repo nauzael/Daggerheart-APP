@@ -5,145 +5,104 @@ import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 
-type View = 'selection' | 'creator' | 'sheet';
-
 const App: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [view, setView] = useState<View>('selection');
-  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedCharacters = localStorage.getItem('daggerheart-characters');
-    if (savedCharacters) {
-      setCharacters(JSON.parse(savedCharacters));
+    try {
+      const savedCharacters = localStorage.getItem('daggerheart-characters');
+      if (savedCharacters) {
+        setCharacters(JSON.parse(savedCharacters));
+      }
+    } catch (error) {
+      console.error("Failed to load characters from localStorage", error);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('daggerheart-characters', JSON.stringify(characters));
-  }, [characters]);
-
-  useEffect(() => {
-    const handleInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setInstallPrompt(null);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (view === 'sheet' && selectedCharacter) {
-      document.title = `${selectedCharacter.name} - Hoja de Personaje`;
-    } else if (view === 'creator') {
-      document.title = 'Crear Personaje - Daggerheart';
-    } else {
-      document.title = 'Selección de Personaje - Daggerheart';
+    if (!isLoading) {
+      try {
+        localStorage.setItem('daggerheart-characters', JSON.stringify(characters));
+      } catch (error) {
+        console.error("Failed to save characters to localStorage", error);
+      }
     }
-  }, [view, selectedCharacter]);
+  }, [characters, isLoading]);
 
-  const handleCharacterCreate = (newCharacter: Character) => {
-    const newCharacters = [...characters, newCharacter];
-    setCharacters(newCharacters);
-    setSelectedCharacter(newCharacter);
-    setView('sheet');
+  const handleCharacterCreate = (character: Character) => {
+    setCharacters(prev => [...prev, character]);
+    setSelectedCharacterId(character.id);
+    setIsCreating(false);
   };
 
   const handleCharacterUpdate = (updatedCharacter: Character) => {
-    const newCharacters = characters.map(c => c.id === updatedCharacter.id ? updatedCharacter : c);
-    setCharacters(newCharacters);
-    setSelectedCharacter(updatedCharacter);
-  };
-
-  const handleCharacterSelect = (characterId: string) => {
-    const charToSelect = characters.find(c => c.id === characterId);
-    if (charToSelect) {
-        setSelectedCharacter(charToSelect);
-        setView('sheet');
-    }
-  };
-
-  const handleCharacterDelete = (characterId: string) => {
-    setCharacters(characters.filter(c => c.id !== characterId));
+    setCharacters(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
   };
   
-  const handleReturnToSelection = () => {
-    setSelectedCharacter(null);
-    setView('selection');
-  }
-
-  const handleShowCreator = () => {
-    setView('creator');
-  }
-
-  const handleInstallClick = () => {
-    if (!installPrompt) return;
-    (installPrompt as any).prompt();
-    (installPrompt as any).userChoice.then(() => {
-        setInstallPrompt(null);
-    });
+  const handleCharacterDelete = (id: string) => {
+      if (window.confirm('Are you sure you want to delete this character? This cannot be undone.')) {
+        setCharacters(prev => prev.filter(c => c.id !== id));
+        if (selectedCharacterId === id) {
+            setSelectedCharacterId(null);
+        }
+      }
   };
 
+  const selectedCharacter = characters.find(c => c.id === selectedCharacterId);
+
   const renderContent = () => {
-    switch(view) {
-        case 'creator':
-            return <CharacterCreator onCharacterCreate={handleCharacterCreate} onCancel={handleReturnToSelection} />;
-        case 'sheet':
-            if (selectedCharacter) {
-                return <CharacterSheet 
-                         character={selectedCharacter} 
-                         onUpdateCharacter={handleCharacterUpdate} 
-                         onReturnToSelection={handleReturnToSelection}
-                       />;
-            }
-            return null; // Should not happen
-        case 'selection':
-        default:
-            return <CharacterSelection 
-                      characters={characters}
-                      onSelectCharacter={handleCharacterSelect}
-                      onDeleteCharacter={handleCharacterDelete}
-                      onCreateNew={handleShowCreator}
-                   />;
+    if (isLoading) {
+      return <div className="text-center text-slate-400">Loading Characters...</div>;
     }
-  }
+
+    if (selectedCharacter) {
+      return (
+        <CharacterSheet
+          character={selectedCharacter}
+          onCharacterUpdate={handleCharacterUpdate}
+          onBack={() => setSelectedCharacterId(null)}
+        />
+      );
+    }
+
+    if (isCreating) {
+      return (
+        <CharacterCreator
+          onCharacterCreate={handleCharacterCreate}
+          onCancel={() => setIsCreating(false)}
+        />
+      );
+    }
+
+    return (
+      <CharacterSelection
+        characters={characters}
+        onSelectCharacter={setSelectedCharacterId}
+        onCreateCharacter={() => setIsCreating(true)}
+        onDeleteCharacter={handleCharacterDelete}
+      />
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
-      <header className="text-center mb-8">
-        <div className="inline-block mx-auto mb-2">
-            <DaggerheartLogo />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
-          Hoja de Personaje
-        </h1>
-        {installPrompt && (
-          <div className="mt-4">
-            <button 
-                onClick={handleInstallClick}
-                className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300 transform hover:scale-105"
-                aria-label="Instalar la aplicación en tu dispositivo"
-            >
-                Instalar Aplicación
-            </button>
+    <div className="bg-slate-900 text-slate-300 min-h-screen font-sans">
+      <header className="bg-slate-800 p-4 border-b-2 border-slate-700 shadow-lg">
+          <div className="container mx-auto flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                  <DaggerheartLogo />
+                  <h1 className="text-3xl font-bold text-slate-100">Daggerheart Character Manager</h1>
+              </div>
           </div>
-        )}
       </header>
-      <main className="container mx-auto max-w-7xl">
+      <main className="container mx-auto p-4 md:p-8">
         {renderContent()}
       </main>
-      <footer className="text-center mt-12 text-slate-500 text-sm">
-        <p>Daggerheart es una marca registrada de Darrington Press. Esta es una herramienta no oficial hecha por fans.</p>
+      <footer className="text-center p-4 text-xs text-slate-500 border-t border-slate-800 mt-8">
+        <p>This is an unofficial fan-made tool for the Daggerheart TTRPG by Darrington Press. Not affiliated with or endorsed by Darrington Press.</p>
       </footer>
     </div>
   );
