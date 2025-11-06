@@ -211,7 +211,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                     <label htmlFor="mixed-ancestry" className="text-slate-300">Create Mixed Ancestry</label>
                 </div>
                 {isMixedAncestry ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <input type="text" placeholder="Mixed Ancestry Name*" value={mixedAncestryName} onChange={e => setMixedAncestryName(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                         <select value={firstAncestry} onChange={e => setFirstAncestry(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
                            <option value="" disabled>First Ancestry (for 1st feature)</option>
@@ -223,15 +223,19 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                         </select>
                     </div>
                 ) : (
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                     <div className="mb-4">
+                        <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">Ancestry</label>
+                        <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full md:max-w-xs bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
                             {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                        </select>
-                        <select value={charData.community} onChange={handleSimpleChange('community')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            {COMMUNITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                         </select>
                      </div>
                 )}
+                <div>
+                     <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">Community</label>
+                     <select value={charData.community} onChange={handleSimpleChange('community')} className="w-full md:max-w-xs bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        {COMMUNITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                    </select>
+                </div>
             </div>
         </Card>
 
