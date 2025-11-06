@@ -1,6 +1,4 @@
-
 import React, { useState, useMemo } from 'react';
-// Fix: The DomainCard type is not exported from '../types'. It's defined in '../data/domainCards'.
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
@@ -19,6 +17,32 @@ interface CharacterSheetProps {
 }
 
 const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'instinct', 'knowledge', 'presence'];
+
+const FeatureDisplayItem: React.FC<{ name: string; type: string; description: string; }> = ({ name, type, description }) => {
+    const getTagClasses = (featureType: string) => {
+        switch (featureType.toLowerCase()) {
+            case 'standard': return 'bg-sky-800 text-sky-200 border-sky-600';
+            case 'hope': return 'bg-yellow-800 text-yellow-200 border-yellow-600';
+            case 'foundation': return 'bg-green-800 text-green-200 border-green-600';
+            case 'specialization': return 'bg-indigo-800 text-indigo-200 border-indigo-600';
+            case 'mastery': return 'bg-purple-800 text-purple-200 border-purple-600';
+            default: return 'bg-slate-700 text-slate-300 border-slate-600';
+        }
+    };
+    
+    return (
+        <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 space-y-1.5">
+            <div className="flex justify-between items-start gap-2">
+                <h4 className="font-bold text-slate-100 text-md leading-tight">{name}</h4>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${getTagClasses(type)}`}>
+                    {type}
+                </span>
+            </div>
+            <p className="text-sm text-slate-300">{description}</p>
+            {type === 'Hope' && <p className="text-xs text-yellow-400 font-semibold">Cost: 3 Hope</p>}
+        </div>
+    );
+};
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
@@ -142,7 +166,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
                             {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
                          </div>
-                     </Card>
+                    </Card>
                     <Card title="Characteristics & Experiences">
                         {character.ancestryFeatures && (
                             <div className="mb-4">
@@ -176,22 +200,33 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                      <Card title="Class & Subclass Features">
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Class Features</h3>
-                                <div className="space-y-2">
+                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
+                                <div className="space-y-3">
                                     {classFeatures.map(feature => (
-                                        <div key={feature.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                            <h4 className="font-bold text-slate-100">{feature.name} <span className="text-xs font-light text-slate-400">({feature.type}{feature.type === 'Hope' ? ' - 3 Hope' : ''})</span></h4>
-                                            <p className="text-sm text-slate-300">{feature.description}</p>
-                                        </div>
+                                        <FeatureDisplayItem 
+                                            key={feature.name}
+                                            name={feature.name}
+                                            type={feature.type}
+                                            description={feature.description}
+                                        />
                                     ))}
                                 </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-2">Subclass Features</h3>
-                                <div className="space-y-2">
-                                    {character.subclassFeatures.map(feature => <SubclassFeatureItem key={feature.name} feature={feature} />)}
+                            {character.subclassFeatures && character.subclassFeatures.length > 0 && (
+                                <div>
+                                    <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
+                                    <div className="space-y-3">
+                                        {character.subclassFeatures.map(feature => (
+                                            <FeatureDisplayItem 
+                                                key={feature.name}
+                                                name={feature.name}
+                                                type={feature.type}
+                                                description={feature.description}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </Card>
                 </div>
@@ -345,14 +380,6 @@ const EditableExperienceDisplay: React.FC<{ experience: Experience; onSave: (upd
         </div>
     );
 };
-
-
-const SubclassFeatureItem: React.FC<{feature: SubclassFeature}> = ({ feature }) => (
-    <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-        <h4 className="font-bold text-slate-100">{feature.name} <span className="text-xs font-light text-slate-400">({feature.type})</span></h4>
-        <p className="text-sm text-slate-300">{feature.description}</p>
-    </div>
-);
 
 const DomainCardDisplay: React.FC<{card: DomainCard}> = ({ card }) => (
     <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
