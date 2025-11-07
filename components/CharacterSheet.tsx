@@ -71,7 +71,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             const featureString = (item as any).feature || '';
             const featureParts = featureString.split(';').map((s: string) => s.trim());
             for (const part of featureParts) {
-                const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
+                const match = part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
                 if (match) {
                     const value = parseInt(match[1], 10);
                     const stats = match[2].toLowerCase().replace(/\./g, '');
@@ -118,7 +118,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             // Generic parser for simple mods
             const featureParts = featureString.split(';').map((s: string) => s.trim());
             for (const part of featureParts) {
-                const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
+                const match = part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
                 if (match) {
                     const value = parseInt(match[1], 10);
                     const stats = match[2].toLowerCase().replace(/\./g, '');
