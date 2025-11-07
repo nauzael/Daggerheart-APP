@@ -17,7 +17,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory'> = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault'> = {
     name: '',
     level: 1,
     subclass: '',
@@ -29,7 +29,7 @@ const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasi
     hope: 2,
     gold: 1, // Handful
     bolsa: 0,
-    domainCards: [],
+    domainCards: ['', ''],
 };
 
 const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, onCancel }) => {
@@ -66,7 +66,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
     const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
     const classItemValid = classItemOptions.length === 1 || (classItemOptions.length > 1 && classItemChoice !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid;
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid;
   }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions]);
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -75,7 +75,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         ...prev,
         class: newClassName,
         subclass: '',
-        domainCards: [],
+        domainCards: ['', ''],
     }));
   };
 
@@ -138,17 +138,11 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       setCharData(prev => ({...prev, ...newState}));
   };
 
-  const handleAbilityToggle = (abilityName: string) => {
+  const handleAbilitySelect = (slotIndex: number, cardName: string) => {
     setCharData(prev => {
-        const currentCards = prev.domainCards || [];
-        const newCards = currentCards.includes(abilityName)
-            ? currentCards.filter(d => d !== abilityName)
-            : [...currentCards, abilityName];
-        
-        if (newCards.length > 2) {
-            return prev;
-        }
-        return { ...prev, domainCards: newCards };
+        const currentCards = [...(prev.domainCards || ['', ''])];
+        currentCards[slotIndex] = cardName;
+        return { ...prev, domainCards: currentCards };
     });
   };
 
@@ -205,7 +199,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         hp: { max: selectedClass.startingHP, current: selectedClass.startingHP },
         stress: { max: 6, current: 6},
         armor: { max: armor.baseScore, current: armor.baseScore },
-        domainCards: charData.domainCards!,
+        domainCards: charData.domainCards!.filter(Boolean),
+        vault: [],
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
     } as Character;
     onCharacterCreate(finalCharacter);
@@ -333,8 +328,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
             <DomainSelector selectedClass={selectedClass} />
             <AbilitySelector
                 selectedDomains={selectedClass.domains}
-                selectedAbilities={charData.domainCards || []}
-                onAbilityToggle={handleAbilityToggle}
+                selectedAbilities={charData.domainCards || ['', '']}
+                onAbilitySelect={handleAbilitySelect}
             />
         </Card>
 

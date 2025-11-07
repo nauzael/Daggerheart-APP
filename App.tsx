@@ -42,6 +42,12 @@ const App: React.FC = () => {
                 const ancestryData = ANCESTRIES.find(a => a.name === char.ancestry);
                 char.ancestryFeatures = ancestryData ? ancestryData.features : [];
             }
+            
+            // Add vault if it's missing
+            if (char.vault === undefined) {
+                char.vault = [];
+            }
+
 
             return char as Character;
         });

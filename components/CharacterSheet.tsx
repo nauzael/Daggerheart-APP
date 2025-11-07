@@ -17,6 +17,7 @@ interface CharacterSheetProps {
 }
 
 const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'instinct', 'knowledge', 'presence'];
+const MAX_LOADOUT = 5;
 
 const FeatureDisplayItem: React.FC<{ name: string; type: string; description: string; }> = ({ name, type, description }) => {
     const getTagClasses = (featureType: string) => {
@@ -44,6 +45,29 @@ const FeatureDisplayItem: React.FC<{ name: string; type: string; description: st
     );
 };
 
+const DomainCardDisplay: React.FC<{card: DomainCard; button?: React.ReactNode}> = ({ card, button }) => (
+    <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+        <div className="flex justify-between items-start gap-2">
+            <div className="flex-grow">
+                <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
+                <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                {card.recallCost !== undefined && (
+                    <div className="flex items-center gap-1 text-yellow-300" title="Recall Cost">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-bold text-sm">{card.recallCost}</span>
+                    </div>
+                )}
+                {button}
+            </div>
+        </div>
+        <p className="text-sm text-slate-300 mt-2">{card.description}</p>
+    </div>
+);
+
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
@@ -60,6 +84,21 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         let majorThreshold: number;
         let severeThreshold: number;
 
+        const parseModifier = (part: string) => {
+            // Tries to match "Label: +N to Stat Name"
+            const matchWithLabel = part.match(/^([^:]+):\s*([+-]\d+)\s+to\s+(.+)/i);
+            if (matchWithLabel) {
+                return { value: parseInt(matchWithLabel[2], 10), stat: matchWithLabel[3].toLowerCase().replace(/\./g, '').trim() };
+            }
+
+            // Tries to match "+N to Stat Name" (no label), fixing a bug with the previous '\b' anchor
+            const matchWithoutLabel = part.match(/^\s*([+-]\d+)\s+to\s+(.+)/i);
+            if (matchWithoutLabel) {
+                return { value: parseInt(matchWithoutLabel[1], 10), stat: matchWithoutLabel[2].toLowerCase().replace(/\./g, '').trim() };
+            }
+            return null;
+        };
+
         // Apply trait modifiers first as they might be used in other calcs (e.g. Bare Bones)
         const allItemsAndFeaturesForTraits = [
             ...(character.primaryWeapon ? [character.primaryWeapon] : []),
@@ -71,13 +110,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             const featureString = (item as any).feature || '';
             const featureParts = featureString.split(';').map((s: string) => s.trim());
             for (const part of featureParts) {
-                const match = part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
-                if (match) {
-                    const value = parseInt(match[1], 10);
-                    const stats = match[2].toLowerCase().replace(/\./g, '');
+                const parsed = parseModifier(part);
+                if (parsed) {
                     TRAIT_NAMES_ORDER.forEach(trait => {
-                        if (stats.includes(trait) || stats.includes('all character traits')) {
-                            traits[trait] = (traits[trait] || 0) + value;
+                        if (parsed.stat.includes(trait) || parsed.stat.includes('all character traits')) {
+                            traits[trait] = (traits[trait] || 0) + parsed.value;
                         }
                     });
                 }
@@ -118,14 +155,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             // Generic parser for simple mods
             const featureParts = featureString.split(';').map((s: string) => s.trim());
             for (const part of featureParts) {
-                const match = part.match(/([\w\s]+):\s*([+-]\d+)\s+to\s+([\w\s]+)/i) || part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
-
-                if (match) {
-                    const value = parseInt(match[1].includes('to') ? match[1] : match[2], 10);
-                    const stats = (match[1].includes('to') ? match[2] : match[3]).toLowerCase().replace(/\./g, '');
-
-                    if (stats.includes('evasion')) evasion += value;
-                    if (stats.includes('armor score')) armorScore += value;
+                const parsed = parseModifier(part);
+                 if (parsed) {
+                    if (parsed.stat.includes('evasion')) evasion += parsed.value;
+                    if (parsed.stat.includes('armor score')) armorScore += parsed.value;
                 }
             }
             
@@ -214,8 +247,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, inventory: newInventory });
     };
     
-    const handleAddDomainCard = (cardName: string) => {
-        onUpdateCharacter({ ...character, domainCards: [...character.domainCards, cardName] });
+    const handleAddCardToVault = (cardName: string) => {
+        const newVault = [...character.vault, cardName];
+        onUpdateCharacter({ ...character, vault: newVault });
         setIsAddDomainCardModalOpen(false);
     };
 
@@ -235,16 +269,45 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, experiences: newExperiences });
     };
     
+    const handleSendToVault = (cardName: string) => {
+        const newDomainCards = character.domainCards.filter(c => c !== cardName);
+        const newVault = [...character.vault, cardName];
+        onUpdateCharacter({ ...character, domainCards: newDomainCards, vault: newVault });
+    };
+    
+    const handleRecallFromVault = (cardName: string) => {
+        const cardToRecall = DOMAIN_CARDS.find(c => c.name === cardName);
+        if (!cardToRecall) return;
+
+        const recallCost = cardToRecall.recallCost ?? 0;
+        if (character.hope < recallCost || character.domainCards.length >= MAX_LOADOUT) {
+            alert("Cannot recall card. Check Hope or loadout limit.");
+            return;
+        }
+
+        const newVault = character.vault.filter(c => c !== cardName);
+        const newDomainCards = [...character.domainCards, cardName];
+        const newHope = character.hope - recallCost;
+
+        onUpdateCharacter({ ...character, vault: newVault, domainCards: newDomainCards, hope: newHope });
+    };
+
+
     const communityFeature = COMMUNITIES.find(c => c.name === character.community)?.feature;
 
     const classFeatures = useMemo(() => {
         return CLASS_FEATURES.filter(feature => feature.className === character.class);
     }, [character.class]);
 
-    const characterDomainCards = useMemo(() => {
+    const loadoutCards = useMemo(() => {
         return DOMAIN_CARDS.filter(card => character.domainCards.includes(card.name))
                            .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name));
     }, [character.domainCards]);
+    
+    const vaultCards = useMemo(() => {
+        return DOMAIN_CARDS.filter(card => character.vault.includes(card.name))
+                           .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name));
+    }, [character.vault]);
 
     return (
         <div className="space-y-6">
@@ -372,7 +435,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 {/* Column 3 */}
                 <div className="flex flex-col gap-6">
                      <Card 
-                        title="Domain Cards"
+                        title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
                         headerContent={
                             <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
                                 + Add Card
@@ -380,11 +443,51 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         }
                     >
                         <div className="space-y-3">
-                            {characterDomainCards.map(card => (
-                                <DomainCardDisplay key={card.name} card={card} />
+                            {loadoutCards.map(card => (
+                                <DomainCardDisplay 
+                                    key={card.name} 
+                                    card={card}
+                                    button={
+                                        <button 
+                                            onClick={() => handleSendToVault(card.name)} 
+                                            className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
+                                            title="Send to Vault"
+                                        >
+                                            Vault
+                                        </button>
+                                    }
+                                />
                             ))}
+                            {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
                         </div>
                     </Card>
+                     <Card title="The Vault">
+                         <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                            {vaultCards.map(card => {
+                                const recallCost = card.recallCost ?? 0;
+                                const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
+                                const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
+                                
+                                return (
+                                    <DomainCardDisplay
+                                        key={card.name}
+                                        card={card}
+                                        button={
+                                            <button
+                                                onClick={() => handleRecallFromVault(card.name)}
+                                                disabled={isDisabled}
+                                                className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
+                                                title={title}
+                                            >
+                                                Recall
+                                            </button>
+                                        }
+                                    />
+                                );
+                            })}
+                            {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
+                         </div>
+                     </Card>
                      <Card title="Inventory">
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
@@ -440,7 +543,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
             {isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
             {isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
-            {isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddDomainCard} onClose={() => setIsAddDomainCardModalOpen(false)} />}
+            {isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddCardToVault} onClose={() => setIsAddDomainCardModalOpen(false)} />}
         </div>
     );
 };
@@ -518,26 +621,5 @@ const EditableExperienceDisplay: React.FC<{ experience: Experience; onSave: (upd
         </div>
     );
 };
-
-const DomainCardDisplay: React.FC<{card: DomainCard}> = ({ card }) => (
-    <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-        <div className="flex justify-between items-start">
-            <div>
-                <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
-                <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
-            </div>
-            {card.recallCost !== undefined && (
-                <div className="flex items-center gap-1 text-yellow-300 flex-shrink-0 ml-2">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-bold text-sm">{card.recallCost}</span>
-                </div>
-            )}
-        </div>
-        <p className="text-sm text-slate-300 mt-2">{card.description}</p>
-    </div>
-);
-
 
 export default CharacterSheet;

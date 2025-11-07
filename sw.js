@@ -18,6 +18,7 @@ const urlsToCache = [
   '/components/LevelUpModal.tsx',
   '/components/AddDomainCardModal.tsx',
   '/components/AddEquipmentModal.tsx',
+  '/components/DomainCardSelectorModal.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',

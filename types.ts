@@ -1,3 +1,11 @@
+// Fix: Moved SubclassFeature definition here to break a circular dependency and export it correctly.
+export interface SubclassFeature {
+    name: string;
+    subclass: string;
+    type: 'Foundation' | 'Specialization' | 'Mastery';
+    description: string;
+}
+
 // Fix: Replaced the incorrect component definition with the correct type definitions.
 export type TraitName = 'strength' | 'agility' | 'finesse' | 'instinct' | 'knowledge' | 'presence';
 
@@ -40,13 +48,6 @@ export interface Armor {
     feature?: string;
 }
 
-export interface SubclassFeature {
-    name: string;
-    subclass: string;
-    type: 'Foundation' | 'Specialization' | 'Mastery';
-    description: string;
-}
-
 export interface AncestryFeature {
     name: string;
     description: string;
@@ -70,6 +71,7 @@ export interface Character {
     inventory: string[];
     domains: string[];
     domainCards: string[];
+    vault: string[];
     notes: string[];
     hp: Stat;
     stress: Stat;

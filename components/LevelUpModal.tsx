@@ -3,6 +3,7 @@ import { Character, TraitName } from '../types';
 import { ADVANCEMENTS } from '../data/advancements';
 import { DOMAIN_CARDS } from '../data/domainCards';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
+import DomainCardSelectorModal from './DomainCardSelectorModal';
 
 interface LevelUpModalProps {
     character: Character;
@@ -27,7 +28,8 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
     const [mandatoryDomainCard, setMandatoryDomainCard] = useState<string>('');
     const [advancementDomainCards, setAdvancementDomainCards] = useState<string[]>([]);
     const [traitSelections, setTraitSelections] = useState<string[]>([]);
-
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+    const [selectorContext, setSelectorContext] = useState<{ type: 'mandatory' | 'advancement'; index: number; } | null>(null);
 
     const tierAchievements = useMemo(() => {
         const achievements: string[] = [];
@@ -103,14 +105,6 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         });
     };
     
-    const handleAdvancementCardSelection = (index: number, cardName: string) => {
-        setAdvancementDomainCards(prev => {
-            const newSelections = [...prev];
-            newSelections[index] = cardName;
-            return newSelections;
-        });
-    };
-
     const handleTraitSelectionChange = (index: number, trait: string) => {
         setTraitSelections(prev => {
             const newSelections = [...prev];
@@ -166,17 +160,69 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         });
 
         const newCards = [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean);
-        updatedChar.domainCards = [...updatedChar.domainCards, ...newCards];
+        updatedChar.vault = [...updatedChar.vault, ...newCards];
         
         onLevelUp(updatedChar);
     };
 
-    const availableDomainCards = useMemo(() => DOMAIN_CARDS
-        .filter(c => character.domains.includes(c.domain) && c.level <= newLevel && !character.domainCards.includes(c.name))
+    const baseAvailableCards = useMemo(() => DOMAIN_CARDS
+        .filter(c => 
+            character.domains.includes(c.domain) && 
+            c.level <= newLevel &&
+            !character.domainCards.includes(c.name) &&
+            !character.vault.includes(c.name)
+        )
         .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name)), [character, newLevel]);
+    
+    const cardsForModal = useMemo(() => {
+        if (!isSelectorOpen) return [];
+        const currentlySelected = [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean);
+        
+        // Exclude the card currently being edited from the "already selected" list
+        let cardToExclude = '';
+        if(selectorContext) {
+            if (selectorContext.type === 'mandatory') {
+                cardToExclude = mandatoryDomainCard;
+            } else {
+                cardToExclude = advancementDomainCards[selectorContext.index];
+            }
+        }
+        const otherSelectedCards = currentlySelected.filter(c => c !== cardToExclude);
+        return baseAvailableCards.filter(c => !otherSelectedCards.includes(c.name));
+
+    }, [isSelectorOpen, selectorContext, mandatoryDomainCard, advancementDomainCards, baseAvailableCards]);
+
+    const handleOpenSelector = (type: 'mandatory' | 'advancement', index = 0) => {
+        setSelectorContext({ type, index });
+        setIsSelectorOpen(true);
+    };
+
+    const handleCardSelectedFromModal = (cardName: string) => {
+        if (!selectorContext) return;
+
+        if (selectorContext.type === 'mandatory') {
+            setMandatoryDomainCard(cardName);
+        } else {
+            setAdvancementDomainCards(prev => {
+                const newSelections = [...prev];
+                newSelections[selectorContext.index] = cardName;
+                return newSelections;
+            });
+        }
+        setIsSelectorOpen(false);
+        setSelectorContext(null);
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            {isSelectorOpen && (
+                 <DomainCardSelectorModal
+                    availableCards={cardsForModal}
+                    onClose={() => setIsSelectorOpen(false)}
+                    onCardSelect={handleCardSelectedFromModal}
+                    title="Seleccionar Carta de Dominio"
+                />
+            )}
             <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-3xl font-bold text-teal-400">Level Up to {newLevel}!</h2>
@@ -244,13 +290,9 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                     <div className="space-y-4">
                         <div>
                             <h3 className="text-xl font-semibold text-teal-400 mb-2">Level Up Domain Card (Step 4)</h3>
-                             <select value={mandatoryDomainCard} onChange={e => setMandatoryDomainCard(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200">
-                                 <option value="">Select a Domain Card</option>
-                                 {availableDomainCards
-                                    .filter(c => !advancementDomainCards.includes(c.name))
-                                    .map(c => <option key={c.name} value={c.name}>{c.name} (Lvl {c.level}, {c.domain})</option>
-                                 )}
-                             </select>
+                             <button type="button" onClick={() => handleOpenSelector('mandatory')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 text-left hover:bg-slate-600">
+                                {mandatoryDomainCard || 'Seleccionar una Carta de Dominio'}
+                            </button>
                         </div>
                         
                         {advancementCardCount > 0 && (
@@ -258,12 +300,9 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                                 <h3 className="text-xl font-semibold text-teal-400 mb-2">Advancement Domain Cards</h3>
                                 <div className="space-y-3">
                                     {Array.from({ length: advancementCardCount }).map((_, index) => (
-                                        <select key={index} value={advancementDomainCards[index] || ''} onChange={e => handleAdvancementCardSelection(index, e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200">
-                                            <option value="">Select Advancement Card #{index+1}</option>
-                                            {availableDomainCards
-                                                .filter(c => c.name !== mandatoryDomainCard && !advancementDomainCards.filter((ac, i) => i !== index).includes(c.name))
-                                                .map(c => <option key={c.name} value={c.name}>{c.name} (Lvl {c.level}, {c.domain})</option>)}
-                                        </select>
+                                        <button key={index} type="button" onClick={() => handleOpenSelector('advancement', index)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 text-left hover:bg-slate-600">
+                                            {advancementDomainCards[index] || `Seleccionar Carta de Avance #${index + 1}`}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
