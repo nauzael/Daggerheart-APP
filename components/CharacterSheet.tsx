@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
@@ -52,59 +51,119 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
+    
+    const derivedStats = useMemo(() => {
+        // Start with base values
+        let evasion = character.evasion;
+        const traits: Character['traits'] = { ...character.traits };
+        let armorScore: number;
+        let majorThreshold: number;
+        let severeThreshold: number;
 
-    const equipmentModifiers = useMemo(() => {
-        const modifiers: { evasion: number; traits: Partial<Record<TraitName, number>> } = {
-            evasion: 0,
-            traits: {},
-        };
+        // Apply trait modifiers first as they might be used in other calcs (e.g. Bare Bones)
+        const allItemsAndFeaturesForTraits = [
+            ...(character.primaryWeapon ? [character.primaryWeapon] : []),
+            ...(character.secondaryWeapon ? [character.secondaryWeapon] : []),
+            ...(character.activeArmor ? [character.activeArmor] : []),
+        ];
 
-        const items = [character.activeArmor, character.primaryWeapon, character.secondaryWeapon].filter(Boolean);
-
-        for (const item of items) {
-            if (item && item.feature) {
-                const featureParts = item.feature.split(';').map(s => s.trim());
-                for (const part of featureParts) {
-                    const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
-                    if (match) {
-                        const value = parseInt(match[1], 10);
-                        let stats = match[2].toLowerCase().replace(/\./g, '');
-
-                        if (stats.includes('all character traits and evasion')) {
-                            modifiers.evasion += value;
-                            TRAIT_NAMES_ORDER.forEach(trait => {
-                                modifiers.traits[trait] = (modifiers.traits[trait] || 0) + value;
-                            });
-                            continue;
+        for (const item of allItemsAndFeaturesForTraits) {
+            const featureString = (item as any).feature || '';
+            const featureParts = featureString.split(';').map((s: string) => s.trim());
+            for (const part of featureParts) {
+                const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
+                if (match) {
+                    const value = parseInt(match[1], 10);
+                    const stats = match[2].toLowerCase().replace(/\./g, '');
+                    TRAIT_NAMES_ORDER.forEach(trait => {
+                        if (stats.includes(trait) || stats.includes('all character traits')) {
+                            traits[trait] = (traits[trait] || 0) + value;
                         }
-
-                        if (stats.includes('evasion')) {
-                            modifiers.evasion += value;
-                        }
-                        
-                        TRAIT_NAMES_ORDER.forEach(trait => {
-                            if (stats.includes(trait)) {
-                                 modifiers.traits[trait] = (modifiers.traits[trait] || 0) + value;
-                            }
-                        });
-                    }
+                    });
                 }
             }
         }
-        return modifiers;
-    }, [character.activeArmor, character.primaryWeapon, character.secondaryWeapon]);
+        
+        // Determine base armor and thresholds
+        const hasBareBones = character.domainCards.includes("Bare Bones");
+        if (hasBareBones && !character.activeArmor) {
+            armorScore = 3 + traits.strength;
+            const tier = character.level >= 8 ? 4 : character.level >= 5 ? 3 : character.level >= 2 ? 2 : 1;
+            const thresholds = { 1: [9, 19], 2: [11, 24], 3: [13, 31], 4: [15, 38] }[tier];
+            [majorThreshold, severeThreshold] = thresholds!;
+        } else if (character.activeArmor) {
+            armorScore = character.activeArmor.baseScore;
+            const [baseMajor, baseSevere] = character.activeArmor.baseThresholds.split('/').map(Number);
+            majorThreshold = baseMajor + character.level;
+            severeThreshold = baseSevere + character.level;
+        } else { // Unarmored
+            armorScore = 0;
+            majorThreshold = character.level;
+            severeThreshold = character.level * 2;
+        }
 
-    const modifiedEvasion = character.evasion + equipmentModifiers.evasion;
+        const allItemsAndFeatures = [
+            ...character.ancestryFeatures,
+            ...character.subclassFeatures,
+            ...(character.primaryWeapon ? [character.primaryWeapon] : []),
+            ...(character.secondaryWeapon ? [character.secondaryWeapon] : []),
+            ...(character.activeArmor ? [character.activeArmor] : []),
+            ...character.domainCards.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter((c): c is DomainCard => !!c),
+        ];
 
-    const modifiedTraits = useMemo(() => {
-        const newTraits = { ...character.traits };
-        for (const trait of TRAIT_NAMES_ORDER) {
-            if (equipmentModifiers.traits[trait]) {
-                newTraits[trait] += equipmentModifiers.traits[trait];
+        // Apply modifiers from all features
+        for (const item of allItemsAndFeatures) {
+            const featureString = (item as any).feature || item.description || '';
+
+            // Generic parser for simple mods
+            const featureParts = featureString.split(';').map((s: string) => s.trim());
+            for (const part of featureParts) {
+                const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
+                if (match) {
+                    const value = parseInt(match[1], 10);
+                    const stats = match[2].toLowerCase().replace(/\./g, '');
+                    if (stats.includes('evasion')) evasion += value;
+                    if (stats.includes('armor score')) armorScore += value;
+                }
+            }
+            
+            // Special/Complex cases
+            if (item.name === 'Nimble') evasion += 1;
+            if (item.name === 'Conjure Shield' && character.hope >= 2) evasion += character.proficiency;
+            if (item.name === 'Unwavering') { majorThreshold += 1; severeThreshold += 1; }
+            if (item.name === 'Unrelenting') { majorThreshold += 2; severeThreshold += 2; }
+            if (item.name === 'Undaunted') { majorThreshold += 3; severeThreshold += 3; }
+            if (item.name === 'Ascendant') severeThreshold += 4;
+            if (item.name === 'Bravesword' && featureString.includes('+3 to Severe damage threshold')) severeThreshold += 3;
+            if (item.name === 'Armorer') armorScore += 1;
+        }
+
+        return {
+            evasion: evasion,
+            traits: traits,
+            armorScore: Math.min(armorScore, 12),
+            damageThresholds: { major: majorThreshold, severe: severeThreshold }
+        };
+    }, [character]);
+
+    useEffect(() => {
+        if (character.armor.max !== derivedStats.armorScore || (derivedStats.armorScore === 0 && character.armor.current !== 0)) {
+            const currentRatio = (character.armor.max > 0) ? (character.armor.current / character.armor.max) : 1;
+            let newCurrent = Math.round(derivedStats.armorScore * currentRatio);
+            if(derivedStats.armorScore === 0) newCurrent = 0;
+            
+            if(character.armor.max !== derivedStats.armorScore || character.armor.current !== newCurrent) {
+                onUpdateCharacter({
+                    ...character,
+                    armor: {
+                        max: derivedStats.armorScore,
+                        current: newCurrent
+                    }
+                });
             }
         }
-        return newTraits;
-    }, [character.traits, equipmentModifiers.traits]);
+    }, [derivedStats.armorScore, character, onUpdateCharacter]);
+
 
     const handleStatChange = (stat: 'hp' | 'stress' | 'armor', value: number) => {
         const updatedCharacter = {
@@ -206,24 +265,20 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         <div className="space-y-4">
                             <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', 0)} color="bg-red-500" />
                             <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', 0)} color="bg-purple-500" />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={character.armor.max} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" />
+                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" />
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
                         <div className="mt-4 pt-4 border-t border-slate-700">
-                            <div className="flex justify-between items-center">
+                             <div className="flex justify-between items-center">
                                 <span className="font-semibold text-slate-300">Damage Thresholds</span>
-                                {character.activeArmor ? (
-                                    <span className="text-sm font-mono bg-slate-900 px-2 py-1 rounded">
-                                        {character.activeArmor.baseThresholds}
-                                    </span>
-                                ) : (
-                                    <span className="text-sm text-slate-400">Unarmored</span>
-                                )}
+                                <span className="text-sm font-mono bg-slate-900 px-2 py-1 rounded">
+                                    {derivedStats.damageThresholds.major} / {derivedStats.damageThresholds.severe}
+                                </span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mt-4">
                             <StatDisplay label="Proficiency" value={character.proficiency} />
-                            <StatDisplay label="Evasion" value={modifiedEvasion} />
+                            <StatDisplay label="Evasion" value={derivedStats.evasion} />
                         </div>
                     </Card>
                     <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
@@ -260,7 +315,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div className="flex flex-col gap-6">
                      <Card title="Traits">
                         <div className="grid grid-cols-2 gap-3">
-                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={modifiedTraits[trait]} />)}
+                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
                         </div>
                     </Card>
                      <Card title="Class & Subclass Features">
