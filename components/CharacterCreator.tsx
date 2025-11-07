@@ -6,8 +6,8 @@ import AbilitySelector from './AbilitySelector';
 import { CLASSES } from '../data/classes';
 import { ANCESTRIES } from '../data/ancestries';
 import { COMMUNITIES } from '../data/communities';
-import { ARMORS, PRIMARY_WEAPONS, SECONDARY_WEAPONS } from '../data/equipment';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
+import EquipmentSelectorModal from './EquipmentSelectorModal';
 
 interface CharacterCreatorProps {
   onCharacterCreate: (character: Character) => void;
@@ -46,6 +46,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [potionChoice, setPotionChoice] = useState('Minor Health Potion');
   const [classItemChoice, setClassItemChoice] = useState('');
   const [spellItem, setSpellItem] = useState('');
+  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+  const [equipmentConfirmed, setEquipmentConfirmed] = useState(false);
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
   
@@ -66,8 +68,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
     const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
     const classItemValid = classItemOptions.length === 1 || (classItemOptions.length > 1 && classItemChoice !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid;
-  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions]);
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed;
+  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed]);
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newClassName = e.target.value;
@@ -122,20 +124,15 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     return acc;
   }, {} as Record<string, number>), [assignedTraits]);
   
-  const handleEquipmentChange = (type: 'activeArmor' | 'primaryWeapon' | 'secondaryWeapon') => (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const itemName = e.target.value;
-      let item;
-      if (type === 'activeArmor') item = ARMORS.find(a => a.name === itemName);
-      if (type === 'primaryWeapon') item = PRIMARY_WEAPONS.find(w => w.name === itemName);
-      if (type === 'secondaryWeapon') item = SECONDARY_WEAPONS.find(w => w.name === itemName);
-
-      const newState: Partial<Character> = { [type]: item || undefined };
-
-      if (type === 'primaryWeapon' && (item as Weapon)?.burden === 'Two-Handed') {
-          newState.secondaryWeapon = undefined;
-      }
-      
-      setCharData(prev => ({...prev, ...newState}));
+  const handleEquipmentConfirm = (selections: { armor?: Armor, primary?: Weapon, secondary?: Weapon }) => {
+      setCharData(prev => ({
+          ...prev,
+          activeArmor: selections.armor,
+          primaryWeapon: selections.primary,
+          secondaryWeapon: selections.secondary
+      }));
+      setEquipmentConfirmed(true);
+      setIsEquipmentModalOpen(false);
   };
 
   const handleAbilitySelect = (slotIndex: number, cardName: string) => {
@@ -205,8 +202,6 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     } as Character;
     onCharacterCreate(finalCharacter);
   };
-
-  const primaryWeapon = charData.primaryWeapon as Weapon | undefined;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -287,26 +282,29 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         </Card>
         
         <Card title="Step 4 & 5: Stats & Equipment">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                 <div><span className="text-slate-400">HP:</span> <span className="font-bold text-slate-100">{selectedClass.startingHP}</span></div>
-                 <div><span className="text-slate-400">Evasion:</span> <span className="font-bold text-slate-100">{selectedClass.startingEvasion}</span></div>
-                 <div><span className="text-slate-400">Stress:</span> <span className="font-bold text-slate-100">6</span></div>
-                 <div><span className="text-slate-400">Hope:</span> <span className="font-bold text-slate-100">2</span></div>
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-700/50 p-4 rounded-lg">
+                <div className="text-center sm:text-left mb-4 sm:mb-0">
+                    <p className="font-semibold text-slate-200">Starting stats are determined by your class.</p>
+                    <p className="text-sm text-slate-400">Select your starting gear to see your final armor score.</p>
+                </div>
+                <button 
+                    type="button" 
+                    onClick={() => setIsEquipmentModalOpen(true)}
+                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2"
+                >
+                    {equipmentConfirmed ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                             <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                             <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                        </svg>
+                    )}
+                    {equipmentConfirmed ? 'Edit Equipment' : 'Select Equipment*'}
+                </button>
             </div>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 <select value={charData.activeArmor?.name || ''} onChange={handleEquipmentChange('activeArmor')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Select Armor</option>
-                    {ARMORS.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                 </select>
-                 <select value={charData.primaryWeapon?.name || ''} onChange={handleEquipmentChange('primaryWeapon')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Select Primary Weapon</option>
-                    {PRIMARY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}
-                 </select>
-                 <select value={charData.secondaryWeapon?.name || ''} onChange={handleEquipmentChange('secondaryWeapon')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" disabled={primaryWeapon?.burden === 'Two-Handed'}>
-                    <option value="">Select Secondary Weapon</option>
-                    {SECONDARY_WEAPONS.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}
-                 </select>
-             </div>
         </Card>
 
         <Card title="Step 6 & 7: Background & Experiences">
@@ -378,6 +376,20 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                 </div>
             </div>
         </Card>
+        
+        {isEquipmentModalOpen && (
+            <EquipmentSelectorModal 
+                isOpen={isEquipmentModalOpen}
+                onClose={() => setIsEquipmentModalOpen(false)}
+                onConfirm={handleEquipmentConfirm}
+                selectedClass={selectedClass}
+                initialSelections={{
+                    armor: charData.activeArmor,
+                    primary: charData.primaryWeapon,
+                    secondary: charData.secondaryWeapon
+                }}
+            />
+        )}
         
         <div className="mt-8 flex justify-center items-center gap-4">
             <button 
