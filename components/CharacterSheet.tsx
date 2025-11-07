@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature } from '../types';
 import Card from './Card';
@@ -51,6 +52,59 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
+
+    const equipmentModifiers = useMemo(() => {
+        const modifiers: { evasion: number; traits: Partial<Record<TraitName, number>> } = {
+            evasion: 0,
+            traits: {},
+        };
+
+        const items = [character.activeArmor, character.primaryWeapon, character.secondaryWeapon].filter(Boolean);
+
+        for (const item of items) {
+            if (item && item.feature) {
+                const featureParts = item.feature.split(';').map(s => s.trim());
+                for (const part of featureParts) {
+                    const match = part.match(/([+-]\d+)\s+to\s+(.+)/i);
+                    if (match) {
+                        const value = parseInt(match[1], 10);
+                        let stats = match[2].toLowerCase().replace(/\./g, '');
+
+                        if (stats.includes('all character traits and evasion')) {
+                            modifiers.evasion += value;
+                            TRAIT_NAMES_ORDER.forEach(trait => {
+                                modifiers.traits[trait] = (modifiers.traits[trait] || 0) + value;
+                            });
+                            continue;
+                        }
+
+                        if (stats.includes('evasion')) {
+                            modifiers.evasion += value;
+                        }
+                        
+                        TRAIT_NAMES_ORDER.forEach(trait => {
+                            if (stats.includes(trait)) {
+                                 modifiers.traits[trait] = (modifiers.traits[trait] || 0) + value;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        return modifiers;
+    }, [character.activeArmor, character.primaryWeapon, character.secondaryWeapon]);
+
+    const modifiedEvasion = character.evasion + equipmentModifiers.evasion;
+
+    const modifiedTraits = useMemo(() => {
+        const newTraits = { ...character.traits };
+        for (const trait of TRAIT_NAMES_ORDER) {
+            if (equipmentModifiers.traits[trait]) {
+                newTraits[trait] += equipmentModifiers.traits[trait];
+            }
+        }
+        return newTraits;
+    }, [character.traits, equipmentModifiers.traits]);
 
     const handleStatChange = (stat: 'hp' | 'stress' | 'armor', value: number) => {
         const updatedCharacter = {
@@ -155,9 +209,21 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <ThresholdTracker label="Armor" current={character.armor.current} max={character.armor.max} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" />
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
+                        <div className="mt-4 pt-4 border-t border-slate-700">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-slate-300">Damage Thresholds</span>
+                                {character.activeArmor ? (
+                                    <span className="text-sm font-mono bg-slate-900 px-2 py-1 rounded">
+                                        {character.activeArmor.baseThresholds}
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-slate-400">Unarmored</span>
+                                )}
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-3 mt-4">
                             <StatDisplay label="Proficiency" value={character.proficiency} />
-                            <StatDisplay label="Evasion" value={character.evasion} />
+                            <StatDisplay label="Evasion" value={modifiedEvasion} />
                         </div>
                     </Card>
                     <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
@@ -194,7 +260,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div className="flex flex-col gap-6">
                      <Card title="Traits">
                         <div className="grid grid-cols-2 gap-3">
-                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={character.traits[trait]} />)}
+                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={modifiedTraits[trait]} />)}
                         </div>
                     </Card>
                      <Card title="Class & Subclass Features">
