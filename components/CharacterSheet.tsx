@@ -118,10 +118,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             // Generic parser for simple mods
             const featureParts = featureString.split(';').map((s: string) => s.trim());
             for (const part of featureParts) {
-                const match = part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
+                const match = part.match(/([\w\s]+):\s*([+-]\d+)\s+to\s+([\w\s]+)/i) || part.match(/\b([+-]\d+)\s+to\s+([\w\s]+)/i);
+
                 if (match) {
-                    const value = parseInt(match[1], 10);
-                    const stats = match[2].toLowerCase().replace(/\./g, '');
+                    const value = parseInt(match[1].includes('to') ? match[1] : match[2], 10);
+                    const stats = (match[1].includes('to') ? match[2] : match[3]).toLowerCase().replace(/\./g, '');
+
                     if (stats.includes('evasion')) evasion += value;
                     if (stats.includes('armor score')) armorScore += value;
                 }
@@ -269,11 +271,26 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
                         <div className="mt-4 pt-4 border-t border-slate-700">
-                             <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-300">Damage Thresholds</span>
-                                <span className="text-sm font-mono bg-slate-900 px-2 py-1 rounded">
-                                    {derivedStats.damageThresholds.major} / {derivedStats.damageThresholds.severe}
-                                </span>
+                            <h4 className="font-semibold text-slate-300 mb-2 text-center">Damage Thresholds</h4>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
+                                    <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
+                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                        1-{derivedStats.damageThresholds.major - 1}
+                                    </div>
+                                </div>
+                                <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
+                                    <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
+                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                        {derivedStats.damageThresholds.major}
+                                    </div>
+                                </div>
+                                <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
+                                    <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
+                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                        {derivedStats.damageThresholds.severe}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mt-4">
