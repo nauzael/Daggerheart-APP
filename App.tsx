@@ -257,7 +257,7 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       <footer className="text-center mt-12 text-slate-500 text-sm">
-        <p>Daggerheart is a trademark of Darrington Press. This is an unofficial fan-made tool.</p>
+        <p>Daggerheart is a trademark of Darrington Press. This is an unofficial fan-made tool. Created by Nauzael</p>
       </footer>
     </div>
   );
