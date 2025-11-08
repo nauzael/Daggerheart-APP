@@ -165,6 +165,11 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         onLevelUp(updatedChar);
     };
 
+    const handleReset = () => {
+        setSelectedAdvancements([]);
+        setMandatoryDomainCard('');
+    };
+
     const baseAvailableCards = useMemo(() => DOMAIN_CARDS
         .filter(c => 
             character.domains.includes(c.domain) && 
@@ -271,7 +276,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                                         onChange={e => handleTraitSelectionChange(index, e.target.value)}
                                         className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
                                     >
-                                        <option value="">Select Trait #{index + 1}</option>
+                                        <option value="">Seleccionar Atributo #{index + 1}</option>
                                         {(Object.keys(character.traits) as TraitName[]).map(trait => (
                                             <option 
                                                 key={trait} 
@@ -310,10 +315,23 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                     </div>
                     
                     <div className="text-center pt-4">
-                         <button onClick={handleConfirm} disabled={!canConfirm} className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
-                            Confirm Level Up
-                         </button>
-                         {!canConfirm && <p className="text-red-400 text-sm mt-2">You must use exactly 2 advancement slots and select all required domain cards.</p>}
+                        <div className="flex justify-center items-center gap-4">
+                            <button 
+                                type="button"
+                                onClick={handleReset} 
+                                className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-lg"
+                            >
+                                Restaurar
+                            </button>
+                            <button 
+                                onClick={handleConfirm} 
+                                disabled={!canConfirm} 
+                                className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed"
+                            >
+                                Confirmar Subida de Nivel
+                            </button>
+                        </div>
+                        {!canConfirm && <p className="text-red-400 text-sm mt-2">Debes usar exactamente 2 espacios de avance y seleccionar todas las cartas de dominio requeridas.</p>}
                     </div>
                 </div>
             </div>
