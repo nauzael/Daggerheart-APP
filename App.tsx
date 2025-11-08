@@ -16,48 +16,47 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('selection');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
 
+  const migrateCharacter = (char: any): Character => {
+      // Ensure subclassFeatures exists and has foundation if it should.
+      if (!char.subclassFeatures || (Array.isArray(char.subclassFeatures) && char.subclassFeatures.length === 0)) {
+          const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === char.subclass && f.type === 'Foundation');
+          char.subclassFeatures = foundationFeature ? [foundationFeature] : [];
+      }
+      
+      // Add default for 'bolsa' if missing
+      if (char.bolsa === undefined) {
+          char.bolsa = 0;
+      }
+      
+      // Migrate notes from string to string[]
+      if (typeof char.notes === 'string' || char.notes === undefined || char.notes === null) {
+          char.notes = typeof char.notes === 'string' && char.notes.trim() !== '' ? char.notes.split('\n') : [];
+      }
+
+      // Migrate to include ancestryFeatures for older characters
+      if (!char.ancestryFeatures) {
+          const ancestryData = ANCESTRIES.find(a => a.name === char.ancestry);
+          char.ancestryFeatures = ancestryData ? ancestryData.features : [];
+      }
+      
+      // Add vault if it's missing
+      if (char.vault === undefined) {
+          char.vault = [];
+      }
+
+      // Add abilityUsage if it's missing
+      if (char.abilityUsage === undefined) {
+          char.abilityUsage = {};
+      }
+
+      return char as Character;
+  };
+
   useEffect(() => {
     const savedCharactersJSON = localStorage.getItem('daggerheart-characters');
     if (savedCharactersJSON) {
         const parsedCharacters: any[] = JSON.parse(savedCharactersJSON);
-
-        const migratedCharacters = parsedCharacters.map(char => {
-            // Ensure subclassFeatures exists and has foundation if it should.
-            if (!char.subclassFeatures || (Array.isArray(char.subclassFeatures) && char.subclassFeatures.length === 0)) {
-                const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === char.subclass && f.type === 'Foundation');
-                char.subclassFeatures = foundationFeature ? [foundationFeature] : [];
-            }
-            
-            // Add default for 'bolsa' if missing
-            if (char.bolsa === undefined) {
-                char.bolsa = 0;
-            }
-            
-            // Migrate notes from string to string[]
-            if (typeof char.notes === 'string' || char.notes === undefined || char.notes === null) {
-                char.notes = typeof char.notes === 'string' && char.notes.trim() !== '' ? char.notes.split('\n') : [];
-            }
-
-            // Migrate to include ancestryFeatures for older characters
-            if (!char.ancestryFeatures) {
-                const ancestryData = ANCESTRIES.find(a => a.name === char.ancestry);
-                char.ancestryFeatures = ancestryData ? ancestryData.features : [];
-            }
-            
-            // Add vault if it's missing
-            if (char.vault === undefined) {
-                char.vault = [];
-            }
-
-            // Add abilityUsage if it's missing
-            if (char.abilityUsage === undefined) {
-                char.abilityUsage = {};
-            }
-
-
-            return char as Character;
-        });
-
+        const migratedCharacters = parsedCharacters.map(migrateCharacter);
         setCharacters(migratedCharacters);
     }
 }, []);
@@ -162,7 +161,7 @@ const App: React.FC = () => {
               imported.forEach((char: any) => {
                 // Basic validation
                 if (char.id && char.name && char.class) {
-                  let newChar = { ...char };
+                  let newChar = migrateCharacter({ ...char });
                   // Ensure unique ID
                   if (existingIds.has(newChar.id)) {
                     newChar.id = crypto.randomUUID();
@@ -178,10 +177,13 @@ const App: React.FC = () => {
               alert("Error: JSON file is not a valid character array.");
             }
           } catch (error) {
+            console.error("Import error:", error);
             alert("Error reading file. Please ensure it's valid JSON.");
           }
         }
       };
+      // Allow re-importing the same file
+      event.target.value = '';
     }
   };
 
@@ -235,12 +237,16 @@ const App: React.FC = () => {
         aria-hidden="true"
       />
       <header className="text-center mb-8">
-        <div className="inline-block mx-auto mb-2">
-            <DaggerheartLogo />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
-          {getHeaderTitle()}
-        </h1>
+        {view !== 'sheet' && (
+          <>
+            <div className="inline-block mx-auto mb-2">
+                <DaggerheartLogo />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
+              {getHeaderTitle()}
+            </h1>
+          </>
+        )}
         {installPrompt && (
           <div className="mt-4">
             <button 
