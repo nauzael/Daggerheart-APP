@@ -19,6 +19,7 @@ const urlsToCache = [
   '/components/AddDomainCardModal.tsx',
   '/components/AddEquipmentModal.tsx',
   '/components/DomainCardSelectorModal.tsx',
+  '/components/RestModal.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',
@@ -27,7 +28,9 @@ const urlsToCache = [
   '/data/equipment.ts',
   '/data/subclassFeatures.ts',
   '/data/advancements.ts',
-  '/data/classFeatures.ts' // The new file
+  '/data/classFeatures.ts',
+  '/data/downtimeMoves.ts',
+  '/data/longRestDowntimeMoves.ts'
 ];
 
 self.addEventListener('install', event => {
@@ -35,7 +38,9 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // Add the new file to the cache
+        const updatedUrls = urlsToCache.filter(url => !url.includes('abilities.ts'));
+        return cache.addAll(updatedUrls);
       })
   );
 });

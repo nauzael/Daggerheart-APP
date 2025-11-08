@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ThresholdTrackerProps {
@@ -8,39 +7,52 @@ interface ThresholdTrackerProps {
   onSet: (value: number) => void;
   onReset?: () => void;
   color: string;
+  showAsMarked?: boolean;
 }
 
-const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max, onSet, onReset, color }) => {
+const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max, onSet, onReset, color, showAsMarked = false }) => {
     
     const handleClick = (index: number) => {
-        // If clicking the last filled box, unfill it. Otherwise, fill up to the clicked box.
-        const newValue = (index + 1 === current) ? index : index + 1;
-        onSet(newValue);
+        if (showAsMarked) {
+            const currentlyMarked = max - current;
+            // If clicking the last marked pip, unmark it. Otherwise, mark up to the clicked pip.
+            const newMarkedValue = (index + 1 === currentlyMarked) ? index : index + 1;
+            onSet(max - newMarkedValue);
+        } else {
+            // If clicking the last filled box, unfill it. Otherwise, fill up to the clicked box.
+            const newValue = (index + 1 === current) ? index : index + 1;
+            onSet(newValue);
+        }
     };
+
+    const displayValue = showAsMarked ? max - current : current;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-2">
                 <span className="font-bold text-slate-300">{label}</span>
                 <span className="text-sm font-mono bg-slate-900 px-2 py-1 rounded">
-                    {current} / {max}
+                    {displayValue} / {max}
                 </span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                {Array.from({ length: max }, (_, i) => (
-                    <div
-                        key={i}
-                        onClick={() => handleClick(i)}
-                        aria-label={`${label} point ${i + 1}`}
-                        role="checkbox"
-                        aria-checked={i < current}
-                        className={`w-8 h-8 rounded-full cursor-pointer border-2 transition-colors ${
-                            i < current
-                                ? `${color} border-slate-400`
-                                : 'bg-slate-700 border-slate-600 hover:bg-slate-600'
-                        }`}
-                    />
-                ))}
+                {Array.from({ length: max }, (_, i) => {
+                    const isFilled = showAsMarked ? i < (max - current) : i < current;
+                    return (
+                        <div
+                            key={i}
+                            onClick={() => handleClick(i)}
+                            aria-label={`${label} point ${i + 1}`}
+                            role="checkbox"
+                            aria-checked={isFilled}
+                            className={`w-8 h-8 rounded-full cursor-pointer border-2 transition-colors ${
+                                isFilled
+                                    ? `${color} border-slate-400`
+                                    : 'bg-slate-700 border-slate-600 hover:bg-slate-600'
+                            }`}
+                        />
+                    );
+                })}
                 {onReset && (
                     <button onClick={onReset} title={`Reset ${label}`} className="text-slate-400 hover:text-white transition-colors ml-2">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

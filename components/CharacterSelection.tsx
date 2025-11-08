@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Character } from '../types';
 import Card from './Card';
@@ -19,7 +20,7 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({ characters, onS
     };
     
     return (
-        <Card title="Character Selection">
+        <Card title="Character Roster">
             {characters.length > 0 ? (
                 <div className="space-y-4">
                     {characters.map(char => (

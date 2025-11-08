@@ -6,6 +6,7 @@ import StatDisplay from './StatDisplay';
 import LevelUpModal from './LevelUpModal';
 import AddEquipmentModal from './AddEquipmentModal';
 import AddDomainCardModal from './AddDomainCardModal';
+import RestModal from './RestModal';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
@@ -72,6 +73,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
     const [isAddDomainCardModalOpen, setIsAddDomainCardModalOpen] = useState(false);
+    const [isRestModalOpen, setIsRestModalOpen] = useState(false);
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
@@ -150,7 +152,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
         // Apply modifiers from all features
         for (const item of allItemsAndFeatures) {
-            const featureString = (item as any).feature || item.description || '';
+            // Use a type guard to safely access either the 'feature' or 'description' property.
+            const featureString = 'description' in item ? item.description : (item.feature || '');
 
             // Generic parser for simple mods
             const featureParts = featureString.split(';').map((s: string) => s.trim());
@@ -169,7 +172,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             if (item.name === 'Unrelenting') { majorThreshold += 2; severeThreshold += 2; }
             if (item.name === 'Undaunted') { majorThreshold += 3; severeThreshold += 3; }
             if (item.name === 'Ascendant') severeThreshold += 4;
-            if (item.name === 'Bravesword' && featureString.includes('+3 to Severe damage threshold')) severeThreshold += 3;
+            if (item.name === 'Bravesword' && 'feature' in item && item.feature?.includes('+3 to Severe damage threshold')) severeThreshold += 3;
             if (item.name === 'Armorer') armorScore += 1;
         }
 
@@ -257,6 +260,64 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter(updatedChar);
         setIsLevelUpModalOpen(false);
     };
+    
+    const handleConfirmRest = (restData: { type: 'short' | 'long'; moves: string[] }) => {
+        const { type, moves } = restData;
+        
+        const tempChar: Character = JSON.parse(JSON.stringify(character));
+
+        if (type === 'long') {
+            moves.forEach(moveId => {
+                switch (moveId) {
+                    case 'tend_all_wounds':
+                        tempChar.hp.current = tempChar.hp.max;
+                        break;
+                    case 'clear_all_stress':
+                        tempChar.stress.current = tempChar.stress.max;
+                        break;
+                    case 'repair_all_armor':
+                        tempChar.armor.current = derivedStats.armorScore;
+                        break;
+                    case 'prepare':
+                        tempChar.hope = Math.min(6, tempChar.hope + 1);
+                        break;
+                    case 'work_on_project':
+                        // No state change, alert is handled below
+                        break;
+                }
+            });
+    
+            if (moves.includes('work_on_project')) {
+                alert("Remember to describe your project work to your GM and manage its countdown.");
+            }
+            const prepareCount = moves.filter(m => m === 'prepare').length;
+            if (prepareCount > 0) {
+                alert(`You prepared for the day and gained ${prepareCount} Hope! (If you prepared with party members, you each gain 2 per 'Prepare' action instead).`);
+            }
+        } else { // Short rest
+            moves.forEach(moveId => {
+                switch (moveId) {
+                    case 'tend_wounds':
+                        tempChar.hp.current = Math.min(tempChar.hp.max, tempChar.hp.current + 2);
+                        break;
+                    case 'take_breather':
+                        tempChar.stress.current = Math.min(tempChar.stress.max, tempChar.stress.current + 2);
+                        break;
+                    case 'repair_armor':
+                        tempChar.armor.current = Math.min(derivedStats.armorScore, tempChar.armor.current + 2);
+                        break;
+                    case 'rummage_pack':
+                        tempChar.hope = Math.max(0, tempChar.hope - 1);
+                        alert("You spent 1 Hope and found a useful mundane item! Describe it to your GM.");
+                        break;
+                }
+            });
+        }
+    
+        onUpdateCharacter(tempChar);
+        setIsRestModalOpen(false);
+    };
+
 
     const handleEquipmentUpdate = (updatedChar: Character) => {
         onUpdateCharacter(updatedChar);
@@ -316,7 +377,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     <h1 className="text-5xl font-bold text-teal-400">{character.name}</h1>
                     <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
                 </div>
-                 <div>
+                 <div className="flex gap-2">
+                    <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
+                        Rest
+                    </button>
                     <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
                         Level Up!
                     </button>
@@ -328,9 +392,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div className="flex flex-col gap-6">
                     <Card title="Combat Stats">
                         <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', 0)} color="bg-red-500" />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', 0)} color="bg-purple-500" />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" />
+                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', 0)} color="bg-red-500" showAsMarked />
+                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', 0)} color="bg-purple-500" showAsMarked />
+                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" showAsMarked />
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
                         <div className="mt-4 pt-4 border-t border-slate-700">
@@ -544,6 +608,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             {isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
             {isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
             {isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddCardToVault} onClose={() => setIsAddDomainCardModalOpen(false)} />}
+            {isRestModalOpen && <RestModal character={character} onConfirm={handleConfirmRest} onClose={() => setIsRestModalOpen(false)} armorScore={derivedStats.armorScore}/>}
         </div>
     );
 };

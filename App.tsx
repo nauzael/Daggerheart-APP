@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character } from './types';
 import CharacterCreator from './components/CharacterCreator';
@@ -81,11 +82,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (view === 'sheet' && selectedCharacter) {
-      document.title = `${selectedCharacter.name} - Character Sheet`;
+      document.title = `${selectedCharacter.name} - Daggerheart Sheet`;
     } else if (view === 'creator') {
-      document.title = 'Create Character - Daggerheart';
+      document.title = 'New Character - Daggerheart';
     } else {
-      document.title = 'Character Selection - Daggerheart';
+      document.title = 'Character Roster - Daggerheart';
     }
   }, [view, selectedCharacter]);
 
@@ -179,6 +180,19 @@ const App: React.FC = () => {
     }
   };
 
+  const getHeaderTitle = () => {
+    switch(view) {
+        case 'creator':
+            return 'New Character';
+        case 'sheet':
+            // The sheet itself has a prominent H1 with the character name, 
+            // so keep the main header generic for this view.
+            return 'Character Sheet'; 
+        case 'selection':
+        default:
+            return 'Character Roster';
+    }
+  }
 
   const renderContent = () => {
     switch(view) {
@@ -207,13 +221,20 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8 overflow-hidden">
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80rem] h-[50rem] blur-3xl pointer-events-none"
+        style={{
+            background: 'radial-gradient(ellipse at 50% 40%, rgba(20, 184, 166, 0.15) 0%, transparent 70%)'
+        }}
+        aria-hidden="true"
+      />
       <header className="text-center mb-8">
         <div className="inline-block mx-auto mb-2">
             <DaggerheartLogo />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
-          Character Sheet
+          {getHeaderTitle()}
         </h1>
         {installPrompt && (
           <div className="mt-4">
