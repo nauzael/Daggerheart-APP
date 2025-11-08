@@ -78,6 +78,7 @@ export interface Character {
     armor: Stat;
     evasion: number;
     subclassFeatures: SubclassFeature[];
+    abilityUsage: { [key: string]: boolean | number };
     primaryWeapon?: Weapon;
     secondaryWeapon?: Weapon;
     activeArmor?: Armor;

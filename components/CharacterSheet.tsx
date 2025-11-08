@@ -20,7 +20,29 @@ interface CharacterSheetProps {
 const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'instinct', 'knowledge', 'presence'];
 const MAX_LOADOUT = 5;
 
-const FeatureDisplayItem: React.FC<{ name: string; type: string; description: string; }> = ({ name, type, description }) => {
+const getSpellcastTrait = (char: Character): TraitName => {
+    switch(char.class) {
+        case 'Bard':
+        case 'Seraph':
+            return 'presence';
+        case 'Druid':
+            return 'instinct';
+        case 'Sorcerer':
+        case 'Wizard':
+            return 'knowledge';
+        default:
+            return 'knowledge'; // A sensible default
+    }
+}
+
+
+const FeatureDisplayItem: React.FC<{ 
+    name: string; 
+    type: string; 
+    description: string;
+    character: Character;
+    onUsageChange: (name: string, value: boolean | number) => void;
+}> = ({ name, type, description, character, onUsageChange }) => {
     const getTagClasses = (featureType: string) => {
         switch (featureType.toLowerCase()) {
             case 'standard': return 'bg-sky-800 text-sky-200 border-sky-600';
@@ -32,6 +54,47 @@ const FeatureDisplayItem: React.FC<{ name: string; type: string; description: st
         }
     };
     
+    const usageType = useMemo(() => {
+        const descLower = description.toLowerCase();
+        if (descLower.includes('once per long rest')) return 'once-per-long-rest';
+        if (descLower.includes('once per rest')) return 'once-per-rest';
+        return null;
+    }, [description]);
+    
+    const isUsed = !!character.abilityUsage?.[name];
+
+    // Special handling for multi-use abilities
+    if (name === 'Gifted Performer') {
+        const songs = ['Relaxing Song', 'Epic Song', 'Heartbreaking Song'];
+        return (
+             <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 space-y-1.5">
+                <div className="flex justify-between items-start gap-2">
+                    <h4 className="font-bold text-slate-100 text-md leading-tight">{name}</h4>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${getTagClasses(type)}`}>{type}</span>
+                </div>
+                <p className="text-sm text-slate-300">{description}</p>
+                <div className="mt-2 pt-2 border-t border-slate-600/50 space-y-1">
+                    <h5 className="text-sm font-semibold text-slate-300">Song Uses (Once each per long rest)</h5>
+                    {songs.map(song => {
+                        const songKey = `${name}: ${song}`;
+                        const isSongUsed = !!character.abilityUsage?.[songKey];
+                        return (
+                            <label key={songKey} className="flex items-center gap-2 cursor-pointer text-sm text-slate-400">
+                                <input
+                                    type="checkbox"
+                                    checked={isSongUsed}
+                                    onChange={(e) => onUsageChange(songKey, e.target.checked)}
+                                    className="h-4 w-4 rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-teal-500"
+                                />
+                                {song}
+                            </label>
+                        )
+                    })}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 space-y-1.5">
             <div className="flex justify-between items-start gap-2">
@@ -42,32 +105,127 @@ const FeatureDisplayItem: React.FC<{ name: string; type: string; description: st
             </div>
             <p className="text-sm text-slate-300">{description}</p>
             {type === 'Hope' && <p className="text-xs text-yellow-400 font-semibold">Cost: 3 Hope</p>}
+            {usageType && (
+                 <div className="mt-2 pt-2 border-t border-slate-600/50">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-400">
+                        <input
+                            type="checkbox"
+                            checked={isUsed}
+                            onChange={(e) => onUsageChange(name, e.target.checked)}
+                            className="h-4 w-4 rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-teal-500"
+                        />
+                        {usageType === 'once-per-rest' ? 'Used this Rest' : 'Used this Long Rest'}
+                    </label>
+                </div>
+            )}
         </div>
     );
 };
 
-const DomainCardDisplay: React.FC<{card: DomainCard; button?: React.ReactNode}> = ({ card, button }) => (
-    <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-        <div className="flex justify-between items-start gap-2">
-            <div className="flex-grow">
-                <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
-                <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
+const DomainCardDisplay: React.FC<{
+    card: DomainCard; 
+    button?: React.ReactNode;
+    character: Character;
+    onUsageChange: (name: string, value: boolean | number) => void;
+}> = ({ card, button, character, onUsageChange }) => {
+    
+    const usageInfo = useMemo(() => {
+        const descLower = card.description.toLowerCase();
+        if (descLower.includes('once per long rest')) return { type: 'once-per-long-rest' };
+        if (descLower.includes('once per rest')) return { type: 'once-per-rest' };
+
+        const tokenMatch = descLower.match(/place a number of tokens equal to your (\w+)/);
+        const spellcastTraitName = getSpellcastTrait(character);
+
+        if (tokenMatch && tokenMatch[1]) {
+            const attribute = tokenMatch[1] as TraitName | 'proficiency';
+            return { type: 'tokens', attribute, maxValue: character.traits[attribute] || character.proficiency };
+        }
+        
+        // Special cases for tokens
+        const specialTokenCases: { [key: string]: { attribute: TraitName | 'proficiency', maxValue: number } } = {
+            'Unleash Chaos': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
+            'Inspirational Words': { attribute: 'presence', maxValue: character.traits.presence },
+            'Thorn Skin': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
+            'Restoration': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
+        };
+        if (specialTokenCases[card.name]) return { type: 'tokens', ...specialTokenCases[card.name] };
+
+        return null;
+    }, [card.description, card.name, character]);
+
+    const usageValue = character.abilityUsage?.[card.name];
+
+    const renderUsageTracker = () => {
+        if (!usageInfo) return null;
+        
+        if (usageInfo.type === 'once-per-rest' || usageInfo.type === 'once-per-long-rest') {
+            const isUsed = !!usageValue;
+            return (
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-400">
+                    <input
+                        type="checkbox"
+                        checked={isUsed}
+                        onChange={(e) => onUsageChange(card.name, e.target.checked)}
+                        className="h-4 w-4 rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-teal-500"
+                    />
+                    {usageInfo.type === 'once-per-rest' ? 'Used this Rest' : 'Used this Long Rest'}
+                </label>
+            );
+        }
+
+        if (usageInfo.type === 'tokens') {
+            const maxTokens = usageInfo.maxValue;
+
+            // Per user request, all token trackers start at 0 and reset to 0.
+            const defaultValue = 0;
+            const currentTokens = typeof usageValue === 'number' ? usageValue : defaultValue;
+            const resetValue = defaultValue;
+
+            return (
+                <ThresholdTracker
+                    label="Tokens"
+                    current={currentTokens}
+                    max={maxTokens}
+                    onSet={(value) => onUsageChange(card.name, value)}
+                    onReset={() => onUsageChange(card.name, resetValue)}
+                    color="bg-cyan-500"
+                    size="small"
+                />
+            )
+        }
+        return null;
+    }
+
+    return (
+        <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+            <div className="flex justify-between items-start gap-2">
+                <div className="flex-grow">
+                    <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
+                    <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    {card.recallCost !== undefined && (
+                        <div className="flex items-center gap-1 text-yellow-300" title="Recall Cost">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-bold text-sm">{card.recallCost}</span>
+                        </div>
+                    )}
+                    {button}
+                </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                {card.recallCost !== undefined && (
-                    <div className="flex items-center gap-1 text-yellow-300" title="Recall Cost">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-bold text-sm">{card.recallCost}</span>
-                    </div>
-                )}
-                {button}
-            </div>
+            <p className="text-sm text-slate-300 mt-2">{card.description}</p>
+            {usageInfo && (
+                <div className="mt-2 pt-2 border-t border-slate-600/50">
+                    {renderUsageTracker()}
+                </div>
+            )}
         </div>
-        <p className="text-sm text-slate-300 mt-2">{card.description}</p>
-    </div>
-);
+    );
+};
+
 
 const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateCharacter, onReturnToSelection }) => {
     const [isLevelUpModalOpen, setIsLevelUpModalOpen] = useState(false);
@@ -214,6 +372,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const handleHopeChange = (value: number) => {
         onUpdateCharacter({ ...character, hope: value });
     };
+    
+    const handleAbilityUsageChange = (name: string, value: boolean | number) => {
+        const newUsage = { ...character.abilityUsage, [name]: value };
+        onUpdateCharacter({ ...character, abilityUsage: newUsage });
+    };
 
     const handleSimpleValueChange = (field: 'gold' | 'bolsa', change: number) => {
         const currentValue = character[field] || 0;
@@ -261,6 +424,15 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         setIsLevelUpModalOpen(false);
     };
     
+    const loadoutCards = useMemo(() => {
+        return DOMAIN_CARDS.filter(card => character.domainCards.includes(card.name))
+                           .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name));
+    }, [character.domainCards]);
+
+    const classFeatures = useMemo(() => {
+        return CLASS_FEATURES.filter(feature => feature.className === character.class);
+    }, [character.class]);
+    
     const handleConfirmRest = (restData: { type: 'short' | 'long'; moves: string[] }) => {
         const { type, moves } = restData;
         
@@ -282,7 +454,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         tempChar.hope = Math.min(6, tempChar.hope + 1);
                         break;
                     case 'work_on_project':
-                        // No state change, alert is handled below
                         break;
                 }
             });
@@ -313,6 +484,51 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 }
             });
         }
+        
+        // Reset ability usages
+        const newAbilityUsage = { ...tempChar.abilityUsage };
+        const allTrackableAbilities = [
+            ...classFeatures,
+            ...character.subclassFeatures,
+            ...loadoutCards,
+        ];
+
+        allTrackableAbilities.forEach(ability => {
+            const desc = 'description' in ability ? ability.description.toLowerCase() : '';
+            const isOncePerRest = desc.includes('once per rest');
+            const isOncePerLongRest = desc.includes('once per long rest');
+            
+            const resetAbility = (name: string) => {
+                delete newAbilityUsage[name];
+            };
+            
+            if (type === 'long') {
+                if (isOncePerRest || isOncePerLongRest) resetAbility(ability.name);
+                
+                // Special case for multi-use abilities
+                if (ability.name === 'Gifted Performer') {
+                    resetAbility(`${ability.name}: Relaxing Song`);
+                    resetAbility(`${ability.name}: Epic Song`);
+                    resetAbility(`${ability.name}: Heartbreaking Song`);
+                }
+                
+                // Handle token resets for long rests
+                const spellcastTraitName = getSpellcastTrait(tempChar);
+                const tokenResets: { [key: string]: number } = {
+                    'Inspirational Words': tempChar.traits.presence,
+                    'Strategic Approach': tempChar.traits.knowledge,
+                    'Restoration': tempChar.traits[spellcastTraitName],
+                };
+                if (tokenResets[ability.name] !== undefined) {
+                    newAbilityUsage[ability.name] = tokenResets[ability.name];
+                }
+
+            } else if (type === 'short') {
+                if (isOncePerRest) resetAbility(ability.name);
+            }
+        });
+        
+        tempChar.abilityUsage = newAbilityUsage;
     
         onUpdateCharacter(tempChar);
         setIsRestModalOpen(false);
@@ -356,15 +572,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
     const communityFeature = COMMUNITIES.find(c => c.name === character.community)?.feature;
 
-    const classFeatures = useMemo(() => {
-        return CLASS_FEATURES.filter(feature => feature.className === character.class);
-    }, [character.class]);
-
-    const loadoutCards = useMemo(() => {
-        return DOMAIN_CARDS.filter(card => character.domainCards.includes(card.name))
-                           .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name));
-    }, [character.domainCards]);
-    
     const vaultCards = useMemo(() => {
         return DOMAIN_CARDS.filter(card => character.vault.includes(card.name))
                            .sort((a,b) => a.level - b.level || a.name.localeCompare(b.name));
@@ -392,9 +599,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div className="flex flex-col gap-6">
                     <Card title="Combat Stats">
                         <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', 0)} color="bg-red-500" showAsMarked />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', 0)} color="bg-purple-500" showAsMarked />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', 0)} color="bg-sky-500" showAsMarked />
+                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', character.hp.max)} color="bg-red-500" showAsMarked />
+                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', character.stress.max)} color="bg-purple-500" showAsMarked />
+                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked />
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
                         <div className="mt-4 pt-4 border-t border-slate-700">
@@ -473,6 +680,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                             name={feature.name}
                                             type={feature.type}
                                             description={feature.description}
+                                            character={character}
+                                            onUsageChange={handleAbilityUsageChange}
                                         />
                                     ))}
                                 </div>
@@ -487,6 +696,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                                 name={feature.name}
                                                 type={feature.type}
                                                 description={feature.description}
+                                                character={character}
+                                                onUsageChange={handleAbilityUsageChange}
                                             />
                                         ))}
                                     </div>
@@ -520,6 +731,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                             Vault
                                         </button>
                                     }
+                                    character={character}
+                                    onUsageChange={handleAbilityUsageChange}
                                 />
                             ))}
                             {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
@@ -546,6 +759,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                                 Recall
                                             </button>
                                         }
+                                        character={character}
+                                        onUsageChange={handleAbilityUsageChange}
                                     />
                                 );
                             })}

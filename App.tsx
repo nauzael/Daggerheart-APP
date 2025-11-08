@@ -49,6 +49,11 @@ const App: React.FC = () => {
                 char.vault = [];
             }
 
+            // Add abilityUsage if it's missing
+            if (char.abilityUsage === undefined) {
+                char.abilityUsage = {};
+            }
+
 
             return char as Character;
         });

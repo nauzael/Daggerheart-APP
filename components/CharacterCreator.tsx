@@ -17,7 +17,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault'> = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage'> = {
     name: '',
     level: 1,
     subclass: '',
@@ -198,6 +198,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         armor: { max: armor.baseScore, current: armor.baseScore },
         domainCards: charData.domainCards!.filter(Boolean),
         vault: [],
+        abilityUsage: {},
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
     } as Character;
     onCharacterCreate(finalCharacter);
