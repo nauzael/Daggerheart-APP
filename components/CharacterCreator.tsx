@@ -3,12 +3,13 @@ import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm } from
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
-import { CLASSES } from '../data/classes';
-import { ANCESTRIES } from '../data/ancestries';
-import { COMMUNITIES } from '../data/communities';
+import { Class, CLASSES } from '../data/classes';
+import { Ancestry, ANCESTRIES } from '../data/ancestries';
+import { Community, COMMUNITIES } from '../data/communities';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import EquipmentSelectorModal from './EquipmentSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
+import SelectionModal from './SelectionModal';
 
 
 interface CharacterCreatorProps {
@@ -19,9 +20,10 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage' | 'beastForms' | 'activeBeastFormName'> = {
+const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage' | 'beastForms' | 'activeBeastFormName'> = {
     name: '',
     level: 1,
+    class: CLASSES[0].name,
     subclass: '',
     ancestry: ANCESTRIES[0].name,
     community: COMMUNITIES[0].name,
@@ -34,11 +36,23 @@ const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasi
     domainCards: ['', ''],
 };
 
+// Helper component for displaying selection and opening modal
+const SelectionDisplay: React.FC<{label: string, value: string, onClick: () => void, className?: string}> = ({ label, value, onClick, className }) => (
+    <div className={className}>
+        <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">{label}</label>
+        <button
+            type="button"
+            onClick={onClick}
+            className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500 text-left h-10 truncate"
+        >
+            {value || `Select a ${label}`}
+        </button>
+    </div>
+);
+
+
 const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, onCancel }) => {
-  const [charData, setCharData] = useState<Partial<Character>>({
-      ...initialCharacterState,
-      class: CLASSES[0].name
-  });
+  const [charData, setCharData] = useState<Partial<Character>>(initialCharacterState);
   const [notes, setNotes] = useState('');
   const [assignedTraits, setAssignedTraits] = useState<Partial<Record<keyof Character['traits'], string>>>({});
   const [isMixedAncestry, setIsMixedAncestry] = useState(false);
@@ -51,6 +65,11 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [equipmentConfirmed, setEquipmentConfirmed] = useState(false);
   const [selectedBeastform, setSelectedBeastform] = useState('');
+  
+  const [modalConfig, setModalConfig] = useState<{
+      isOpen: boolean;
+      type: 'class' | 'ancestry' | 'community' | 'first_ancestry' | 'second_ancestry' | 'subclass' | null;
+  }>({ isOpen: false, type: null });
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
   const tier1Beastforms = useMemo(() => ALL_BEASTFORMS.filter(b => b.tier === 1), []);
@@ -79,8 +98,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed && druidFormValid;
   }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed, selectedClass.name, selectedBeastform]);
 
-  const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newClassName = e.target.value;
+  const handleClassChange = (newClassName: string) => {
     setCharData(prev => ({
         ...prev,
         class: newClassName,
@@ -102,18 +120,12 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
  const handleTraitAssignment = useCallback((traitName: keyof Character['traits'], value: string) => {
     setAssignedTraits(prev => {
         const newAssigned = { ...prev };
-        
-        // Find the old value for the current trait to correctly manage counts
         const oldValue = prev[traitName];
-
-        // If setting a new value, update the state
         if (value !== "") {
             newAssigned[traitName] = value;
         } else {
-            // If clearing the value, remove the trait from the assigned list
             delete newAssigned[traitName];
         }
-        
         return newAssigned;
     });
 }, []);
@@ -221,18 +233,192 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     onCharacterCreate(finalCharacter);
   };
 
+  const openModal = (type: 'class' | 'ancestry' | 'community' | 'first_ancestry' | 'second_ancestry' | 'subclass') => {
+      setModalConfig({ isOpen: true, type });
+  };
+  const closeModal = () => setModalConfig({ isOpen: false, type: null });
+
+  const handleModalConfirm = (selection: string) => {
+      switch (modalConfig.type) {
+          case 'class':
+              handleClassChange(selection);
+              break;
+          case 'ancestry':
+              setCharData(prev => ({ ...prev, ancestry: selection }));
+              break;
+          case 'community':
+              setCharData(prev => ({ ...prev, community: selection }));
+              break;
+          case 'first_ancestry':
+              setFirstAncestry(selection);
+              break;
+          case 'second_ancestry':
+              setSecondAncestry(selection);
+              break;
+          case 'subclass':
+              setCharData(prev => ({ ...prev, subclass: selection }));
+              break;
+      }
+      closeModal();
+  };
+  
+  const renderClassDetails = (item: Class) => (
+      <div className="space-y-4 text-slate-300">
+          <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
+          <p className="text-sm">Domains: <span className="font-semibold text-slate-100">{item.domains.join(', ')}</span></p>
+          <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="bg-slate-800 p-2 rounded-lg">
+                  <p className="text-sm text-slate-400">Starting HP</p>
+                  <p className="text-xl font-bold text-slate-100">{item.startingHP}</p>
+              </div>
+              <div className="bg-slate-800 p-2 rounded-lg">
+                  <p className="text-sm text-slate-400">Starting Evasion</p>
+                  <p className="text-xl font-bold text-slate-100">{item.startingEvasion}</p>
+              </div>
+          </div>
+          <div>
+              <h4 className="font-semibold text-slate-200">Subclasses:</h4>
+              <ul className="list-disc list-inside text-sm text-slate-400">
+                  {item.subclasses.map(sc => <li key={sc}>{sc}</li>)}
+              </ul>
+          </div>
+          <div>
+              <h4 className="font-semibold text-slate-200">Starting Item:</h4>
+              <p className="text-sm italic text-slate-400">{item.items}</p>
+          </div>
+      </div>
+  );
+
+  const renderAncestryDetails = (item: Ancestry) => (
+      <div className="space-y-4 text-slate-300">
+          <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
+          <div>
+              <h4 className="font-semibold text-slate-200">Features:</h4>
+              <ul className="space-y-2 mt-1">
+                  {item.features.map(feature => (
+                      <li key={feature.name} className="p-2 bg-slate-800 rounded-lg">
+                          <p className="font-bold text-slate-100">{feature.name}</p>
+                          <p className="text-sm text-slate-400">{feature.description}</p>
+                      </li>
+                  ))}
+              </ul>
+          </div>
+      </div>
+  );
+
+  const renderCommunityDetails = (item: Community) => (
+      <div className="space-y-4 text-slate-300">
+          <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
+          <div>
+              <h4 className="font-semibold text-slate-200">Feature:</h4>
+              <div className="mt-1 p-2 bg-slate-800 rounded-lg">
+                  <p className="font-bold text-slate-100">{item.feature.name}</p>
+                  <p className="text-sm text-slate-400">{item.feature.description}</p>
+              </div>
+          </div>
+          <div>
+              <h4 className="font-semibold text-slate-200">Adjectives:</h4>
+              <p className="text-sm italic text-slate-400">{item.adjectives.join(', ')}</p>
+          </div>
+      </div>
+  );
+
+  const renderSubclassDetails = (item: { name: string }) => {
+    const foundation = SUBCLASS_FEATURES.find(f => f.subclass === item.name && f.type === 'Foundation');
+    if (!foundation) return <p className="text-slate-400">Details not available for this subclass.</p>;
+
+    return (
+        <div className="space-y-4 text-slate-300">
+            <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
+            <div>
+                <h4 className="font-semibold text-slate-200">Foundation Feature:</h4>
+                <div className="mt-1 p-2 bg-slate-800 rounded-lg">
+                    <p className="font-bold text-slate-100">{foundation.name}</p>
+                    <p className="text-sm text-slate-400">{foundation.description}</p>
+                </div>
+            </div>
+        </div>
+    );
+  };
+
+  const renderModal = () => {
+      if (!modalConfig.isOpen) return null;
+
+      let props: any;
+      switch (modalConfig.type) {
+          case 'class':
+              props = {
+                  title: "Select a Class",
+                  items: CLASSES,
+                  renderItemDetails: renderClassDetails,
+                  initialSelection: charData.class,
+              };
+              break;
+          case 'subclass':
+              props = {
+                  title: "Select a Subclass",
+                  items: selectedClass.subclasses.map(sc => ({ name: sc })),
+                  renderItemDetails: renderSubclassDetails,
+                  initialSelection: charData.subclass,
+              };
+              break;
+          case 'ancestry':
+              props = {
+                  title: "Select an Ancestry",
+                  items: ANCESTRIES,
+                  renderItemDetails: renderAncestryDetails,
+                  initialSelection: charData.ancestry,
+              };
+              break;
+          case 'community':
+              props = {
+                  title: "Select a Community",
+                  items: COMMUNITIES,
+                  renderItemDetails: renderCommunityDetails,
+                  initialSelection: charData.community,
+              };
+              break;
+          case 'first_ancestry':
+              props = {
+                  title: "Select First Ancestry",
+                  items: ANCESTRIES,
+                  renderItemDetails: renderAncestryDetails,
+                  initialSelection: firstAncestry,
+              };
+              break;
+          case 'second_ancestry':
+              props = {
+                  title: "Select Second Ancestry",
+                  items: ANCESTRIES,
+                  renderItemDetails: renderAncestryDetails,
+                  initialSelection: secondAncestry,
+              };
+              break;
+          default:
+              return null;
+      }
+      return <SelectionModal {...props} onConfirm={handleModalConfirm} onClose={closeModal} isOpen={modalConfig.isOpen} />;
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+        {renderModal()}
         <Card title="Step 1 & 2: Class & Heritage">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <input type="text" placeholder="Character Name*" value={charData.name || ''} onChange={handleSimpleChange('name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                <select value={charData.class} onChange={handleClassChange} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    {CLASSES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                </select>
-                <select value={charData.subclass} onChange={handleSimpleChange('subclass')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">Select a Subclass*</option>
-                    {selectedClass.subclasses.map(sc => <option key={sc} value={sc}>{sc}</option>)}
-                </select>
+            <div className="mb-4">
+                <label htmlFor="character-name" className="block text-sm font-bold mb-1 text-slate-400">Character Name*</label>
+                <input
+                    id="character-name"
+                    type="text"
+                    placeholder="Enter Character Name"
+                    value={charData.name || ''}
+                    onChange={handleSimpleChange('name')}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SelectionDisplay label="Class" value={charData.class!} onClick={() => openModal('class')} />
+                <SelectionDisplay label="Subclass" value={charData.subclass!} onClick={() => openModal('subclass')} />
             </div>
              <div className="mt-4 pt-4 border-t border-slate-700">
                 <div className="flex items-center gap-3 mb-4">
@@ -242,28 +428,16 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                 {isMixedAncestry ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <input type="text" placeholder="Mixed Ancestry Name*" value={mixedAncestryName} onChange={e => setMixedAncestryName(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                        <select value={firstAncestry} onChange={e => setFirstAncestry(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                           <option value="" disabled>First Ancestry (for 1st feature)</option>
-                           {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                        </select>
-                        <select value={secondAncestry} onChange={e => setSecondAncestry(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            <option value="" disabled>Second Ancestry (for 2nd feature)</option>
-                           {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                        </select>
+                        <SelectionDisplay label="First Ancestry (1st feature)" value={firstAncestry} onClick={() => openModal('first_ancestry')} />
+                        <SelectionDisplay label="Second Ancestry (2nd feature)" value={secondAncestry} onClick={() => openModal('second_ancestry')} />
                     </div>
                 ) : (
                      <div className="mb-4">
-                        <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">Ancestry</label>
-                        <select value={charData.ancestry} onChange={handleSimpleChange('ancestry')} className="w-full md:max-w-xs bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            {ANCESTRIES.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                        </select>
+                        <SelectionDisplay label="Ancestry" value={charData.ancestry!} onClick={() => openModal('ancestry')} className="w-full md:max-w-xs" />
                      </div>
                 )}
                 <div>
-                     <label className="block text-sm font-bold mb-1 text-slate-400 capitalize">Community</label>
-                     <select value={charData.community} onChange={handleSimpleChange('community')} className="w-full md:max-w-xs bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        {COMMUNITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                    </select>
+                     <SelectionDisplay label="Community" value={charData.community!} onClick={() => openModal('community')} className="w-full md:max-w-xs" />
                 </div>
             </div>
         </Card>

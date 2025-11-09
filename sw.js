@@ -24,6 +24,7 @@ const urlsToCache = [
   '/components/BeastformSelectorModal.tsx',
   '/components/BeastformListModal.tsx',
   '/components/BeastformCard.tsx',
+  '/components/SelectionModal.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',
