@@ -448,6 +448,73 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       return <SelectionModal {...props} onConfirm={handleModalConfirm} onClose={closeModal} isOpen={modalConfig.isOpen} />;
   };
 
+  const isHeritageComplete = useMemo(() => {
+    const ancestryComplete = isMixedAncestry
+        ? mixedAncestryName.trim() !== '' && firstAncestry && secondAncestry
+        : !!charData.ancestry;
+
+    return !!charData.class && !!charData.subclass && ancestryComplete && !!charData.community;
+  }, [charData, isMixedAncestry, mixedAncestryName, firstAncestry, secondAncestry]);
+
+  const renderHeritageSummary = () => {
+    const classData = CLASSES.find(c => c.name === charData.class);
+    const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === charData.subclass && f.type === 'Foundation');
+    const communityData = COMMUNITIES.find(c => c.name === charData.community);
+
+    let finalAncestryFeatures: AncestryFeature[] = [];
+    if (isMixedAncestry) {
+        const ancestry1 = ANCESTRIES.find(a => a.name === firstAncestry);
+        const ancestry2 = ANCESTRIES.find(a => a.name === secondAncestry);
+        if (ancestry1 && ancestry2) {
+            finalAncestryFeatures = [ancestry1.features[0], ancestry2.features[1]];
+        }
+    } else {
+        const ancestryData = ANCESTRIES.find(a => a.name === charData.ancestry);
+        if (ancestryData) {
+            finalAncestryFeatures = ancestryData.features;
+        }
+    }
+
+    if (!classData || !foundationFeature || !communityData || finalAncestryFeatures.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mt-6 pt-4 border-t-2 border-slate-700 animate-fade-in">
+            <h3 className="text-xl font-bold text-teal-300 mb-3 text-center">Heritage Summary</h3>
+            <div className="grid grid-cols-2 gap-4 text-center mb-4">
+                 <div className="bg-slate-700 p-3 rounded-lg">
+                    <p className="text-sm text-slate-400">Starting HP</p>
+                    <p className="text-2xl font-bold text-slate-100">{classData.startingHP}</p>
+                </div>
+                <div className="bg-slate-700 p-3 rounded-lg">
+                    <p className="text-sm text-slate-400">Starting Evasion</p>
+                    <p className="text-2xl font-bold text-slate-100">{classData.startingEvasion}</p>
+                </div>
+            </div>
+            <div className="space-y-3">
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <p className="text-xs text-slate-400 font-semibold">Foundation Feature</p>
+                    <p className="font-bold text-slate-100">{foundationFeature.name}</p>
+                    <p className="text-sm text-slate-300">{foundationFeature.description}</p>
+                </div>
+                {finalAncestryFeatures.map(feature => (
+                     <div key={feature.name} className="bg-slate-700/50 p-3 rounded-lg">
+                        <p className="text-xs text-slate-400 font-semibold">Ancestry Feature</p>
+                        <p className="font-bold text-slate-100">{feature.name}</p>
+                        <p className="text-sm text-slate-300">{feature.description}</p>
+                    </div>
+                ))}
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <p className="text-xs text-slate-400 font-semibold">Community Feature</p>
+                    <p className="font-bold text-slate-100">{communityData.feature.name}</p>
+                    <p className="text-sm text-slate-300">{communityData.feature.description}</p>
+                </div>
+            </div>
+        </div>
+    );
+  };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -488,6 +555,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                      <SelectionDisplay label="Community" value={charData.community!} onClick={() => openModal('community')} className="w-full md:max-w-xs" />
                 </div>
             </div>
+            {isHeritageComplete && renderHeritageSummary()}
         </Card>
 
         <Card title="Step 3: Assign Traits">

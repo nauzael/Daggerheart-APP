@@ -15,11 +15,19 @@ const BeastformDisplay: React.FC<BeastformDisplayProps> = ({ character, onUpdate
     const [isListModalOpen, setIsListModalOpen] = useState(false);
 
     const handleTransform = (formName: string) => {
-        const updatedCharacter: Character = {
-            ...character,
-            activeBeastFormName: formName,
-        };
-        onUpdateCharacter(updatedCharacter);
+        if (character.stress.current > 0) {
+            const updatedCharacter: Character = {
+                ...character,
+                activeBeastFormName: formName,
+                stress: {
+                    ...character.stress,
+                    current: character.stress.current - 1,
+                },
+            };
+            onUpdateCharacter(updatedCharacter);
+        } else {
+            alert("No tienes Estrés para marcar y no puedes transformarte.");
+        }
         setIsSelectorModalOpen(false);
     };
 
