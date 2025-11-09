@@ -10,6 +10,7 @@ import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import EquipmentSelectorModal from './EquipmentSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
 import SelectionModal from './SelectionModal';
+import { CLASS_FEATURES } from '../data/classFeatures';
 
 
 interface CharacterCreatorProps {
@@ -262,32 +263,62 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       closeModal();
   };
   
-  const renderClassDetails = (item: Class) => (
-      <div className="space-y-4 text-slate-300">
-          <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
-          <p className="text-sm">Domains: <span className="font-semibold text-slate-100">{item.domains.join(', ')}</span></p>
-          <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="bg-slate-800 p-2 rounded-lg">
-                  <p className="text-sm text-slate-400">Starting HP</p>
-                  <p className="text-xl font-bold text-slate-100">{item.startingHP}</p>
+  const renderClassDetails = (item: Class) => {
+      const features = CLASS_FEATURES.filter(f => f.className === item.name);
+
+      const FeatureCard: React.FC<{ feature: (typeof features)[0] }> = ({ feature }) => (
+          <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+              <div className="flex justify-between items-center">
+                <h4 className="font-bold text-slate-100">{feature.name}</h4>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${feature.type === 'Hope' ? 'bg-yellow-800 text-yellow-200 border-yellow-600' : 'bg-sky-800 text-sky-200 border-sky-600'}`}>{feature.type}</span>
               </div>
-              <div className="bg-slate-800 p-2 rounded-lg">
-                  <p className="text-sm text-slate-400">Starting Evasion</p>
-                  <p className="text-xl font-bold text-slate-100">{item.startingEvasion}</p>
+              <p className="text-sm text-slate-400 mt-1">{feature.description}</p>
+              {feature.type === 'Hope' && <p className="text-xs text-yellow-400 font-semibold mt-1">Cost: 3 Hope</p>}
+          </div>
+      );
+
+      return (
+          <div className="space-y-4 text-slate-300">
+              <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
+              <p className="text-sm italic text-slate-400">{item.description}</p>
+
+              <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-slate-800 p-2 rounded-lg">
+                      <p className="text-sm text-slate-400">Starting HP</p>
+                      <p className="text-xl font-bold text-slate-100">{item.startingHP}</p>
+                  </div>
+                  <div className="bg-slate-800 p-2 rounded-lg">
+                      <p className="text-sm text-slate-400">Starting Evasion</p>
+                      <p className="text-xl font-bold text-slate-100">{item.startingEvasion}</p>
+                  </div>
+              </div>
+
+              <div>
+                  <h4 className="font-semibold text-slate-200">Class Features:</h4>
+                  <div className="space-y-2 mt-1">
+                      {features.map(feature => <FeatureCard key={feature.name} feature={feature} />)}
+                  </div>
+              </div>
+
+              <div>
+                  <h4 className="font-semibold text-slate-200">Domains:</h4>
+                  <p className="text-sm font-semibold text-slate-400">{item.domains.join(', ')}</p>
+              </div>
+
+              <div>
+                  <h4 className="font-semibold text-slate-200">Subclasses:</h4>
+                  <ul className="list-disc list-inside text-sm text-slate-400">
+                      {item.subclasses.map(sc => <li key={sc}>{sc}</li>)}
+                  </ul>
+              </div>
+              
+              <div>
+                  <h4 className="font-semibold text-slate-200">Starting Item:</h4>
+                  <p className="text-sm italic text-slate-400">{item.items}</p>
               </div>
           </div>
-          <div>
-              <h4 className="font-semibold text-slate-200">Subclasses:</h4>
-              <ul className="list-disc list-inside text-sm text-slate-400">
-                  {item.subclasses.map(sc => <li key={sc}>{sc}</li>)}
-              </ul>
-          </div>
-          <div>
-              <h4 className="font-semibold text-slate-200">Starting Item:</h4>
-              <p className="text-sm italic text-slate-400">{item.items}</p>
-          </div>
-      </div>
-  );
+      );
+  }
 
   const renderAncestryDetails = (item: Ancestry) => (
       <div className="space-y-4 text-slate-300">
@@ -325,21 +356,38 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
 
   const renderSubclassDetails = (item: { name: string }) => {
     const foundation = SUBCLASS_FEATURES.find(f => f.subclass === item.name && f.type === 'Foundation');
-    if (!foundation) return <p className="text-slate-400">Details not available for this subclass.</p>;
+    const specialization = SUBCLASS_FEATURES.find(f => f.subclass === item.name && f.type === 'Specialization');
+    const mastery = SUBCLASS_FEATURES.find(f => f.subclass === item.name && f.type === 'Mastery');
+
+    if (!foundation) {
+        return <p className="text-slate-400">Details not available for this subclass.</p>;
+    }
+
+    const FeatureCard = ({ title, feature }: { title: string, feature: typeof foundation | undefined }) => {
+        if (!feature) return null;
+        return (
+            <div>
+                <h4 className="font-semibold text-slate-200">{title}</h4>
+                <div className="mt-1 p-3 bg-slate-800 rounded-lg border border-slate-700">
+                    <p className="font-bold text-slate-100">{feature.name}</p>
+                    <p className="text-sm text-slate-400 mt-1">{feature.description}</p>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-4 text-slate-300">
             <h3 className="text-2xl font-bold text-teal-300">{item.name}</h3>
-            <div>
-                <h4 className="font-semibold text-slate-200">Foundation Feature:</h4>
-                <div className="mt-1 p-2 bg-slate-800 rounded-lg">
-                    <p className="font-bold text-slate-100">{foundation.name}</p>
-                    <p className="text-sm text-slate-400">{foundation.description}</p>
-                </div>
+            <p className="text-sm text-slate-400">Review the full progression for the {item.name} subclass.</p>
+            <div className="space-y-3">
+                <FeatureCard title="Foundation Feature (Level 1)" feature={foundation} />
+                <FeatureCard title="Specialization Feature (Tier 2)" feature={specialization} />
+                <FeatureCard title="Mastery Feature (Tier 3)" feature={mastery} />
             </div>
         </div>
     );
-  };
+};
 
   const renderModal = () => {
       if (!modalConfig.isOpen) return null;

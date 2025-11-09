@@ -1,5 +1,6 @@
 export interface Class {
     name: string;
+    description: string;
     startingHP: number;
     startingEvasion: number;
     domains: string[];
@@ -10,6 +11,7 @@ export interface Class {
 export const CLASSES: Class[] = [
     {
         name: 'Bard',
+        description: 'A charismatic performer who weaves magic through music, stories, and speeches. Bards inspire allies, captivate audiences, and manipulate the emotions of others to turn the tide of any situation.',
         startingHP: 5,
         startingEvasion: 10,
         domains: ['Grace', 'Codex'],
@@ -18,6 +20,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Druid',
+        description: "A warden of the natural world, deeply connected to the earth and its creatures. Druids command nature's raw power, shapeshift into powerful beasts, and protect the balance of the wild.",
         startingHP: 6,
         startingEvasion: 10,
         domains: ['Sage', 'Arcana'],
@@ -26,6 +29,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Guardian',
+        description: 'An unwavering protector who stands as a bulwark between their allies and danger. Guardians are masters of defense, using their formidable strength and resilience to shield others from harm.',
         startingHP: 7,
         startingEvasion: 9,
         domains: ['Valor', 'Blade'],
@@ -34,6 +38,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Ranger',
+        description: 'A skilled hunter and tracker, at home in the wilderness. Rangers are masters of survival and ranged combat, often forming deep bonds with animal companions and relentlessly pursuing their chosen quarry.',
         startingHP: 6,
         startingEvasion: 12,
         domains: ['Bone', 'Sage'],
@@ -42,6 +47,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Rogue',
+        description: 'A master of stealth, deception, and precision strikes. Rogues thrive in the shadows, exploiting weaknesses with cunning tactics and disappearing before their enemies know what hit them.',
         startingHP: 6,
         startingEvasion: 12,
         domains: ['Midnight', 'Grace'],
@@ -50,6 +56,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Seraph',
+        description: 'A divine agent, channeling celestial power to heal the wounded and smite the wicked. Seraphs are beacons of hope, wielding sacred energy to protect the innocent and uphold their sacred vows.',
         startingHP: 7,
         startingEvasion: 9,
         domains: ['Splendor', 'Valor'],
@@ -58,6 +65,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Sorcerer',
+        description: 'A wielder of innate, untamed magic that flows from their very being. Sorcerers command raw arcane forces, shaping reality with instinct and power that others can only dream of.',
         startingHP: 6,
         startingEvasion: 10,
         domains: ['Arcana', 'Midnight'],
@@ -66,6 +74,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Warrior',
+        description: 'A master of martial combat, relying on skill, strength, and tactical prowess. Warriors are versatile fighters, adept with a variety of weapons and techniques to overcome any challenge on the battlefield.',
         startingHP: 6,
         startingEvasion: 11,
         domains: ['Blade', 'Bone'],
@@ -74,6 +83,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Wizard',
+        description: 'A dedicated scholar of the arcane arts, whose power comes from rigorous study and intellectual mastery. Wizards manipulate the fabric of magic through spells learned from ancient tomes and scrolls.',
         startingHP: 5,
         startingEvasion: 11,
         domains: ['Codex', 'Splendor'],
