@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature } from '../types';
+import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
 import StatDisplay from './StatDisplay';
@@ -7,9 +7,11 @@ import LevelUpModal from './LevelUpModal';
 import AddEquipmentModal from './AddEquipmentModal';
 import AddDomainCardModal from './AddDomainCardModal';
 import RestModal from './RestModal';
+import BeastformDisplay from './BeastformDisplay';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
+import { ALL_BEASTFORMS } from '../data/beastforms';
 
 interface CharacterSheetProps {
     character: Character;
@@ -50,6 +52,7 @@ const FeatureDisplayItem: React.FC<{
             case 'foundation': return 'bg-green-800 text-green-200 border-green-600';
             case 'specialization': return 'bg-indigo-800 text-indigo-200 border-indigo-600';
             case 'mastery': return 'bg-purple-800 text-purple-200 border-purple-600';
+            case 'beastform': return 'bg-orange-800 text-orange-200 border-orange-600';
             default: return 'bg-slate-700 text-slate-300 border-slate-600';
         }
     };
@@ -237,9 +240,16 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [newNote, setNewNote] = useState('');
     
     const derivedStats = useMemo(() => {
+        const activeBeastForm = character.activeBeastFormName ? ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName) : undefined;
+
         // Start with base values
-        let evasion = character.evasion;
+        let evasion = character.evasion + (activeBeastForm?.evasionBonus || 0);
         const traits: Character['traits'] = { ...character.traits };
+        
+        if (activeBeastForm?.traitBonus) {
+            traits[activeBeastForm.traitBonus.trait] = (traits[activeBeastForm.traitBonus.trait] || 0) + activeBeastForm.traitBonus.value;
+        }
+
         let armorScore: number;
         let majorThreshold: number;
         let severeThreshold: number;
@@ -301,11 +311,13 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
         const allItemsAndFeatures = [
             ...character.ancestryFeatures,
-            ...character.subclassFeatures,
+            ...character.subclassFeatures.map(f => ({ ...f, type: f.type as string })),
             ...(character.primaryWeapon ? [character.primaryWeapon] : []),
             ...(character.secondaryWeapon ? [character.secondaryWeapon] : []),
             ...(character.activeArmor ? [character.activeArmor] : []),
             ...character.domainCards.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter((c): c is DomainCard => !!c),
+            // FIX: Corrected variable name from activeForm to activeBeastForm
+            ...(activeBeastForm ? activeBeastForm.features.map(f => ({ name: f.name, description: f.description, type: 'Beastform' })) : []),
         ];
 
         // Apply modifiers from all features
@@ -324,41 +336,56 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             }
             
             // Special/Complex cases
-            if (item.name === 'Nimble') evasion += 1;
-            if (item.name === 'Conjure Shield' && character.hope >= 2) evasion += character.proficiency;
-            if (item.name === 'Unwavering') { majorThreshold += 1; severeThreshold += 1; }
-            if (item.name === 'Unrelenting') { majorThreshold += 2; severeThreshold += 2; }
-            if (item.name === 'Undaunted') { majorThreshold += 3; severeThreshold += 3; }
-            if (item.name === 'Ascendant') severeThreshold += 4;
-            if (item.name === 'Bravesword' && 'feature' in item && item.feature?.includes('+3 to Severe damage threshold')) severeThreshold += 3;
-            if (item.name === 'Armorer') armorScore += 1;
+            if ('name' in item && item.name === 'Nimble') evasion += 1;
+            if ('name' in item && item.name === 'Conjure Shield' && character.hope >= 2) evasion += character.proficiency;
+            if ('name' in item && item.name === 'Unwavering') { majorThreshold += 1; severeThreshold += 1; }
+            if ('name' in item && item.name === 'Unrelenting') { majorThreshold += 2; severeThreshold += 2; }
+            if ('name' in item && item.name === 'Undaunted') { majorThreshold += 3; severeThreshold += 3; }
+            if ('name' in item && item.name === 'Ascendant') severeThreshold += 4;
+            if ('name' in item && item.name === 'Bravesword' && 'feature' in item && item.feature?.includes('+3 to Severe damage threshold')) severeThreshold += 3;
+            if ('name' in item && item.name === 'Armorer') armorScore += 1;
         }
 
         return {
             evasion: evasion,
             traits: traits,
             armorScore: Math.min(armorScore, 12),
-            damageThresholds: { major: majorThreshold, severe: severeThreshold }
+            damageThresholds: { major: majorThreshold, severe: severeThreshold },
+            maxHP: character.hp.max,
+            maxStress: character.stress.max,
         };
     }, [character]);
 
     useEffect(() => {
+        let updateNeeded = false;
+        const changes: Partial<Character> = {};
+    
+        // Armor update logic
         if (character.armor.max !== derivedStats.armorScore || (derivedStats.armorScore === 0 && character.armor.current !== 0)) {
             const currentRatio = (character.armor.max > 0) ? (character.armor.current / character.armor.max) : 1;
             let newCurrent = Math.round(derivedStats.armorScore * currentRatio);
             if(derivedStats.armorScore === 0) newCurrent = 0;
             
             if(character.armor.max !== derivedStats.armorScore || character.armor.current !== newCurrent) {
-                onUpdateCharacter({
-                    ...character,
-                    armor: {
-                        max: derivedStats.armorScore,
-                        current: newCurrent
-                    }
-                });
+                changes.armor = { max: derivedStats.armorScore, current: newCurrent };
+                updateNeeded = true;
             }
         }
-    }, [derivedStats.armorScore, character, onUpdateCharacter]);
+    
+        // Capping for HP/Stress on revert
+        if (character.hp.current > derivedStats.maxHP) {
+            changes.hp = { ...character.hp, current: derivedStats.maxHP };
+            updateNeeded = true;
+        }
+        if (character.stress.current > derivedStats.maxStress) {
+            changes.stress = { ...character.stress, current: derivedStats.maxStress };
+            updateNeeded = true;
+        }
+    
+        if(updateNeeded) {
+            onUpdateCharacter({ ...character, ...changes });
+        }
+    }, [derivedStats.armorScore, derivedStats.maxHP, derivedStats.maxStress, character, onUpdateCharacter]);
 
 
     const handleStatChange = (stat: 'hp' | 'stress' | 'armor', value: number) => {
@@ -442,10 +469,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             moves.forEach(moveId => {
                 switch (moveId) {
                     case 'tend_all_wounds':
-                        tempChar.hp.current = tempChar.hp.max;
+                        tempChar.hp.current = derivedStats.maxHP;
                         break;
                     case 'clear_all_stress':
-                        tempChar.stress.current = tempChar.stress.max;
+                        tempChar.stress.current = derivedStats.maxStress;
                         break;
                     case 'repair_all_armor':
                         tempChar.armor.current = derivedStats.armorScore;
@@ -469,10 +496,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             moves.forEach(moveId => {
                 switch (moveId) {
                     case 'tend_wounds':
-                        tempChar.hp.current = Math.min(tempChar.hp.max, tempChar.hp.current + 2);
+                        tempChar.hp.current = Math.min(derivedStats.maxHP, tempChar.hp.current + 2);
                         break;
                     case 'take_breather':
-                        tempChar.stress.current = Math.min(tempChar.stress.max, tempChar.stress.current + 2);
+                        tempChar.stress.current = Math.min(derivedStats.maxStress, tempChar.stress.current + 2);
                         break;
                     case 'repair_armor':
                         tempChar.armor.current = Math.min(derivedStats.armorScore, tempChar.armor.current + 2);
@@ -599,8 +626,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 <div className="flex flex-col gap-6">
                     <Card title="Combat Stats">
                         <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={character.hp.max} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', character.hp.max)} color="bg-red-500" showAsMarked />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={character.stress.max} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', character.stress.max)} color="bg-purple-500" showAsMarked />
+                            <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked />
+                            <ThresholdTracker label="Stress" current={character.stress.current} max={derivedStats.maxStress} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', derivedStats.maxStress)} color="bg-purple-500" showAsMarked />
                             <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked />
                             <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
                         </div>
@@ -632,11 +659,18 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <StatDisplay label="Evasion" value={derivedStats.evasion} />
                         </div>
                     </Card>
+                    {character.class === 'Druid' && <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />}
                     <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
                          <div className="grid grid-cols-1 gap-4">
-                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                            {character.activeBeastFormName ? (
+                                <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
+                            ) : (
+                                <>
+                                    {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                                    {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                                    {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                                </>
+                            )}
                          </div>
                     </Card>
                     <Card title="Characteristics & Experiences">
@@ -829,7 +863,21 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 };
 
 // Helper components for display
-const EquipmentItem: React.FC<{item: Weapon | Armor}> = ({ item }) => {
+const EquipmentItem: React.FC<{item: (Weapon | Armor | BeastForm['attack']) | undefined, isBeastformAttack?: boolean}> = ({ item, isBeastformAttack = false }) => {
+    if (!item) return null;
+
+    if (isBeastformAttack) {
+        const attack = item as BeastForm['attack'];
+        return (
+            <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                <h4 className="font-bold text-slate-100">Beastform Attack</h4>
+                <div className="text-sm text-slate-300">
+                    <span>Dmg: <span className="font-mono">{attack.damage}</span></span> | <span>Trait: <span className="font-mono">{attack.trait}</span></span> | <span>Range: <span className="font-mono">{attack.range}</span></span>
+                </div>
+            </div>
+        );
+    }
+
     const isWeapon = 'damage' in item;
     return (
         <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">

@@ -53,6 +53,24 @@ export interface AncestryFeature {
     description: string;
 }
 
+export interface BeastForm {
+    name: string;
+    tier: number;
+    examples: string;
+    traitBonus?: {
+        trait: TraitName;
+        value: number;
+    };
+    evasionBonus: number;
+    attack: {
+        trait: TraitName;
+        damage: string;
+        range: string;
+    };
+    advantages: string[];
+    features: { name: string; description: string }[];
+}
+
 export interface Character {
     id: string;
     name: string;
@@ -82,4 +100,6 @@ export interface Character {
     primaryWeapon?: Weapon;
     secondaryWeapon?: Weapon;
     activeArmor?: Armor;
+    beastForms?: BeastForm[];
+    activeBeastFormName?: string;
 }

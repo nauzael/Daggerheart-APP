@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Character, Experience, Weapon, Armor, AncestryFeature } from '../types';
+import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
@@ -8,6 +8,8 @@ import { ANCESTRIES } from '../data/ancestries';
 import { COMMUNITIES } from '../data/communities';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import EquipmentSelectorModal from './EquipmentSelectorModal';
+import { ALL_BEASTFORMS } from '../data/beastforms';
+
 
 interface CharacterCreatorProps {
   onCharacterCreate: (character: Character) => void;
@@ -17,7 +19,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage'> = {
+const initialCharacterState: Omit<Character, 'id' | 'class' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage' | 'beastForms' | 'activeBeastFormName'> = {
     name: '',
     level: 1,
     subclass: '',
@@ -48,8 +50,10 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [spellItem, setSpellItem] = useState('');
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [equipmentConfirmed, setEquipmentConfirmed] = useState(false);
+  const [selectedBeastform, setSelectedBeastform] = useState('');
   
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
+  const tier1Beastforms = useMemo(() => ALL_BEASTFORMS.filter(b => b.tier === 1), []);
   
   const classItemOptions = useMemo(() => {
     if (!selectedClass) return [];
@@ -62,14 +66,18 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       if(classItemOptions.length === 1) {
           setClassItemChoice(classItemOptions[0]);
       }
+       if (selectedClass.name !== 'Druid') {
+            setSelectedBeastform('');
+        }
   }, [selectedClass, classItemOptions]);
 
   const isFormValid = useMemo(() => {
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
     const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
     const classItemValid = classItemOptions.length === 1 || (classItemOptions.length > 1 && classItemChoice !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed;
-  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed]);
+    const druidFormValid = selectedClass.name !== 'Druid' || (selectedClass.name === 'Druid' && selectedBeastform !== '');
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed && druidFormValid;
+  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed, selectedClass.name, selectedBeastform]);
 
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newClassName = e.target.value;
@@ -176,6 +184,14 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     if (potionChoice) finalInventory.push(potionChoice);
     if (classItemChoice) finalInventory.push(classItemChoice);
     if (spellItem.trim()) finalInventory.push(`Spells carried in: ${spellItem.trim()}`);
+    
+    let finalBeastForms: BeastForm[] = [];
+    if (selectedClass.name === 'Druid' && selectedBeastform) {
+        const form = ALL_BEASTFORMS.find(b => b.name === selectedBeastform);
+        if (form) {
+            finalBeastForms.push(form);
+        }
+    }
 
 
     const finalCharacter: Character = {
@@ -200,6 +216,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         vault: [],
         abilityUsage: {},
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
+        beastForms: finalBeastForms,
     } as Character;
     onCharacterCreate(finalCharacter);
   };
@@ -322,6 +339,62 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                  <textarea placeholder="Background, Notes, Connections..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
         </Card>
+        
+        {selectedClass.name === 'Druid' && (
+            <Card title="Choose Beastform">
+                <p className="text-slate-400 mb-4 text-sm">As a Druid, you begin with knowledge of one Tier 1 beast form.</p>
+                <select 
+                    value={selectedBeastform} 
+                    onChange={e => setSelectedBeastform(e.target.value)} 
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                    <option value="">Select a Beastform*</option>
+                    {tier1Beastforms.map(form => <option key={form.name} value={form.name}>{form.name}</option>)}
+                </select>
+                {selectedBeastform && (() => {
+                    const form = ALL_BEASTFORMS.find(b=>b.name === selectedBeastform);
+                    if (!form) return null;
+                    const traitBonusString = form.traitBonus ? `${form.traitBonus.trait.charAt(0).toUpperCase() + form.traitBonus.trait.slice(1)} +${form.traitBonus.value}` : 'None';
+                    return (
+                        <div className="mt-4 p-4 bg-slate-700/50 rounded-lg border border-slate-700 space-y-3">
+                            <div>
+                                <h4 className="font-bold text-lg text-teal-300">{form.name}</h4>
+                                <p className="text-sm text-slate-300 italic">{form.examples}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="bg-slate-800/50 p-2 rounded">
+                                    <div className="font-bold text-slate-400">Bonuses</div>
+                                    <p className="font-mono text-slate-100">{traitBonusString} | Evasion +{form.evasionBonus}</p>
+                                </div>
+                                <div className="bg-slate-800/50 p-2 rounded">
+                                    <div className="font-bold text-slate-400">Attack</div>
+                                    <p className="text-sm text-slate-400 font-mono truncate">
+                                        {form.attack.trait} | {form.attack.range} | {form.attack.damage}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5 className="font-semibold text-slate-200">Advantages</h5>
+                                <p className="text-sm text-slate-300">Gain advantage on: {form.advantages.join(', ')}.</p>
+                            </div>
+
+                            <div>
+                                <h5 className="font-semibold text-slate-200">Features</h5>
+                                <ul className="list-disc list-inside space-y-1 text-sm text-slate-300">
+                                    {form.features.map(feature => (
+                                        <li key={feature.name}>
+                                            <span className="font-semibold">{feature.name}:</span> {feature.description}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </Card>
+        )}
 
         <Card title="Step 8: Domain Cards">
             <DomainSelector selectedClass={selectedClass} />

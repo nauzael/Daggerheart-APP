@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Character, TraitName } from '../types';
+import { Character, TraitName, BeastForm } from '../types';
 import { ADVANCEMENTS } from '../data/advancements';
 import { DOMAIN_CARDS } from '../data/domainCards';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import DomainCardSelectorModal from './DomainCardSelectorModal';
+import { ALL_BEASTFORMS } from '../data/beastforms';
 
 interface LevelUpModalProps {
     character: Character;
@@ -30,6 +31,26 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
     const [traitSelections, setTraitSelections] = useState<string[]>([]);
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [selectorContext, setSelectorContext] = useState<{ type: 'mandatory' | 'advancement'; index: number; } | null>(null);
+    const [newBeastform, setNewBeastform] = useState('');
+
+    const isBeastformTierUp = useMemo(() => {
+        if (character.class !== 'Druid') return false;
+        return newLevel === 5 || newLevel === 8 || newLevel === 10;
+    }, [newLevel, character.class]);
+
+    const beastformTierToSelect = useMemo(() => {
+        if (!isBeastformTierUp) return 0;
+        if (newLevel === 5) return 2;
+        if (newLevel === 8) return 3;
+        if (newLevel === 10) return 4;
+        return 0;
+    }, [isBeastformTierUp, newLevel]);
+    
+    const availableBeastforms = useMemo(() => {
+        if (!beastformTierToSelect) return [];
+        const knownFormNames = (character.beastForms || []).map(f => f.name);
+        return ALL_BEASTFORMS.filter(b => b.tier === beastformTierToSelect && !knownFormNames.includes(b.name));
+    }, [beastformTierToSelect, character.beastForms]);
 
     const tierAchievements = useMemo(() => {
         const achievements: string[] = [];
@@ -121,7 +142,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         return filled && unique;
     }, [traitSelections, increaseTraitsCount]);
 
-    const canConfirm = totalSlotsUsed === 2 && mandatoryDomainCard !== '' && advancementDomainCards.every(c => c !== '') && traitSelectionsValid;
+    const canConfirm = totalSlotsUsed === 2 && mandatoryDomainCard !== '' && advancementDomainCards.every(c => c !== '') && traitSelectionsValid && (!isBeastformTierUp || newBeastform !== '');
     
     const handleConfirm = () => {
         if (!canConfirm) return;
@@ -134,6 +155,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
             traits: { ...character.traits },
             experiences: [...character.experiences],
             subclassFeatures: [...character.subclassFeatures],
+            beastForms: [...(character.beastForms || [])],
         };
         
         if (newLevel === 2 || newLevel === 5 || newLevel === 8) {
@@ -158,6 +180,13 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         traitSelections.forEach(trait => {
             if (trait) updatedChar.traits[trait as TraitName] += 1;
         });
+
+        if (isBeastformTierUp && newBeastform) {
+            const form = ALL_BEASTFORMS.find(b => b.name === newBeastform);
+            if (form) {
+                updatedChar.beastForms = [...(updatedChar.beastForms || []), form];
+            }
+        }
 
         const newCards = [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean);
         updatedChar.vault = [...updatedChar.vault, ...newCards];
@@ -313,6 +342,65 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                             </div>
                         )}
                     </div>
+
+                    {isBeastformTierUp && (
+                        <div>
+                            <h3 className="text-xl font-semibold text-teal-400 mb-2">Druid Progression: New Beastform</h3>
+                            <p className="text-slate-400 mb-2 text-sm">You have reached Tier {beastformTierToSelect}. Choose a new beastform to master.</p>
+                            <select
+                                value={newBeastform}
+                                onChange={e => setNewBeastform(e.target.value)}
+                                className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                            >
+                                <option value="">Select a Tier {beastformTierToSelect} Form*</option>
+                                {availableBeastforms.map(form => (
+                                    <option key={form.name} value={form.name}>{form.name}</option>
+                                ))}
+                            </select>
+                            {newBeastform && (() => {
+                                const form = ALL_BEASTFORMS.find(b=>b.name === newBeastform);
+                                if (!form) return null;
+                                const traitBonusString = form.traitBonus ? `${form.traitBonus.trait.charAt(0).toUpperCase() + form.traitBonus.trait.slice(1)} +${form.traitBonus.value}` : 'None';
+                                return (
+                                     <div className="mt-4 p-4 bg-slate-700/50 rounded-lg border border-slate-700 space-y-3">
+                                        <div>
+                                            <h4 className="font-bold text-lg text-teal-300">{form.name}</h4>
+                                            <p className="text-sm text-slate-300 italic">{form.examples}</p>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div className="bg-slate-800/50 p-2 rounded">
+                                                <div className="font-bold text-slate-400">Bonuses</div>
+                                                <p className="font-mono text-slate-100">{traitBonusString} | Evasion +{form.evasionBonus}</p>
+                                            </div>
+                                            <div className="bg-slate-800/50 p-2 rounded">
+                                                <div className="font-bold text-slate-400">Attack</div>
+                                                <p className="text-sm text-slate-400 font-mono truncate">
+                                                    {form.attack.trait} | {form.attack.range} | {form.attack.damage}
+                                                </p>
+                                            </div>
+                                        </div>
+            
+                                        <div>
+                                            <h5 className="font-semibold text-slate-200">Advantages</h5>
+                                            <p className="text-sm text-slate-300">Gain advantage on: {form.advantages.join(', ')}.</p>
+                                        </div>
+            
+                                        <div>
+                                            <h5 className="font-semibold text-slate-200">Features</h5>
+                                            <ul className="list-disc list-inside space-y-1 text-sm text-slate-300">
+                                                {form.features.map(feature => (
+                                                    <li key={feature.name}>
+                                                        <span className="font-semibold">{feature.name}:</span> {feature.description}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    )}
                     
                     <div className="text-center pt-4">
                         <div className="flex justify-center items-center gap-4">

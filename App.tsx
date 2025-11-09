@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Character } from './types';
+import { Character, BeastForm } from './types';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 import { SUBCLASS_FEATURES } from './data/subclassFeatures';
 import { ANCESTRIES } from './data/ancestries';
+import { ALL_BEASTFORMS } from './data/beastforms';
+
 
 type View = 'selection' | 'creator' | 'sheet';
 
@@ -47,6 +49,24 @@ const App: React.FC = () => {
       // Add abilityUsage if it's missing
       if (char.abilityUsage === undefined) {
           char.abilityUsage = {};
+      }
+      
+      // Handle Beastform data structure change
+      if (char.class === 'Druid') {
+          if (char.beastForms && Array.isArray(char.beastForms) && char.beastForms.length > 0) {
+              // If the first beastform has an old property (like hpBonus), it's the old structure.
+              // Clear the list to prevent crashes. The user will need to re-select forms on level up.
+              if (char.beastForms[0].hpBonus !== undefined) {
+                  char.beastForms = [];
+                  char.activeBeastFormName = undefined; 
+              }
+          } else {
+             char.beastForms = [];
+          }
+      }
+
+      if (char.activeBeastFormName === undefined) {
+          char.activeBeastFormName = undefined;
       }
 
       return char as Character;
