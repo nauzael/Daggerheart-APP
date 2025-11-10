@@ -75,6 +75,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [isStanceModalOpen, setIsStanceModalOpen] = useState(false);
   const [selectedStances, setSelectedStances] = useState<string[]>([]);
   const [martialArtistFocus, setMartialArtistFocus] = useState<string>('');
+  const [isChainingClassToSubclass, setIsChainingClassToSubclass] = useState(false);
   
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
@@ -84,6 +85,13 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const selectedClass = useMemo(() => CLASSES.find(c => c.name === charData.class) || CLASSES[0], [charData.class]);
   const tier1Beastforms = useMemo(() => ALL_BEASTFORMS.filter(b => b.tier === 1), []);
   
+  useEffect(() => {
+    if (isChainingClassToSubclass && charData.class) {
+        openModal('subclass');
+        setIsChainingClassToSubclass(false);
+    }
+  }, [charData.class, isChainingClassToSubclass]);
+
   const classItemOptions = useMemo(() => {
     if (!selectedClass) return [];
     const itemsString = selectedClass.items;
@@ -294,7 +302,10 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const handleModalConfirm = (selection: string) => {
       switch (modalConfig.type) {
           case 'class':
-              handleClassChange(selection);
+              if (selection !== charData.class) {
+                  setIsChainingClassToSubclass(true);
+                  handleClassChange(selection);
+              }
               break;
           case 'ancestry':
               setCharData(prev => ({ ...prev, ancestry: selection }));
