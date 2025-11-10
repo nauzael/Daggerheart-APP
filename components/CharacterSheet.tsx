@@ -627,7 +627,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     onSave={handleProfileImageUpdate}
                 />
             )}
-            <header className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-6">
+            <header className="flex flex-col sm:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4 sm:gap-6">
                     <div 
                         className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-700 border-2 border-slate-600 group flex-shrink-0 cursor-pointer"
