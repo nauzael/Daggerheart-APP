@@ -41,7 +41,8 @@ const urlsToCache = [
   '/data/longRestDowntimeMoves.ts',
   '/data/beastforms.ts',
   '/data/wolfForm.ts',
-  '/data/martialStances.ts'
+  '/data/martialStances.ts',
+  '/data/defaultProfileImage.ts'
 ];
 
 self.addEventListener('install', event => {

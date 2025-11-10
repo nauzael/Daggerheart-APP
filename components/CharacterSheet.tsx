@@ -17,6 +17,7 @@ import { ALL_BEASTFORMS } from '../data/beastforms';
 import { WOLF_FORM_DATA } from '../data/wolfForm';
 import StanceSelectorModal from './StanceSelectorModal';
 import { MARTIAL_STANCES } from '../data/martialStances';
+import { DEFAULT_PROFILE_IMAGE } from '../data/defaultProfileImage';
 
 interface CharacterSheetProps {
     character: Character;
@@ -795,15 +796,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         role="button"
                         aria-label="Change profile image"
                     >
-                        {character.profileImage ? (
-                            <img src={character.profileImage} alt={character.name} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                        )}
+                        <img 
+                            src={character.profileImage || DEFAULT_PROFILE_IMAGE} 
+                            alt={character.name} 
+                            className="w-full h-full rounded-full object-cover" 
+                        />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />

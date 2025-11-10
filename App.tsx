@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Character, BeastForm } from './types';
 import CharacterCreator from './components/CharacterCreator';
@@ -8,6 +9,7 @@ import { DaggerheartLogo } from './components/DaggerheartLogo';
 import { SUBCLASS_FEATURES } from './data/subclassFeatures';
 import { ANCESTRIES } from './data/ancestries';
 import { ALL_BEASTFORMS } from './data/beastforms';
+import { DEFAULT_PROFILE_IMAGE } from './data/defaultProfileImage';
 
 
 type View = 'selection' | 'creator' | 'sheet';
@@ -78,7 +80,7 @@ const App: React.FC = () => {
       }
       
       if (char.profileImage === undefined) {
-          char.profileImage = undefined;
+          char.profileImage = DEFAULT_PROFILE_IMAGE;
       }
       
       // Warlock migration
@@ -144,11 +146,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (view === 'sheet' && selectedCharacter) {
-      document.title = `${selectedCharacter.name} - Daggerheart Sheet`;
+      document.title = `${selectedCharacter.name} - Community Sheet for Daggerheart`;
     } else if (view === 'creator') {
-      document.title = 'New Character - Daggerheart';
+      document.title = 'New Character - Community Sheet for Daggerheart';
     } else {
-      document.title = 'Character Roster - Daggerheart';
+      document.title = 'Character Roster - Community Sheet for Daggerheart';
     }
   }, [view, selectedCharacter]);
 
@@ -321,8 +323,9 @@ const App: React.FC = () => {
       <main className="container mx-auto max-w-7xl">
         {renderContent()}
       </main>
-      <footer className="text-center mt-12 text-slate-500 text-sm">
-        <p>Daggerheart is a trademark of Darrington Press. This is an unofficial fan-made tool.</p>
+      <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed">
+        <p>This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License. More information can be found at <a href="https://www.daggerheart.com" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">https://www.daggerheart.com</a>. There are no previous modifications by others.</p>
+        <p className="mt-2">This is an unofficial fan-made tool and is not affiliated with, endorsed, sponsored, or specifically approved by Darrington Press LLC.</p>
       </footer>
     </div>
   );
