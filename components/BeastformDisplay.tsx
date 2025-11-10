@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Character, BeastForm } from '../types';
+import { Character, BeastForm, TraitName } from '../types';
 import Card from './Card';
 import BeastformSelectorModal from './BeastformSelectorModal';
 import BeastformListModal from './BeastformListModal';
@@ -14,25 +14,45 @@ const BeastformDisplay: React.FC<BeastformDisplayProps> = ({ character, onUpdate
     const [isSelectorModalOpen, setIsSelectorModalOpen] = useState(false);
     const [isListModalOpen, setIsListModalOpen] = useState(false);
 
-    const handleTransform = (formName: string) => {
-        if (character.stress.current > 0) {
-            const updatedCharacter: Character = {
-                ...character,
+    const handleTransform = (selection: { formName: string; useEvolution: boolean; traitBonus?: TraitName }) => {
+        const { formName, useEvolution, traitBonus } = selection;
+        let updatedCharacter: Partial<Character> = {};
+
+        if (useEvolution) {
+            if (character.hope < 3) {
+                alert("No tienes suficiente Esperanza para Evolucionar.");
+                return;
+            }
+            if (!traitBonus) {
+                alert("Por favor, selecciona un rasgo para potenciar con Evolución.");
+                return;
+            }
+            updatedCharacter = {
+                activeBeastFormName: formName,
+                hope: character.hope - 3,
+                activeBeastformTraitBonus: { trait: traitBonus, value: 1 }
+            };
+        } else {
+            if (character.stress.current === 0) {
+                 alert("No tienes Estrés para marcar y no puedes transformarte.");
+                 return;
+            }
+            updatedCharacter = {
                 activeBeastFormName: formName,
                 stress: {
                     ...character.stress,
                     current: character.stress.current - 1,
                 },
+                activeBeastformTraitBonus: undefined // ensure it is cleared
             };
-            onUpdateCharacter(updatedCharacter);
-        } else {
-            alert("No tienes Estrés para marcar y no puedes transformarte.");
         }
+        onUpdateCharacter({ ...character, ...updatedCharacter });
         setIsSelectorModalOpen(false);
     };
 
+
     const handleRevert = () => {
-        onUpdateCharacter({ ...character, activeBeastFormName: undefined });
+        onUpdateCharacter({ ...character, activeBeastFormName: undefined, activeBeastformTraitBonus: undefined });
     };
 
     const handleLearnForm = (formName: string) => {
@@ -85,7 +105,11 @@ const BeastformDisplay: React.FC<BeastformDisplayProps> = ({ character, onUpdate
                                         </p>
                                     </div>
                                 </div>
-
+                                {character.activeBeastformTraitBonus && (
+                                    <div className="bg-yellow-800/50 text-yellow-200 border border-yellow-700 p-2 rounded-lg text-sm font-semibold text-center">
+                                        Evolution Bonus: +{character.activeBeastformTraitBonus.value} to {character.activeBeastformTraitBonus.trait}
+                                    </div>
+                                )}
                                 <div>
                                     <h5 className="font-semibold text-slate-200">Advantages</h5>
                                     <p className="text-sm text-slate-300">Gain advantage on: {activeForm.advantages.join(', ')}.</p>
@@ -128,6 +152,7 @@ const BeastformDisplay: React.FC<BeastformDisplayProps> = ({ character, onUpdate
 
             {isSelectorModalOpen && (
                 <BeastformSelectorModal 
+                    character={character}
                     forms={learnedForms}
                     onClose={() => setIsSelectorModalOpen(false)}
                     onSelect={handleTransform}

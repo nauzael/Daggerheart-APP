@@ -68,6 +68,10 @@ const App: React.FC = () => {
       if (char.activeBeastFormName === undefined) {
           char.activeBeastFormName = undefined;
       }
+      
+      if (char.activeBeastformTraitBonus === undefined) {
+          char.activeBeastformTraitBonus = undefined;
+      }
 
       return char as Character;
   };

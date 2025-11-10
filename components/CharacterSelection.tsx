@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Character } from '../types';
 import Card from './Card';
@@ -20,7 +19,7 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({ characters, onS
     };
     
     return (
-        <Card title="Character Roster">
+        <Card title="Character Roster" className="max-w-3xl mx-auto">
             {characters.length > 0 ? (
                 <div className="space-y-4">
                     {characters.map(char => (
@@ -53,15 +52,15 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({ characters, onS
             ) : (
                 <p className="text-slate-400 text-center">You haven't created any characters yet.</p>
             )}
-            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+            <div className="mt-8 max-w-md mx-auto space-y-4">
                 <button
                     onClick={onCreateNew}
-                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-6 rounded-lg text-lg w-full sm:w-auto"
+                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-6 rounded-lg text-lg w-full"
                 >
                     + Create New Character
                 </button>
-                <div className="flex gap-4 w-full sm:w-auto">
-                     <input
+                <div className="grid grid-cols-2 gap-4">
+                    <input
                         type="file"
                         ref={fileInputRef}
                         onChange={onImport}
@@ -72,14 +71,14 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({ characters, onS
                         onClick={handleImportClick}
                         className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg text-lg w-full"
                     >
-                        Import Character(s)
+                        Import
                     </button>
                     <button
                         onClick={onExport}
                         disabled={characters.length === 0}
                         className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-lg text-lg w-full disabled:bg-slate-600 disabled:cursor-not-allowed"
                     >
-                        Export Characters
+                        Export
                     </button>
                 </div>
             </div>

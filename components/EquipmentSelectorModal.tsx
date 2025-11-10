@@ -76,6 +76,14 @@ const EquipmentSelectorModal: React.FC<EquipmentSelectorModalProps> = ({ isOpen,
             secondary: selectedSecondaryWeapon,
         });
     };
+
+    const handleApplySuggested = () => {
+        if (selectedClass.suggestedEquipment) {
+            setSelectedArmorName(selectedClass.suggestedEquipment.armor || '');
+            setSelectedPrimaryName(selectedClass.suggestedEquipment.primary || '');
+            setSelectedSecondaryName(selectedClass.suggestedEquipment.secondary || '');
+        }
+    };
     
     if (!isOpen) return null;
 
@@ -84,7 +92,16 @@ const EquipmentSelectorModal: React.FC<EquipmentSelectorModalProps> = ({ isOpen,
             <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-600 flex-shrink-0">
                     <h2 className="text-3xl font-bold text-teal-400">Select Equipment & Stats</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none" aria-label="Close">&times;</button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={handleApplySuggested}
+                            className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-lg text-sm"
+                        >
+                            Apply Suggested Equipment
+                        </button>
+                        <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none" aria-label="Close">&times;</button>
+                    </div>
                 </div>
 
                 <div className="overflow-y-auto space-y-6 pr-2">

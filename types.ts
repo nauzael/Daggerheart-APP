@@ -102,4 +102,5 @@ export interface Character {
     activeArmor?: Armor;
     beastForms?: BeastForm[];
     activeBeastFormName?: string;
+    activeBeastformTraitBonus?: { trait: TraitName; value: number };
 }

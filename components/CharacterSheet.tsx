@@ -250,6 +250,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             traits[activeBeastForm.traitBonus.trait] = (traits[activeBeastForm.traitBonus.trait] || 0) + activeBeastForm.traitBonus.value;
         }
 
+        if (character.activeBeastformTraitBonus) {
+            traits[character.activeBeastformTraitBonus.trait] = (traits[character.activeBeastformTraitBonus.trait] || 0) + character.activeBeastformTraitBonus.value;
+        }
+
         let armorScore: number;
         let majorThreshold: number;
         let severeThreshold: number;
@@ -621,110 +625,107 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Column 1 */}
-                <div className="flex flex-col gap-6">
-                    <Card title="Combat Stats">
-                        <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={derivedStats.maxStress} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', derivedStats.maxStress)} color="bg-purple-500" showAsMarked />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked />
-                            <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-slate-700">
-                            <h4 className="font-semibold text-slate-300 mb-2 text-center">Damage Thresholds</h4>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                                <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
-                                    <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
-                                        1-{derivedStats.damageThresholds.major - 1}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Column 1 - Reordered for mobile */}
+                <div className="contents md:flex md:flex-col md:gap-6">
+                    <div className="order-1 md:order-none">
+                        <Card title="Combat Stats">
+                            <div className="space-y-4">
+                                <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked />
+                                <ThresholdTracker label="Stress" current={character.stress.current} max={derivedStats.maxStress} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', derivedStats.maxStress)} color="bg-purple-500" showAsMarked />
+                                <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked />
+                                <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" />
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-700">
+                                <h4 className="font-semibold text-slate-300 mb-2 text-center">Damage Thresholds</h4>
+                                <div className="grid grid-cols-3 gap-2 text-center">
+                                    <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
+                                        <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
+                                        <div className="text-xl font-bold text-slate-100 font-mono">
+                                            1-{derivedStats.damageThresholds.major - 1}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
-                                    <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
-                                        {derivedStats.damageThresholds.major}
+                                    <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
+                                        <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
+                                        <div className="text-xl font-bold text-slate-100 font-mono">
+                                            {derivedStats.damageThresholds.major}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
-                                    <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
-                                        {derivedStats.damageThresholds.severe}
+                                    <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
+                                        <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
+                                        <div className="text-xl font-bold text-slate-100 font-mono">
+                                            {derivedStats.damageThresholds.severe}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                <StatDisplay label="Proficiency" value={character.proficiency} />
+                                <StatDisplay label="Evasion" value={derivedStats.evasion} />
+                            </div>
+                        </Card>
+                    </div>
+                    {character.class === 'Druid' && (
+                        <div className="order-5 md:order-none">
+                            <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
                         </div>
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                            <StatDisplay label="Proficiency" value={character.proficiency} />
-                            <StatDisplay label="Evasion" value={derivedStats.evasion} />
-                        </div>
-                    </Card>
-                    {character.class === 'Druid' && <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />}
-                    <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
-                         <div className="grid grid-cols-1 gap-4">
-                            {character.activeBeastFormName ? (
-                                <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
-                            ) : (
-                                <>
-                                    {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                                    {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                                    {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
-                                </>
+                    )}
+                    <div className="order-7 md:order-none">
+                        <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
+                             <div className="grid grid-cols-1 gap-4">
+                                {character.activeBeastFormName ? (
+                                    <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
+                                ) : (
+                                    <>
+                                        {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                                        {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                                        {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                                    </>
+                                )}
+                             </div>
+                        </Card>
+                    </div>
+                    <div className="order-6 md:order-none">
+                        <Card title="Characteristics & Experiences">
+                            {character.ancestryFeatures && (
+                                <div className="mb-4">
+                                    <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
+                                    {character.ancestryFeatures.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
+                                </div>
                             )}
-                         </div>
-                    </Card>
-                    <Card title="Characteristics & Experiences">
-                        {character.ancestryFeatures && (
-                            <div className="mb-4">
-                                <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
-                                {character.ancestryFeatures.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
-                            </div>
-                        )}
-                        {communityFeature && (
-                             <div className="mb-4">
-                                <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
-                                <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
-                            </div>
-                        )}
-                         {character.experiences.map((exp, i) => (
-                            <EditableExperienceDisplay
-                                key={i}
-                                experience={exp}
-                                onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
-                            />
-                         ))}
-                    </Card>
+                            {communityFeature && (
+                                 <div className="mb-4">
+                                    <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
+                                    <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
+                                </div>
+                            )}
+                             {character.experiences.map((exp, i) => (
+                                <EditableExperienceDisplay
+                                    key={i}
+                                    experience={exp}
+                                    onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
+                                />
+                             ))}
+                        </Card>
+                    </div>
                 </div>
 
-                {/* Column 2 */}
-                <div className="flex flex-col gap-6">
-                     <Card title="Traits">
-                        <div className="grid grid-cols-2 gap-3">
-                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
-                        </div>
-                    </Card>
-                     <Card title="Class & Subclass Features">
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
-                                <div className="space-y-3">
-                                    {classFeatures.map(feature => (
-                                        <FeatureDisplayItem 
-                                            key={feature.name}
-                                            name={feature.name}
-                                            type={feature.type}
-                                            description={feature.description}
-                                            character={character}
-                                            onUsageChange={handleAbilityUsageChange}
-                                        />
-                                    ))}
-                                </div>
+                {/* Column 2 - Reordered for mobile */}
+                <div className="contents md:flex md:flex-col md:gap-6">
+                    <div className="order-2 md:order-none">
+                         <Card title="Traits">
+                            <div className="grid grid-cols-2 gap-3">
+                                {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
                             </div>
-                            {character.subclassFeatures && character.subclassFeatures.length > 0 && (
+                        </Card>
+                    </div>
+                    <div className="order-4 md:order-none">
+                         <Card title="Class & Subclass Features">
+                            <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
+                                    <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
                                     <div className="space-y-3">
-                                        {character.subclassFeatures.map(feature => (
+                                        {classFeatures.map(feature => (
                                             <FeatureDisplayItem 
                                                 key={feature.name}
                                                 name={feature.name}
@@ -736,115 +737,140 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                         ))}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    </Card>
+                                {character.subclassFeatures && character.subclassFeatures.length > 0 && (
+                                    <div>
+                                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
+                                        <div className="space-y-3">
+                                            {character.subclassFeatures.map(feature => (
+                                                <FeatureDisplayItem 
+                                                    key={feature.name}
+                                                    name={feature.name}
+                                                    type={feature.type}
+                                                    description={feature.description}
+                                                    character={character}
+                                                    onUsageChange={handleAbilityUsageChange}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
                 </div>
 
-                {/* Column 3 */}
-                <div className="flex flex-col gap-6">
-                     <Card 
-                        title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
-                        headerContent={
-                            <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
-                                + Add Card
-                            </button>
-                        }
-                    >
-                        <div className="space-y-3">
-                            {loadoutCards.map(card => (
-                                <DomainCardDisplay 
-                                    key={card.name} 
-                                    card={card}
-                                    button={
-                                        <button 
-                                            onClick={() => handleSendToVault(card.name)} 
-                                            className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
-                                            title="Send to Vault"
-                                        >
-                                            Vault
-                                        </button>
-                                    }
-                                    character={character}
-                                    onUsageChange={handleAbilityUsageChange}
-                                />
-                            ))}
-                            {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
-                        </div>
-                    </Card>
-                     <Card title="The Vault">
-                         <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                            {vaultCards.map(card => {
-                                const recallCost = card.recallCost ?? 0;
-                                const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
-                                const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
-                                
-                                return (
-                                    <DomainCardDisplay
-                                        key={card.name}
+                {/* Column 3 - Reordered for mobile */}
+                <div className="contents md:flex md:flex-col md:gap-6">
+                    <div className="order-3 md:order-none">
+                         <Card 
+                            title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
+                            headerContent={
+                                <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
+                                    + Add Card
+                                </button>
+                            }
+                        >
+                            <div className="space-y-3">
+                                {loadoutCards.map(card => (
+                                    <DomainCardDisplay 
+                                        key={card.name} 
                                         card={card}
                                         button={
-                                            <button
-                                                onClick={() => handleRecallFromVault(card.name)}
-                                                disabled={isDisabled}
-                                                className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
-                                                title={title}
+                                            <button 
+                                                onClick={() => handleSendToVault(card.name)} 
+                                                className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
+                                                title="Send to Vault"
                                             >
-                                                Recall
+                                                Vault
                                             </button>
                                         }
                                         character={character}
                                         onUsageChange={handleAbilityUsageChange}
                                     />
-                                );
-                            })}
-                            {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
-                         </div>
-                     </Card>
-                     <Card title="Inventory">
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
-                            <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
-                        </div>
-                        <ul className="space-y-2 pr-2">
-                            {inventory.map((item, i) => (
-                                <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
-                                    <span>{item}</span>
-                                    <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="flex gap-2 mt-4">
-                            <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
-                            <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
-                        </div>
-                    </Card>
-                    <Card title="Notes & Background">
-                        {character.notes && character.notes.length > 0 ? (
-                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
-                                {character.notes.map((note, i) => (
-                                    <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
-                                        <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
-                                        <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>
+                                ))}
+                                {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="order-8 md:order-none">
+                         <Card title="The Vault">
+                             <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                                {vaultCards.map(card => {
+                                    const recallCost = card.recallCost ?? 0;
+                                    const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
+                                    const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
+                                    
+                                    return (
+                                        <DomainCardDisplay
+                                            key={card.name}
+                                            card={card}
+                                            button={
+                                                <button
+                                                    onClick={() => handleRecallFromVault(card.name)}
+                                                    disabled={isDisabled}
+                                                    className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
+                                                    title={title}
+                                                >
+                                                    Recall
+                                                </button>
+                                            }
+                                            character={character}
+                                            onUsageChange={handleAbilityUsageChange}
+                                        />
+                                    );
+                                })}
+                                {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
+                             </div>
+                         </Card>
+                    </div>
+                    <div className="order-9 md:order-none">
+                         <Card title="Inventory">
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
+                                <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
+                            </div>
+                            <ul className="space-y-2 pr-2">
+                                {inventory.map((item, i) => (
+                                    <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
+                                        <span>{item}</span>
+                                        <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
                                     </li>
                                 ))}
                             </ul>
-                        ) : (
-                            <p className="text-slate-400 text-center mb-4">No notes yet.</p>
-                        )}
-                        <div className="flex flex-col gap-2 mt-2">
-                            <textarea 
-                                value={newNote} 
-                                onChange={e => setNewNote(e.target.value)} 
-                                placeholder="Add a new note..." 
-                                rows={3} 
-                                className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
-                            />
-                            <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
-                                Add Note
-                            </button>
-                        </div>
-                    </Card>
+                            <div className="flex gap-2 mt-4">
+                                <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
+                                <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="order-10 md:order-none">
+                        <Card title="Notes & Background">
+                            {character.notes && character.notes.length > 0 ? (
+                                <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
+                                    {character.notes.map((note, i) => (
+                                        <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
+                                            <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
+                                            <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-slate-400 text-center mb-4">No notes yet.</p>
+                            )}
+                            <div className="flex flex-col gap-2 mt-2">
+                                <textarea 
+                                    value={newNote} 
+                                    onChange={e => setNewNote(e.target.value)} 
+                                    placeholder="Add a new note..." 
+                                    rows={3} 
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
+                                />
+                                <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
+                                    Add Note
+                                </button>
+                            </div>
+                        </Card>
+                    </div>
                 </div>
             </div>
             

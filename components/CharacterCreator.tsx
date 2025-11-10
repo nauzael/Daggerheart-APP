@@ -11,6 +11,8 @@ import EquipmentSelectorModal from './EquipmentSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
 import SelectionModal from './SelectionModal';
 import { CLASS_FEATURES } from '../data/classFeatures';
+import { DOMAIN_CARDS } from '../data/domainCards';
+import BeastformCard from './BeastformCard';
 
 
 interface CharacterCreatorProps {
@@ -66,6 +68,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [equipmentConfirmed, setEquipmentConfirmed] = useState(false);
   const [selectedBeastform, setSelectedBeastform] = useState('');
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
@@ -131,6 +134,18 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     });
 }, []);
 
+  const handleApplySuggestedTraits = useCallback(() => {
+    if (selectedClass?.suggestedTraits) {
+        const newAssigned: Partial<Record<keyof Character['traits'], string>> = {};
+        for (const trait in selectedClass.suggestedTraits) {
+            const key = trait as keyof Character['traits'];
+            const value = selectedClass.suggestedTraits[key as keyof typeof selectedClass.suggestedTraits];
+            newAssigned[key] = String(value);
+        }
+        setAssignedTraits(newAssigned);
+    }
+  }, [selectedClass]);
+
   const availableCounts = useMemo(() => TRAIT_MODIFIERS.reduce((acc, mod) => {
     const key = String(mod);
     acc[key] = (acc[key] || 0) + 1;
@@ -164,8 +179,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFinalizeCharacter = () => {
     if (!isFormValid) return;
 
     const finalTraits: Character['traits'] = { strength: 0, agility: 0, finesse: 0, instinct: 0, knowledge: 0, presence: 0 };
@@ -233,6 +247,13 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     } as Character;
     onCharacterCreate(finalCharacter);
   };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid) return;
+    setIsSummaryModalOpen(true);
+  };
+
 
   const openModal = (type: 'class' | 'ancestry' | 'community' | 'first_ancestry' | 'second_ancestry' | 'subclass') => {
       setModalConfig({ isOpen: true, type });
@@ -448,19 +469,47 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       return <SelectionModal {...props} onConfirm={handleModalConfirm} onClose={closeModal} isOpen={modalConfig.isOpen} />;
   };
 
-  const isHeritageComplete = useMemo(() => {
-    const ancestryComplete = isMixedAncestry
-        ? mixedAncestryName.trim() !== '' && firstAncestry && secondAncestry
-        : !!charData.ancestry;
+  const renderConfirmationSummaryModal = () => {
+    if (!isSummaryModalOpen) return null;
 
-    return !!charData.class && !!charData.subclass && ancestryComplete && !!charData.community;
-  }, [charData, isMixedAncestry, mixedAncestryName, firstAncestry, secondAncestry]);
+    // Helper components for detailed display
+    const SummaryFeature: React.FC<{ title: string, name: string, description: string }> = ({ title, name, description }) => (
+        <div className="bg-slate-700/50 p-3 rounded-lg">
+            <p className="text-xs text-slate-400 font-semibold">{title}</p>
+            <p className="font-bold text-slate-100">{name}</p>
+            <p className="text-sm text-slate-400 mt-1">{description}</p>
+        </div>
+    );
 
-  const renderHeritageSummary = () => {
-    const classData = CLASSES.find(c => c.name === charData.class);
+    const SummaryEquipmentItem: React.FC<{ item: Weapon | Armor | undefined }> = ({ item }) => {
+        if (!item) return null;
+        const isWeapon = 'damage' in item;
+        return (
+             <div className="bg-slate-700/50 p-3 rounded-lg">
+                <p className="font-bold text-slate-100">{item.name}</p>
+                <div className="text-xs text-slate-400">
+                    {isWeapon ? (
+                        <span>Dmg: {(item as Weapon).damage} | Trait: {(item as Weapon).trait} | Range: {(item as Weapon).range}</span>
+                    ) : (
+                        <span>Score: {(item as Armor).baseScore} | Thresholds: {(item as Armor).baseThresholds}</span>
+                    )}
+                </div>
+                {item.feature && <p className="text-xs text-slate-400 mt-1 italic">{item.feature}</p>}
+            </div>
+        );
+    };
+    
+    // Calculate final data for summary display
+    const finalTraits: Character['traits'] = { strength: 0, agility: 0, finesse: 0, instinct: 0, knowledge: 0, presence: 0 };
+    Object.entries(assignedTraits).forEach(([trait, value]) => {
+        finalTraits[trait as keyof Character['traits']] = Number(value);
+    });
+
+    const armor = charData.activeArmor || { baseScore: 0 };
     const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === charData.subclass && f.type === 'Foundation');
     const communityData = COMMUNITIES.find(c => c.name === charData.community);
 
+    let finalAncestryName = isMixedAncestry ? mixedAncestryName : charData.ancestry!;
     let finalAncestryFeatures: AncestryFeature[] = [];
     if (isMixedAncestry) {
         const ancestry1 = ANCESTRIES.find(a => a.name === firstAncestry);
@@ -470,48 +519,134 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         }
     } else {
         const ancestryData = ANCESTRIES.find(a => a.name === charData.ancestry);
-        if (ancestryData) {
-            finalAncestryFeatures = ancestryData.features;
-        }
+        if (ancestryData) finalAncestryFeatures = ancestryData.features;
     }
 
-    if (!classData || !foundationFeature || !communityData || finalAncestryFeatures.length === 0) {
-        return null;
-    }
+    const selectedDomainCards = DOMAIN_CARDS.filter(card => charData.domainCards?.includes(card.name));
+    const beastformDetails = selectedClass.name === 'Druid' ? ALL_BEASTFORMS.find(b => b.name === selectedBeastform) : undefined;
+    
+    const finalInventory = ["A torch", "50 feet of rope", "Basic supplies"];
+    if (potionChoice) finalInventory.push(potionChoice);
+    if (classItemChoice) finalInventory.push(classItemChoice);
+    if (spellItem.trim()) finalInventory.push(`Spells carried in: ${spellItem.trim()}`);
 
     return (
-        <div className="mt-6 pt-4 border-t-2 border-slate-700 animate-fade-in">
-            <h3 className="text-xl font-bold text-teal-300 mb-3 text-center">Heritage Summary</h3>
-            <div className="grid grid-cols-2 gap-4 text-center mb-4">
-                 <div className="bg-slate-700 p-3 rounded-lg">
-                    <p className="text-sm text-slate-400">Starting HP</p>
-                    <p className="text-2xl font-bold text-slate-100">{classData.startingHP}</p>
-                </div>
-                <div className="bg-slate-700 p-3 rounded-lg">
-                    <p className="text-sm text-slate-400">Starting Evasion</p>
-                    <p className="text-2xl font-bold text-slate-100">{classData.startingEvasion}</p>
-                </div>
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
+          <div className="flex justify-between items-center mb-4 flex-shrink-0">
+            <h2 className="text-3xl font-bold text-teal-400">Character Summary</h2>
+            <button onClick={() => setIsSummaryModalOpen(false)} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+          </div>
+
+          <div className="overflow-y-auto pr-2 space-y-6 text-slate-300">
+            {/* Main Info */}
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+                <h3 className="text-2xl font-bold text-center text-slate-100">{charData.name}</h3>
+                <p className="text-center text-slate-400">
+                    {finalAncestryName} {communityData?.name} | Level 1 {selectedClass.name} ({charData.subclass})
+                </p>
             </div>
-            <div className="space-y-3">
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                    <p className="text-xs text-slate-400 font-semibold">Foundation Feature</p>
-                    <p className="font-bold text-slate-100">{foundationFeature.name}</p>
-                    <p className="text-sm text-slate-300">{foundationFeature.description}</p>
-                </div>
-                {finalAncestryFeatures.map(feature => (
-                     <div key={feature.name} className="bg-slate-700/50 p-3 rounded-lg">
-                        <p className="text-xs text-slate-400 font-semibold">Ancestry Feature</p>
-                        <p className="font-bold text-slate-100">{feature.name}</p>
-                        <p className="text-sm text-slate-300">{feature.description}</p>
+            {/* Stats & Traits */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Combat Stats</h3>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                         <div className="bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-400">HP</p><p className="text-2xl font-bold text-slate-100">{selectedClass.startingHP}</p></div>
+                         <div className="bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-400">Evasion</p><p className="text-2xl font-bold text-slate-100">{selectedClass.startingEvasion}</p></div>
+                         <div className="bg-slate-700 p-3 rounded-lg"><p className="text-sm text-slate-400">Armor</p><p className="text-2xl font-bold text-slate-100">{armor.baseScore}</p></div>
                     </div>
-                ))}
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                    <p className="text-xs text-slate-400 font-semibold">Community Feature</p>
-                    <p className="font-bold text-slate-100">{communityData.feature.name}</p>
-                    <p className="text-sm text-slate-300">{communityData.feature.description}</p>
+                </div>
+                 <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Traits</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                        {TRAIT_NAMES.map(trait => (
+                            <div key={trait} className="bg-slate-700 p-2 rounded-lg text-center">
+                                <p className="text-sm text-slate-400 capitalize">{trait}</p>
+                                <p className="text-xl font-bold text-teal-300">{finalTraits[trait] > 0 ? `+${finalTraits[trait]}` : finalTraits[trait]}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
+
+            {/* Features */}
+             <div>
+                <h3 className="text-xl font-semibold text-slate-200 mb-2">Features</h3>
+                <div className="space-y-3">
+                    {foundationFeature && <SummaryFeature title="Foundation Feature" name={foundationFeature.name} description={foundationFeature.description} />}
+                    {finalAncestryFeatures.map(f => <SummaryFeature key={f.name} title="Ancestry Feature" name={f.name} description={f.description} />)}
+                    {communityData && <SummaryFeature title="Community Feature" name={communityData.feature.name} description={communityData.feature.description} />}
+                </div>
+             </div>
+
+            {/* Equipment & Experiences */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Equipment</h3>
+                    <div className="space-y-2">
+                        <SummaryEquipmentItem item={charData.activeArmor} />
+                        <SummaryEquipmentItem item={charData.primaryWeapon} />
+                        <SummaryEquipmentItem item={charData.secondaryWeapon} />
+                    </div>
+                </div>
+                 <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Starting Inventory</h3>
+                    <ul className="list-disc list-inside text-sm text-slate-400 space-y-1 bg-slate-700/50 p-3 rounded-lg">
+                        {finalInventory.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                </div>
+            </div>
+
+            {/* Experiences & Domain Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Experiences</h3>
+                    <div className="space-y-2">
+                        {charData.experiences?.map((exp, i) => (
+                             <div key={i} className="bg-slate-700/50 p-3 rounded-lg">
+                                <p className="font-bold text-slate-100">{exp.name} <span className="font-mono text-teal-300 text-sm">(+2)</span></p>
+                                {exp.description && <p className="text-sm text-slate-400 mt-1 italic">{exp.description}</p>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Domain Cards</h3>
+                    <div className="space-y-2">
+                        {selectedDomainCards.map(card => (
+                            <div key={card.name} className="bg-slate-700/50 p-3 rounded-lg">
+                                <p className="font-bold text-slate-100">{card.name}</p>
+                                <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            
+            {beastformDetails && (
+                <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Starting Beastform</h3>
+                    <BeastformCard form={beastformDetails} />
+                </div>
+            )}
+
+            {notes.trim() && (
+                 <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Notes & Background</h3>
+                    <p className="text-sm text-slate-400 whitespace-pre-wrap bg-slate-700/50 p-3 rounded-lg">{notes}</p>
+                </div>
+            )}
+          </div>
+          <div className="flex justify-center gap-4 pt-6 mt-auto flex-shrink-0">
+            <button onClick={() => setIsSummaryModalOpen(false)} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-lg">
+              Edit
+            </button>
+            <button onClick={handleFinalizeCharacter} className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg">
+              Finalize Character
+            </button>
+          </div>
         </div>
+      </div>
     );
   };
 
@@ -519,6 +654,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
         {renderModal()}
+        {renderConfirmationSummaryModal()}
         <Card title="Step 1 & 2: Class & Heritage">
             <div className="mb-4">
                 <label htmlFor="character-name" className="block text-sm font-bold mb-1 text-slate-400">Character Name*</label>
@@ -555,11 +691,20 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                      <SelectionDisplay label="Community" value={charData.community!} onClick={() => openModal('community')} className="w-full md:max-w-xs" />
                 </div>
             </div>
-            {isHeritageComplete && renderHeritageSummary()}
         </Card>
 
         <Card title="Step 3: Assign Traits">
             <p className="text-slate-400 mb-4 text-sm">Assign a modifier to each trait. Modifiers: <span className="font-mono">{TRAIT_MODIFIERS.join(', ')}</span></p>
+            <div className="my-4 flex justify-center">
+                <button
+                    type="button"
+                    onClick={handleApplySuggestedTraits}
+                    disabled={!charData.class}
+                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+                >
+                    Apply Suggested Traits for {selectedClass.name}
+                </button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {TRAIT_NAMES.map(traitName => (
                     <div key={traitName}>
@@ -590,28 +735,30 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         </Card>
         
         <Card title="Step 4 & 5: Stats & Equipment">
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-700/50 p-4 rounded-lg">
-                <div className="text-center sm:text-left mb-4 sm:mb-0">
-                    <p className="font-semibold text-slate-200">Starting stats are determined by your class.</p>
-                    <p className="text-sm text-slate-400">Select your starting gear to see your final armor score.</p>
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-700/50 p-4 rounded-lg">
+                    <div className="text-center sm:text-left mb-4 sm:mb-0">
+                        <p className="font-semibold text-slate-200">Starting stats are determined by your class.</p>
+                        <p className="text-sm text-slate-400">Select your starting gear to see your final armor score.</p>
+                    </div>
+                    <button 
+                        type="button" 
+                        onClick={() => setIsEquipmentModalOpen(true)}
+                        className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2"
+                    >
+                        {equipmentConfirmed ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                 <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                 <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                            </svg>
+                        )}
+                        {equipmentConfirmed ? 'Edit Equipment' : 'Select Equipment*'}
+                    </button>
                 </div>
-                <button 
-                    type="button" 
-                    onClick={() => setIsEquipmentModalOpen(true)}
-                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-lg flex items-center gap-2"
-                >
-                    {equipmentConfirmed ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                             <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                             <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-                        </svg>
-                    )}
-                    {equipmentConfirmed ? 'Edit Equipment' : 'Select Equipment*'}
-                </button>
             </div>
         </Card>
 

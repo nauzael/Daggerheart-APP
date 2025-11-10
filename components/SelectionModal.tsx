@@ -20,9 +20,11 @@ const SelectionModal = <T extends { name: string }>({
     initialSelection = ''
 }: SelectionModalProps<T>) => {
     const [selectedItemName, setSelectedItemName] = useState(initialSelection);
+    const [isShowingDetailsOnMobile, setIsShowingDetailsOnMobile] = useState(false);
     
     useEffect(() => {
         setSelectedItemName(initialSelection);
+        setIsShowingDetailsOnMobile(false); // Reset mobile view on open
     }, [initialSelection, isOpen]);
 
     const selectedItem = items.find(item => item.name === selectedItemName);
@@ -44,11 +46,15 @@ const SelectionModal = <T extends { name: string }>({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden flex-grow">
-                    <div className="md:col-span-1 overflow-y-auto pr-2 space-y-2">
+                    {/* List Column - Conditional visibility on mobile */}
+                    <div className={`md:col-span-1 overflow-y-auto pr-2 space-y-2 ${isShowingDetailsOnMobile ? 'hidden md:block' : 'block'}`}>
                         {items.map(item => (
                             <button
                                 key={item.name}
-                                onClick={() => setSelectedItemName(item.name)}
+                                onClick={() => {
+                                    setSelectedItemName(item.name);
+                                    setIsShowingDetailsOnMobile(true);
+                                }}
                                 className={`w-full text-left p-3 rounded-md transition-colors text-slate-200 ${
                                     selectedItemName === item.name
                                         ? 'bg-teal-600 font-semibold'
@@ -60,7 +66,14 @@ const SelectionModal = <T extends { name: string }>({
                         ))}
                     </div>
 
-                    <div className="md:col-span-2 bg-slate-900/50 p-4 rounded-lg overflow-y-auto">
+                    {/* Details Column - Conditional visibility on mobile */}
+                    <div className={`md:col-span-2 bg-slate-900/50 p-4 rounded-lg overflow-y-auto ${isShowingDetailsOnMobile ? 'block' : 'hidden md:block'}`}>
+                        <button 
+                            onClick={() => setIsShowingDetailsOnMobile(false)}
+                            className="md:hidden mb-4 bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg w-full"
+                        >
+                            &larr; Back to List
+                        </button>
                         {selectedItem ? (
                             renderItemDetails(selectedItem)
                         ) : (

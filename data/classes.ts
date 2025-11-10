@@ -1,3 +1,5 @@
+import { Traits } from '../types';
+
 export interface Class {
     name: string;
     description: string;
@@ -6,6 +8,12 @@ export interface Class {
     domains: string[];
     subclasses: string[];
     items: string;
+    suggestedTraits?: Traits;
+    suggestedEquipment?: {
+        armor: string;
+        primary: string;
+        secondary?: string;
+    };
 }
 
 export const CLASSES: Class[] = [
@@ -16,7 +24,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 10,
         domains: ['Grace', 'Codex'],
         subclasses: ['Troubadour', 'Wordsmith'],
-        items: 'A romance novel or a letter never opened'
+        items: 'A romance novel or a letter never opened',
+        suggestedTraits: { agility: 0, strength: -1, finesse: 1, instinct: 0, presence: 2, knowledge: 1 },
+        suggestedEquipment: { armor: 'Gambeson Armor', primary: 'Rapier', secondary: 'Small Dagger' }
     },
     {
         name: 'Druid',
@@ -25,7 +35,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 10,
         domains: ['Sage', 'Arcana'],
         subclasses: ['Warden of the Elements', 'Warden of Renewal'],
-        items: 'A small bag of rocks and bones or a strange pendant'
+        items: 'A small bag of rocks and bones or a strange pendant',
+        suggestedTraits: { agility: 1, strength: 0, finesse: 1, instinct: 2, presence: -1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Leather Armor', primary: 'Shortstaff', secondary: 'Round Shield' }
     },
     {
         name: 'Guardian',
@@ -34,7 +46,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 9,
         domains: ['Valor', 'Blade'],
         subclasses: ['Stalwart', 'Vengeance'],
-        items: 'A totem from your mentor or a secret key'
+        items: 'A totem from your mentor or a secret key',
+        suggestedTraits: { agility: 1, strength: 2, finesse: -1, instinct: 0, presence: 1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Chainmail Armor', primary: 'Battleaxe' }
     },
     {
         name: 'Ranger',
@@ -43,7 +57,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 12,
         domains: ['Bone', 'Sage'],
         subclasses: ['Beastbound', 'Wayfinder'],
-        items: 'A trophy from your first kill or a seemingly broken compass'
+        items: 'A trophy from your first kill or a seemingly broken compass',
+        suggestedTraits: { agility: 2, strength: 0, finesse: 1, instinct: 1, presence: -1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Leather Armor', primary: 'Shortbow' }
     },
     {
         name: 'Rogue',
@@ -52,7 +68,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 12,
         domains: ['Midnight', 'Grace'],
         subclasses: ['Nightwalker', 'Syndicate'],
-        items: 'A set of forgery tools or a grappling hook'
+        items: 'A set of forgery tools or a grappling hook',
+        suggestedTraits: { agility: 1, strength: -1, finesse: 2, instinct: 0, presence: 1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Gambeson Armor', primary: 'Dagger', secondary: 'Small Dagger' }
     },
     {
         name: 'Seraph',
@@ -61,7 +79,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 9,
         domains: ['Splendor', 'Valor'],
         subclasses: ['Divine Wielder', 'Winged Sentinel'],
-        items: 'A bundle of offerings or a sigil of your god'
+        items: 'A bundle of offerings or a sigil of your god',
+        suggestedTraits: { agility: 0, strength: 2, finesse: 0, instinct: 1, presence: 1, knowledge: -1 },
+        suggestedEquipment: { armor: 'Chainmail Armor', primary: 'Hallowed Axe', secondary: 'Round Shield' }
     },
     {
         name: 'Sorcerer',
@@ -70,7 +90,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 10,
         domains: ['Arcana', 'Midnight'],
         subclasses: ['Elemental Origin', 'Primal Origin'],
-        items: 'A whispering orb or a family heirloom'
+        items: 'A whispering orb or a family heirloom',
+        suggestedTraits: { agility: 0, strength: -1, finesse: 1, instinct: 2, presence: 1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Gambeson Armor', primary: 'Dualstaff' }
     },
     {
         name: 'Warrior',
@@ -79,7 +101,9 @@ export const CLASSES: Class[] = [
         startingEvasion: 11,
         domains: ['Blade', 'Bone'],
         subclasses: ['Call of the Brave', 'Call of the Slayer'],
-        items: 'The drawing of a lover or a sharpening stone'
+        items: 'The drawing of a lover or a sharpening stone',
+        suggestedTraits: { agility: 2, strength: 1, finesse: 0, instinct: 1, presence: -1, knowledge: 0 },
+        suggestedEquipment: { armor: 'Chainmail Armor', primary: 'Longsword' }
     },
     {
         name: 'Wizard',
@@ -88,6 +112,8 @@ export const CLASSES: Class[] = [
         startingEvasion: 11,
         domains: ['Codex', 'Splendor'],
         subclasses: ['School of Knowledge', 'School of War'],
-        items: 'A book you\'re trying to translate or a tiny, harmless elemental pet'
+        items: 'A book you\'re trying to translate or a tiny, harmless elemental pet',
+        suggestedTraits: { agility: -1, strength: 0, finesse: 0, instinct: 1, presence: 1, knowledge: 2 },
+        suggestedEquipment: { armor: 'Leather Armor', primary: 'Greatstaff' }
     }
 ];

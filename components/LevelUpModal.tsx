@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Character, TraitName, BeastForm } from '../types';
 import { ADVANCEMENTS } from '../data/advancements';
-import { DOMAIN_CARDS } from '../data/domainCards';
+import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import DomainCardSelectorModal from './DomainCardSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
+import BeastformCard from './BeastformCard';
+
 
 interface LevelUpModalProps {
     character: Character;
@@ -32,6 +34,8 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [selectorContext, setSelectorContext] = useState<{ type: 'mandatory' | 'advancement'; index: number; } | null>(null);
     const [newBeastform, setNewBeastform] = useState('');
+    const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+
 
     const isBeastformTierUp = useMemo(() => {
         if (character.class !== 'Druid') return false;
@@ -144,7 +148,13 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
 
     const canConfirm = totalSlotsUsed === 2 && mandatoryDomainCard !== '' && advancementDomainCards.every(c => c !== '') && traitSelectionsValid && (!isBeastformTierUp || newBeastform !== '');
     
-    const handleConfirm = () => {
+    const handleSubmit = () => {
+        if (canConfirm) {
+            setIsConfirmationModalOpen(true);
+        }
+    }
+
+    const handleFinalizeLevelUp = () => {
         if (!canConfirm) return;
         
         let updatedChar: Character = { 
@@ -160,7 +170,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         
         if (newLevel === 2 || newLevel === 5 || newLevel === 8) {
              updatedChar.proficiency += 1;
-             updatedChar.experiences = [...updatedChar.experiences, {name: `Level ${newLevel} Experience`, modifier: 2}];
+             updatedChar.experiences = [...updatedChar.experiences, {name: `Level ${newLevel} Experience`, modifier: 2, description: ''}];
         }
         
         selectedAdvancements.forEach(id => {
@@ -212,7 +222,6 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         if (!isSelectorOpen) return [];
         const currentlySelected = [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean);
         
-        // Exclude the card currently being edited from the "already selected" list
         let cardToExclude = '';
         if(selectorContext) {
             if (selectorContext.type === 'mandatory') {
@@ -247,6 +256,161 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         setSelectorContext(null);
     };
 
+    const renderConfirmationModal = () => {
+        if (!isConfirmationModalOpen) return null;
+
+        // Helper components for detailed display
+        const StatChangeDisplay: React.FC<{ label: string, oldValue: number, newValue: number }> = ({ label, oldValue, newValue }) => (
+            <div className="flex justify-between items-center bg-slate-700 p-2 rounded-lg">
+                <span className="text-sm font-semibold capitalize text-slate-300">{label}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-md font-bold text-slate-400">{oldValue}</span>
+                    <span className="text-teal-400 font-bold">→</span>
+                    <span className="text-md font-bold text-teal-300">{newValue}</span>
+                </div>
+            </div>
+        );
+
+        const NewFeatureDisplay: React.FC<{ title: string, name: string, description: string }> = ({ title, name, description }) => (
+            <div className="bg-slate-700/50 p-3 rounded-lg">
+                <p className="text-xs text-slate-400 font-semibold">{title}</p>
+                <p className="font-bold text-slate-100">{name}</p>
+                <p className="text-sm text-slate-400 mt-1">{description}</p>
+            </div>
+        );
+
+        const NewCardDisplay: React.FC<{ cardName: string }> = ({ cardName }) => {
+            const card = DOMAIN_CARDS.find(c => c.name === cardName);
+            if (!card) return null;
+            return (
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                    <p className="font-bold text-slate-100">{card.name}</p>
+                    <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type} / Lvl {card.level}</p>
+                </div>
+            );
+        };
+
+        // Pre-calculate all changes for display
+        const changes = {
+            level: { old: character.level, new: newLevel },
+            proficiency: { old: character.proficiency, new: character.proficiency },
+            hp: { old: character.hp.max, new: character.hp.max },
+            stress: { old: character.stress.max, new: character.stress.max },
+            evasion: { old: character.evasion, new: character.evasion },
+            traits: {} as Record<string, { old: number, new: number }>,
+            newSubclassFeature: null as (typeof SUBCLASS_FEATURES[0]) | null,
+            newCards: [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean),
+            newBeastform: ALL_BEASTFORMS.find(b => b.name === newBeastform),
+            tierAchievements: tierAchievements,
+        };
+
+        // Tier Achievements
+        if (newLevel === 2 || newLevel === 5 || newLevel === 8) {
+            changes.proficiency.new += 1;
+        }
+
+        // Advancements
+        selectedAdvancements.forEach(id => {
+            const baseId = id.substring(0, id.lastIndexOf('_'));
+            if (baseId.startsWith('add_hp')) changes.hp.new += 1;
+            if (baseId.startsWith('add_stress')) changes.stress.new += 1;
+            if (baseId.startsWith('increase_evasion')) changes.evasion.new += 1;
+            if (baseId.startsWith('upgrade_subclass')) {
+                const nextFeatureType = character.subclassFeatures.some(f => f.type === 'Specialization') ? 'Mastery' : 'Specialization';
+                changes.newSubclassFeature = SUBCLASS_FEATURES.find(f => f.subclass === character.subclass && f.type === nextFeatureType) || null;
+            }
+        });
+
+        // Trait increases
+        traitSelections.forEach(traitStr => {
+            if (traitStr) {
+                const trait = traitStr as TraitName;
+                if (!changes.traits[trait]) {
+                    changes.traits[trait] = { old: character.traits[trait], new: character.traits[trait] };
+                }
+                changes.traits[trait].new += 1;
+            }
+        });
+
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] flex flex-col">
+                    <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                        <h2 className="text-3xl font-bold text-teal-400">Confirm Level Up to {newLevel}</h2>
+                        <button onClick={() => setIsConfirmationModalOpen(false)} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+                    </div>
+                    <div className="overflow-y-auto pr-2 space-y-6 text-slate-300">
+                        {/* Stat Changes */}
+                        <div>
+                            <h3 className="text-xl font-semibold text-slate-200 mb-2">Stat Changes</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <StatChangeDisplay label="Level" oldValue={changes.level.old} newValue={changes.level.new} />
+                                {changes.proficiency.old !== changes.proficiency.new && <StatChangeDisplay label="Proficiency" oldValue={changes.proficiency.old} newValue={changes.proficiency.new} />}
+                                {changes.hp.old !== changes.hp.new && <StatChangeDisplay label="Max HP" oldValue={changes.hp.old} newValue={changes.hp.new} />}
+                                {changes.stress.old !== changes.stress.new && <StatChangeDisplay label="Max Stress" oldValue={changes.stress.old} newValue={changes.stress.new} />}
+                                {changes.evasion.old !== changes.evasion.new && <StatChangeDisplay label="Evasion" oldValue={changes.evasion.old} newValue={changes.evasion.new} />}
+                                {Object.entries(changes.traits).map(([trait, values]) => (
+                                    <StatChangeDisplay key={trait} label={trait} oldValue={values.old} newValue={values.new} />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tier Achievements */}
+                        {changes.tierAchievements.length > 0 && (
+                            <div>
+                                <h3 className="text-xl font-semibold text-slate-200 mb-2">Tier Achievements</h3>
+                                <ul className="list-disc list-inside text-sm text-slate-400 bg-slate-700/50 p-3 rounded-lg space-y-1">
+                                    {changes.tierAchievements.map((ach, i) => <li key={i}>{ach}</li>)}
+                                    <li>All damage thresholds increase by 1.</li>
+                                </ul>
+                            </div>
+                        )}
+                        
+                        {/* New Abilities */}
+                        {(changes.newSubclassFeature || changes.newBeastform) && (
+                            <div>
+                                <h3 className="text-xl font-semibold text-slate-200 mb-2">New Abilities</h3>
+                                <div className="space-y-3">
+                                    {changes.newSubclassFeature && (
+                                        <NewFeatureDisplay
+                                            title={`New ${changes.newSubclassFeature.type} Feature`}
+                                            name={changes.newSubclassFeature.name}
+                                            description={changes.newSubclassFeature.description}
+                                        />
+                                    )}
+                                    {changes.newBeastform && (
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-semibold mb-1">New Beastform Learned</p>
+                                            <BeastformCard form={changes.newBeastform} />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* New Cards */}
+                        {changes.newCards.length > 0 && (
+                            <div>
+                                <h3 className="text-xl font-semibold text-slate-200 mb-2">New Domain Cards (Added to Vault)</h3>
+                                <div className="space-y-2">
+                                    {changes.newCards.map(cardName => <NewCardDisplay key={cardName} cardName={cardName} />)}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex justify-center gap-4 pt-6 mt-auto flex-shrink-0">
+                        <button onClick={() => setIsConfirmationModalOpen(false)} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-lg">
+                            Edit Selections
+                        </button>
+                        <button onClick={handleFinalizeLevelUp} className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg">
+                            Finalize Level Up
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
             {isSelectorOpen && (
@@ -257,6 +421,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                     title="Seleccionar Carta de Dominio"
                 />
             )}
+            {renderConfirmationModal()}
             <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-3xl font-bold text-teal-400">Level Up to {newLevel}!</h2>
@@ -360,44 +525,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                             {newBeastform && (() => {
                                 const form = ALL_BEASTFORMS.find(b=>b.name === newBeastform);
                                 if (!form) return null;
-                                const traitBonusString = form.traitBonus ? `${form.traitBonus.trait.charAt(0).toUpperCase() + form.traitBonus.trait.slice(1)} +${form.traitBonus.value}` : 'None';
-                                return (
-                                     <div className="mt-4 p-4 bg-slate-700/50 rounded-lg border border-slate-700 space-y-3">
-                                        <div>
-                                            <h4 className="font-bold text-lg text-teal-300">{form.name}</h4>
-                                            <p className="text-sm text-slate-300 italic">{form.examples}</p>
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div className="bg-slate-800/50 p-2 rounded">
-                                                <div className="font-bold text-slate-400">Bonuses</div>
-                                                <p className="font-mono text-slate-100">{traitBonusString} | Evasion +{form.evasionBonus}</p>
-                                            </div>
-                                            <div className="bg-slate-800/50 p-2 rounded">
-                                                <div className="font-bold text-slate-400">Attack</div>
-                                                <p className="text-sm text-slate-400 font-mono truncate">
-                                                    {form.attack.trait} | {form.attack.range} | {form.attack.damage}
-                                                </p>
-                                            </div>
-                                        </div>
-            
-                                        <div>
-                                            <h5 className="font-semibold text-slate-200">Advantages</h5>
-                                            <p className="text-sm text-slate-300">Gain advantage on: {form.advantages.join(', ')}.</p>
-                                        </div>
-            
-                                        <div>
-                                            <h5 className="font-semibold text-slate-200">Features</h5>
-                                            <ul className="list-disc list-inside space-y-1 text-sm text-slate-300">
-                                                {form.features.map(feature => (
-                                                    <li key={feature.name}>
-                                                        <span className="font-semibold">{feature.name}:</span> {feature.description}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                );
+                                return ( <div className="mt-4"><BeastformCard form={form} /></div> );
                             })()}
                         </div>
                     )}
@@ -412,7 +540,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                                 Restaurar
                             </button>
                             <button 
-                                onClick={handleConfirm} 
+                                onClick={handleSubmit} 
                                 disabled={!canConfirm} 
                                 className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed"
                             >
