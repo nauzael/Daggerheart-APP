@@ -49,5 +49,15 @@ export const DOMAINS: Domain[] = [
     name: "Valor",
     description: "The domain of protection. Channel formidable strength to protect allies in battle, whether through attack or defense.",
     icon: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
+  },
+  {
+    name: "Blood",
+    description: "The domain of hemocraft and life force manipulation. Wield blood magic to curse enemies, empower allies, and control the very essence of vitality.",
+    icon: "M12 2C7.5 7.5 4 11 4 14.5C4 18.09 7.13 21 12 21s8-2.91 8-6.5C20 11 16.5 7.5 12 2z"
+  },
+  {
+    name: "Dread",
+    description: "The domain of fear, shadow, and necromancy. Channel dark energies to terrify foes, manipulate souls, and summon horrors from beyond the veil.",
+    icon: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-6h8v2H8v-2zm1-4c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm6 0c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1z"
   }
 ];

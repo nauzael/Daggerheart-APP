@@ -72,6 +72,10 @@ const App: React.FC = () => {
           char.activeBeastformTraitBonus = undefined;
       }
 
+      if (char.isWolfFormActive === undefined) {
+          char.isWolfFormActive = false;
+      }
+
       return char as Character;
   };
 

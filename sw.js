@@ -25,6 +25,7 @@ const urlsToCache = [
   '/components/BeastformListModal.tsx',
   '/components/BeastformCard.tsx',
   '/components/SelectionModal.tsx',
+  '/components/WolfFormDisplay.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',
@@ -36,7 +37,8 @@ const urlsToCache = [
   '/data/classFeatures.ts',
   '/data/downtimeMoves.ts',
   '/data/longRestDowntimeMoves.ts',
-  '/data/beastforms.ts'
+  '/data/beastforms.ts',
+  '/data/wolfForm.ts'
 ];
 
 self.addEventListener('install', event => {

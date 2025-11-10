@@ -79,5 +79,53 @@ export const COMMUNITIES: Community[] = [
       description: "Your movement is naturally silent. You have advantage on rolls to move without being heard."
     },
     adjectives: ["hardy", "loyal", "nurturing", "reclusive", "sagacious", "vibrant"]
+  },
+  {
+    name: "Duneborne",
+    feature: {
+      name: "Oasis",
+      description: "During a short rest, you or an ally can reroll a die used for a downtime action."
+    },
+    adjectives: ["arid", "shifting", "hardy", "resourceful", "sun-scorched", "nomadic"]
+  },
+  {
+    name: "Freeborne",
+    feature: {
+      name: "Unbound",
+      description: "Once per session, when you make an action roll with Fear, you can change it to a roll with Hope instead."
+    },
+    adjectives: ["liberated", "defiant", "independent", "resilient", "determined", "unshackled"]
+  },
+  {
+    name: "Frostborne",
+    feature: {
+      name: "Hardy",
+      description: "Once per rest, you can Help an Ally traverse difficult terrain without spending a Hope."
+    },
+    adjectives: ["icy", "stoic", "enduring", "fierce", "isolated", "winter-worn"]
+  },
+  {
+    name: "Hearthborne",
+    feature: {
+      name: "Close-Knit",
+      description: "Once per long rest, you can spend any number of Hope to give an ally the same number of Hope."
+    },
+    adjectives: ["humble", "kind", "grounded", "neighborly", "simple", "warm"]
+  },
+  {
+    name: "Reborne",
+    feature: {
+      name: "Found Family",
+      description: "Once per session, you can spend a Hope to use an ally's community ability. When you do, your ally gains a Hope. At any point, when you've discovered the community you were once a part of, or have joined a new community, you can permanently trade this community card for that one instead."
+    },
+    adjectives: ["amnesiac", "searching", "adaptable", "new", "curious", "unwritten"]
+  },
+  {
+    name: "Warborne",
+    feature: {
+      name: "Brave Face",
+      description: "Once per session, when an attack would cause you to mark a Stress, you can spend a Hope instead."
+    },
+    adjectives: ["ravaged", "scarred", "cynical", "tough", "vigilant", "battle-weary"]
   }
 ];

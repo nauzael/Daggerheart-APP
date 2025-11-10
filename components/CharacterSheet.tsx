@@ -8,10 +8,12 @@ import AddEquipmentModal from './AddEquipmentModal';
 import AddDomainCardModal from './AddDomainCardModal';
 import RestModal from './RestModal';
 import BeastformDisplay from './BeastformDisplay';
+import WolfFormDisplay from './WolfFormDisplay';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
 import { ALL_BEASTFORMS } from '../data/beastforms';
+import { WOLF_FORM_DATA } from '../data/wolfForm';
 
 interface CharacterSheetProps {
     character: Character;
@@ -296,18 +298,20 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         }
         
         // Determine base armor and thresholds
+        const isEffectivelyUnarmored = character.isWolfFormActive || !character.activeArmor;
         const hasBareBones = character.domainCards.includes("Bare Bones");
-        if (hasBareBones && !character.activeArmor) {
+
+        if (hasBareBones && isEffectivelyUnarmored) {
             armorScore = 3 + traits.strength;
             const tier = character.level >= 8 ? 4 : character.level >= 5 ? 3 : character.level >= 2 ? 2 : 1;
             const thresholds = { 1: [9, 19], 2: [11, 24], 3: [13, 31], 4: [15, 38] }[tier];
             [majorThreshold, severeThreshold] = thresholds!;
-        } else if (character.activeArmor) {
+        } else if (character.activeArmor && !character.isWolfFormActive) {
             armorScore = character.activeArmor.baseScore;
             const [baseMajor, baseSevere] = character.activeArmor.baseThresholds.split('/').map(Number);
             majorThreshold = baseMajor + character.level;
             severeThreshold = baseSevere + character.level;
-        } else { // Unarmored
+        } else { // Unarmored (or Wolf Form without Bare Bones)
             armorScore = 0;
             majorThreshold = character.level;
             severeThreshold = character.level * 2;
@@ -318,9 +322,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             ...character.subclassFeatures.map(f => ({ ...f, type: f.type as string })),
             ...(character.primaryWeapon ? [character.primaryWeapon] : []),
             ...(character.secondaryWeapon ? [character.secondaryWeapon] : []),
-            ...(character.activeArmor ? [character.activeArmor] : []),
+            ...(character.activeArmor && !character.isWolfFormActive ? [character.activeArmor] : []),
             ...character.domainCards.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter((c): c is DomainCard => !!c),
-            // FIX: Corrected variable name from activeForm to activeBeastForm
             ...(activeBeastForm ? activeBeastForm.features.map(f => ({ name: f.name, description: f.description, type: 'Beastform' })) : []),
         ];
 
@@ -671,6 +674,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                      {character.class === 'Druid' && (
                         <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
                     )}
+                    {character.class === 'Blood Hunter' && character.subclass === 'Order of the Lycan' && (
+                        <WolfFormDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
+                    )}
                     <Card title="Class & Subclass Features">
                         <div className="space-y-6">
                             <div>
@@ -709,7 +715,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     </Card>
                     <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
                         <div className="grid grid-cols-1 gap-4">
-                            {character.activeBeastFormName ? (
+                            {character.isWolfFormActive ? (
+                                <EquipmentItem item={WOLF_FORM_DATA.unarmedStrike as any} isBeastformAttack={true} />
+                            ) : character.activeBeastFormName ? (
                                 <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
                             ) : (
                                 <>
@@ -869,13 +877,15 @@ const EquipmentItem: React.FC<{item: (Weapon | Armor | BeastForm['attack']) | un
     if (!item) return null;
 
     if (isBeastformAttack) {
-        const attack = item as BeastForm['attack'];
+        const attack = item as any; // Can be BeastForm attack or WolfForm attack
+        const title = attack.name || 'Beastform Attack';
         return (
             <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                <h4 className="font-bold text-slate-100">Beastform Attack</h4>
+                <h4 className="font-bold text-slate-100">{title}</h4>
                 <div className="text-sm text-slate-300">
                     <span>Dmg: <span className="font-mono">{attack.damage}</span></span> | <span>Trait: <span className="font-mono">{attack.trait}</span></span> | <span>Range: <span className="font-mono">{attack.range}</span></span>
                 </div>
+                {attack.feature && <p className="text-xs text-slate-400 mt-1 italic">{attack.feature}</p>}
             </div>
         );
     }

@@ -133,4 +133,46 @@ export const ANCESTRIES: Ancestry[] = [
       { name: "Nimble", description: "Gain a permanent +1 bonus to your Evasion." },
     ],
   },
+  {
+    name: "Earthkin",
+    features: [
+      { name: "Stoneskin", description: "Gain a +1 bonus to your Armor Score and Damage Thresholds." },
+      { name: "Immoveable", description: "While your feet are touching the ground, you cannot be lifted or moved against your will." },
+    ],
+  },
+  {
+    name: "Tidekin",
+    features: [
+      { name: "Amphibious", description: "You can breathe and move naturally underwater." },
+      { name: "Lifespring", description: "Once per rest, when you have access to a small amount of water, you can mark 2 Stress to heal a Hit Point on yourself or an ally." },
+    ],
+  },
+  {
+    name: "Emberkin",
+    features: [
+      { name: "Fireproof", description: "You are immune to damage from magical or mundane flame." },
+      { name: "Ignition", description: "Mark a Stress to wreathe your primary weapon in flame until the end of the scene. While ablaze, it gives off a bright light and grants a 1d6 bonus to damage rolls against targets within Melee range." },
+    ],
+  },
+  {
+    name: "Skykin",
+    features: [
+      { name: "Gale Force", description: "Mark a Stress to conjure a gust of wind that carries you or an ally up to Very Far range. Additionally, you can always control the speed at which you fall." },
+      { name: "Eye of the Storm", description: "Spend 2 Hope to grant a +1 bonus to either your or an ally's Evasion until you next take Severe damage or you use Eye of the Storm again." },
+    ],
+  },
+  {
+    name: "Aetheris",
+    features: [
+      { name: "Hallowed Aura", description: "Once per rest, when an ally within Close range rolls with Fear, you can make it a roll with Hope instead." },
+      { name: "Divine Countenance", description: "You have advantage on rolls to command or persuade." },
+    ],
+  },
+  {
+    name: "Gnome",
+    features: [
+      { name: "Nimble Fingers", description: "When you make a Finesse Roll, you can spend 2 Hope to reroll your Hope Die." },
+      { name: "True Sight", description: "You have advantage on rolls to see through illusions." },
+    ],
+  },
 ];

@@ -1,3 +1,5 @@
+// Fix: Removed self-import of 'SubclassFeature' that was conflicting with the local declaration.
+
 // Fix: Moved SubclassFeature definition here to break a circular dependency and export it correctly.
 export interface SubclassFeature {
     name: string;
@@ -103,4 +105,5 @@ export interface Character {
     beastForms?: BeastForm[];
     activeBeastFormName?: string;
     activeBeastformTraitBonus?: { trait: TraitName; value: number };
+    isWolfFormActive?: boolean;
 }
