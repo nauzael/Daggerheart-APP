@@ -666,11 +666,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         </Card>
                     </div>
                     {character.class === 'Druid' && (
-                        <div className="order-5 md:order-none">
+                        <div className="order-6 md:order-none">
                             <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
                         </div>
                     )}
-                    <div className="order-7 md:order-none">
+                    <div className="order-8 md:order-none">
                         <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
                              <div className="grid grid-cols-1 gap-4">
                                 {character.activeBeastFormName ? (
@@ -685,7 +685,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                              </div>
                         </Card>
                     </div>
-                    <div className="order-6 md:order-none">
+                    <div className="order-7 md:order-none">
                         <Card title="Characteristics & Experiences">
                             {character.ancestryFeatures && (
                                 <div className="mb-4">
@@ -719,7 +719,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             </div>
                         </Card>
                     </div>
-                    <div className="order-4 md:order-none">
+                    <div className="order-5 md:order-none">
                          <Card title="Class & Subclass Features">
                             <div className="space-y-6">
                                 <div>
@@ -792,7 +792,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             </div>
                         </Card>
                     </div>
-                    <div className="order-8 md:order-none">
+                    <div className="order-4 md:order-none">
                          <Card title="The Vault">
                              <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                                 {vaultCards.map(card => {
