@@ -625,9 +625,9 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-10 lg:grid-cols-3 gap-6">
-                {/* --- COLUMN 1 (Tablet 30% / Desktop 33%) --- */}
-                <div className="space-y-6 md:col-span-3 lg:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* --- Left Column (33%) --- */}
+                <div className="space-y-6 md:col-span-1">
                     <Card title="Combat Stats">
                         <div className="space-y-4">
                             <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked />
@@ -668,7 +668,121 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
                         </div>
                     </Card>
-                     <Card title="Characteristics & Experiences">
+                     {character.class === 'Druid' && (
+                        <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
+                    )}
+                    <Card title="Class & Subclass Features">
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
+                                <div className="space-y-3">
+                                    {classFeatures.map(feature => (
+                                        <FeatureDisplayItem 
+                                            key={feature.name}
+                                            name={feature.name}
+                                            type={feature.type}
+                                            description={feature.description}
+                                            character={character}
+                                            onUsageChange={handleAbilityUsageChange}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            {character.subclassFeatures && character.subclassFeatures.length > 0 && (
+                                <div>
+                                    <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
+                                    <div className="space-y-3">
+                                        {character.subclassFeatures.map(feature => (
+                                            <FeatureDisplayItem 
+                                                key={feature.name}
+                                                name={feature.name}
+                                                type={feature.type}
+                                                description={feature.description}
+                                                character={character}
+                                                onUsageChange={handleAbilityUsageChange}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                    <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
+                        <div className="grid grid-cols-1 gap-4">
+                            {character.activeBeastFormName ? (
+                                <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
+                            ) : (
+                                <>
+                                    {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                                    {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                                    {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                                </>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+
+                {/* --- Right Column (67%) --- */}
+                <div className="space-y-6 md:col-span-2">
+                    <Card 
+                        title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
+                        headerContent={
+                            <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
+                                + Add Card
+                            </button>
+                        }
+                    >
+                        <div className="space-y-3">
+                            {loadoutCards.map(card => (
+                                <DomainCardDisplay 
+                                    key={card.name} 
+                                    card={card}
+                                    button={
+                                        <button 
+                                            onClick={() => handleSendToVault(card.name)} 
+                                            className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
+                                            title="Send to Vault"
+                                        >
+                                            Vault
+                                        </button>
+                                    }
+                                    character={character}
+                                    onUsageChange={handleAbilityUsageChange}
+                                />
+                            ))}
+                            {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
+                        </div>
+                    </Card>
+                    <Card title="The Vault">
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                            {vaultCards.map(card => {
+                                const recallCost = card.recallCost ?? 0;
+                                const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
+                                const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
+                                
+                                return (
+                                    <DomainCardDisplay
+                                        key={card.name}
+                                        card={card}
+                                        button={
+                                            <button
+                                                onClick={() => handleRecallFromVault(card.name)}
+                                                disabled={isDisabled}
+                                                className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
+                                                title={title}
+                                            >
+                                                Recall
+                                            </button>
+                                        }
+                                        character={character}
+                                        onUsageChange={handleAbilityUsageChange}
+                                    />
+                                );
+                            })}
+                            {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
+                        </div>
+                    </Card>
+                    <Card title="Characteristics & Experiences">
                         {character.ancestryFeatures && (
                             <div className="mb-4">
                                 <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
@@ -689,172 +803,50 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             />
                             ))}
                     </Card>
-                </div>
-
-                {/* --- COLUMN 2 & 3 WRAPPER (Tablet 70% / Desktop 66%) --- */}
-                <div className="md:col-span-7 lg:col-span-2">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Desktop Column 2 */}
-                        <div className="space-y-6">
-                            <Card title="Class & Subclass Features">
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
-                                        <div className="space-y-3">
-                                            {classFeatures.map(feature => (
-                                                <FeatureDisplayItem 
-                                                    key={feature.name}
-                                                    name={feature.name}
-                                                    type={feature.type}
-                                                    description={feature.description}
-                                                    character={character}
-                                                    onUsageChange={handleAbilityUsageChange}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {character.subclassFeatures && character.subclassFeatures.length > 0 && (
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
-                                            <div className="space-y-3">
-                                                {character.subclassFeatures.map(feature => (
-                                                    <FeatureDisplayItem 
-                                                        key={feature.name}
-                                                        name={feature.name}
-                                                        type={feature.type}
-                                                        description={feature.description}
-                                                        character={character}
-                                                        onUsageChange={handleAbilityUsageChange}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
-                             {character.class === 'Druid' && (
-                                <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
-                            )}
-                             <Card title="Combat & Equipment" headerContent={<button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {character.activeBeastFormName ? (
-                                        <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
-                                    ) : (
-                                        <>
-                                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
-                                        </>
-                                    )}
-                                </div>
-                            </Card>
+                    <Card title="Inventory">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
+                            <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
                         </div>
-                        {/* Desktop Column 3 */}
-                        <div className="space-y-6">
-                             <Card 
-                                title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
-                                headerContent={
-                                    <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
-                                        + Add Card
-                                    </button>
-                                }
-                            >
-                                <div className="space-y-3">
-                                    {loadoutCards.map(card => (
-                                        <DomainCardDisplay 
-                                            key={card.name} 
-                                            card={card}
-                                            button={
-                                                <button 
-                                                    onClick={() => handleSendToVault(card.name)} 
-                                                    className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
-                                                    title="Send to Vault"
-                                                >
-                                                    Vault
-                                                </button>
-                                            }
-                                            character={character}
-                                            onUsageChange={handleAbilityUsageChange}
-                                        />
-                                    ))}
-                                    {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
-                                </div>
-                            </Card>
-                            <Card title="The Vault">
-                                <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                                    {vaultCards.map(card => {
-                                        const recallCost = card.recallCost ?? 0;
-                                        const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
-                                        const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
-                                        
-                                        return (
-                                            <DomainCardDisplay
-                                                key={card.name}
-                                                card={card}
-                                                button={
-                                                    <button
-                                                        onClick={() => handleRecallFromVault(card.name)}
-                                                        disabled={isDisabled}
-                                                        className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
-                                                        title={title}
-                                                    >
-                                                        Recall
-                                                    </button>
-                                                }
-                                                character={character}
-                                                onUsageChange={handleAbilityUsageChange}
-                                            />
-                                        );
-                                    })}
-                                    {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
-                                </div>
-                            </Card>
-                            <Card title="Inventory">
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
-                                    <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
-                                </div>
-                                <ul className="space-y-2 pr-2">
-                                    {inventory.map((item, i) => (
-                                        <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
-                                            <span>{item}</span>
-                                            <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <div className="flex gap-2 mt-4">
-                                    <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
-                                    <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
-                                </div>
-                            </Card>
-                            <Card title="Notes & Background">
-                                {character.notes && character.notes.length > 0 ? (
-                                    <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
-                                        {character.notes.map((note, i) => (
-                                            <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
-                                                <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
-                                                <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-slate-400 text-center mb-4">No notes yet.</p>
-                                )}
-                                <div className="flex flex-col gap-2 mt-2">
-                                    <textarea 
-                                        value={newNote} 
-                                        onChange={e => setNewNote(e.target.value)} 
-                                        placeholder="Add a new note..." 
-                                        rows={3} 
-                                        className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
-                                    />
-                                    <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
-                                        Add Note
-                                    </button>
-                                </div>
-                            </Card>
+                        <ul className="space-y-2 pr-2">
+                            {inventory.map((item, i) => (
+                                <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
+                                    <span>{item}</span>
+                                    <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="flex gap-2 mt-4">
+                            <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
+                            <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
                         </div>
-                    </div>
+                    </Card>
+                    <Card title="Notes & Background">
+                        {character.notes && character.notes.length > 0 ? (
+                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
+                                {character.notes.map((note, i) => (
+                                    <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
+                                        <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
+                                        <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-slate-400 text-center mb-4">No notes yet.</p>
+                        )}
+                        <div className="flex flex-col gap-2 mt-2">
+                            <textarea 
+                                value={newNote} 
+                                onChange={e => setNewNote(e.target.value)} 
+                                placeholder="Add a new note..." 
+                                rows={3} 
+                                className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
+                            />
+                            <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
+                                Add Note
+                            </button>
+                        </div>
+                    </Card>
                 </div>
             </div>
             
