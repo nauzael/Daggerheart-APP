@@ -75,6 +75,10 @@ const App: React.FC = () => {
       if (char.isWolfFormActive === undefined) {
           char.isWolfFormActive = false;
       }
+      
+      if (char.profileImage === undefined) {
+          char.profileImage = undefined;
+      }
 
       return char as Character;
   };

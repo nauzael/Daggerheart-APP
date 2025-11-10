@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
@@ -9,6 +9,7 @@ import AddDomainCardModal from './AddDomainCardModal';
 import RestModal from './RestModal';
 import BeastformDisplay from './BeastformDisplay';
 import WolfFormDisplay from './WolfFormDisplay';
+import ProfileImageEditorModal from './ProfileImageEditorModal';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
@@ -237,6 +238,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
     const [isAddDomainCardModalOpen, setIsAddDomainCardModalOpen] = useState(false);
     const [isRestModalOpen, setIsRestModalOpen] = useState(false);
+    const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
@@ -457,6 +459,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter(updatedChar);
         setIsLevelUpModalOpen(false);
     };
+
+    const handleProfileImageUpdate = (imageData: string) => {
+        onUpdateCharacter({ ...character, profileImage: imageData });
+        setIsImageEditorOpen(false);
+    };
     
     const loadoutCards = useMemo(() => {
         return DOMAIN_CARDS.filter(card => character.domainCards.includes(card.name))
@@ -613,12 +620,42 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-4xl sm:text-5xl font-bold text-teal-400">{character.name}</h1>
-                    <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
+            {isImageEditorOpen && (
+                <ProfileImageEditorModal
+                    currentImage={character.profileImage}
+                    onClose={() => setIsImageEditorOpen(false)}
+                    onSave={handleProfileImageUpdate}
+                />
+            )}
+            <header className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-6">
+                <div className="flex items-center gap-4 sm:gap-6">
+                    <div 
+                        className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-700 border-2 border-slate-600 group flex-shrink-0 cursor-pointer"
+                        onClick={() => setIsImageEditorOpen(true)}
+                        role="button"
+                        aria-label="Change profile image"
+                    >
+                        {character.profileImage ? (
+                            <img src={character.profileImage} alt={character.name} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="text-center sm:text-left">
+                        <h1 className="text-4xl sm:text-5xl font-bold text-teal-400">{character.name}</h1>
+                        <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
+                    </div>
                 </div>
-                 <div className="flex gap-2">
+                 <div className="flex gap-2 justify-center sm:justify-end">
                     <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
                         Rest
                     </button>

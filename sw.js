@@ -26,6 +26,7 @@ const urlsToCache = [
   '/components/BeastformCard.tsx',
   '/components/SelectionModal.tsx',
   '/components/WolfFormDisplay.tsx',
+  '/components/ProfileImageEditorModal.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',

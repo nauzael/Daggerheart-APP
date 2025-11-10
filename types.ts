@@ -99,6 +99,7 @@ export interface Character {
     evasion: number;
     subclassFeatures: SubclassFeature[];
     abilityUsage: { [key: string]: boolean | number };
+    profileImage?: string;
     primaryWeapon?: Weapon;
     secondaryWeapon?: Weapon;
     activeArmor?: Armor;
