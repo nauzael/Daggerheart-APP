@@ -45,9 +45,9 @@ const SelectionModal = <T extends { name: string }>({
                     <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none" aria-label="Close">&times;</button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden flex-grow">
+                <div className="grid grid-cols-1 md:grid-cols-10 gap-6 overflow-hidden flex-grow">
                     {/* List Column - Conditional visibility on mobile */}
-                    <div className={`md:col-span-1 overflow-y-auto pr-2 space-y-2 ${isShowingDetailsOnMobile ? 'hidden md:block' : 'block'}`}>
+                    <div className={`md:col-span-3 overflow-y-auto pr-2 space-y-2 ${isShowingDetailsOnMobile ? 'hidden md:block' : 'block'}`}>
                         {items.map(item => (
                             <button
                                 key={item.name}
@@ -67,7 +67,7 @@ const SelectionModal = <T extends { name: string }>({
                     </div>
 
                     {/* Details Column - Conditional visibility on mobile */}
-                    <div className={`md:col-span-2 bg-slate-900/50 p-4 rounded-lg overflow-y-auto ${isShowingDetailsOnMobile ? 'block' : 'hidden md:block'}`}>
+                    <div className={`md:col-span-7 bg-slate-900/50 p-4 rounded-lg overflow-y-auto ${isShowingDetailsOnMobile ? 'block' : 'hidden md:block'}`}>
                         <button 
                             onClick={() => setIsShowingDetailsOnMobile(false)}
                             className="md:hidden mb-4 bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg w-full"
