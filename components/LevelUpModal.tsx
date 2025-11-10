@@ -334,7 +334,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
 
         return (
             <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 animate-fade-in">
-                <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] flex flex-col">
+                <div className="bg-slate-800 rounded-lg shadow-xl p-4 sm:p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] flex flex-col">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <h2 className="text-3xl font-bold text-teal-400">Confirm Level Up to {newLevel}</h2>
                         <button onClick={() => setIsConfirmationModalOpen(false)} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
@@ -422,7 +422,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                 />
             )}
             {renderConfirmationModal()}
-            <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-slate-800 rounded-lg shadow-xl p-4 sm:p-6 border border-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-3xl font-bold text-teal-400">Level Up to {newLevel}!</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>

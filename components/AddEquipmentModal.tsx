@@ -84,7 +84,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ character, onClos
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="bg-slate-800 rounded-lg shadow-xl p-4 sm:p-6 border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-600 flex-shrink-0">
                     <h2 className="text-2xl font-bold text-teal-400">Cambiar Equipo</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>

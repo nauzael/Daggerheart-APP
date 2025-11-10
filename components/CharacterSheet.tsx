@@ -612,7 +612,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         <div className="space-y-6">
             <header className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-5xl font-bold text-teal-400">{character.name}</h1>
+                    <h1 className="text-4xl sm:text-5xl font-bold text-teal-400">{character.name}</h1>
                     <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
                 </div>
                  <div className="flex gap-2">
@@ -640,19 +640,19 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             <div className="grid grid-cols-3 gap-2 text-center">
                                 <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
                                     <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
                                         1-{derivedStats.damageThresholds.major - 1}
                                     </div>
                                 </div>
                                 <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
                                     <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
                                         {derivedStats.damageThresholds.major}
                                     </div>
                                 </div>
                                 <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
                                     <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
-                                    <div className="text-xl font-bold text-slate-100 font-mono">
+                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
                                         {derivedStats.damageThresholds.severe}
                                     </div>
                                 </div>

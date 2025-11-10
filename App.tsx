@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Character, BeastForm } from './types';
 import CharacterCreator from './components/CharacterCreator';
@@ -252,7 +251,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8 overflow-hidden">
+    <div className="relative min-h-screen bg-slate-900 text-slate-200 font-sans p-2 sm:p-4 md:p-6 lg:p-8 overflow-hidden">
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80rem] h-[50rem] blur-3xl pointer-events-none"
         style={{
@@ -266,7 +265,7 @@ const App: React.FC = () => {
             <div className="inline-block mx-auto mb-2">
                 <DaggerheartLogo />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
               {getHeaderTitle()}
             </h1>
           </>

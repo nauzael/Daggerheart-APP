@@ -55,7 +55,7 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
-            <div className="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="bg-slate-800 rounded-lg shadow-xl p-4 sm:p-6 border border-slate-700 w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4 flex-shrink-0">
                     <h2 className="text-3xl font-bold text-teal-400">Take a Rest</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-white text-3xl leading-none" aria-label="Close">&times;</button>
