@@ -13,18 +13,39 @@ const SelectableDomainCard: React.FC<{ card: DomainCard; isSelected: boolean; on
     const selectedClasses = "bg-teal-800/50 border-teal-500 shadow-lg ring-2 ring-teal-500";
     const unselectedClasses = "bg-slate-700/80 border-slate-600 hover:bg-slate-600/80";
 
+    const isGrimoire = card.type === 'Grimoire';
+
+    const renderGrimoireDescription = () => {
+        const spells = card.description.split('\n').filter(s => s.trim() !== '');
+        return (
+            <div className="mt-2 space-y-3 flex-grow">
+                {spells.map((spell, index) => {
+                    const parts = spell.split(':');
+                    const spellName = parts[0];
+                    const spellDescription = parts.slice(1).join(':').trim();
+                    return (
+                        <div key={index} className="p-2 bg-slate-800/50 rounded-md border border-slate-600/50">
+                            <h5 className="font-semibold text-slate-200">{spellName}</h5>
+                            <p className="text-sm text-slate-400">{spellDescription}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
         <div className={`${baseClasses} ${isSelected ? selectedClasses : unselectedClasses}`} onClick={onSelect}>
             <div className="flex justify-between items-start gap-2">
                 <div className="flex-grow">
                     <h4 className="font-bold text-lg text-slate-100">{card.name}</h4>
                     <p className="text-xs text-slate-400 font-mono">
-                        {card.domain} / {card.type} / Nvl {card.level}
+                        {card.domain} / {card.type} / Nivel {card.level}
                         {card.recallCost !== undefined && ` / Recuperar: ${card.recallCost}`}
                     </p>
                 </div>
             </div>
-            <p className="text-sm text-slate-300 mt-2">{card.description}</p>
+            {isGrimoire ? renderGrimoireDescription() : <p className="text-sm text-slate-300 mt-2 flex-grow">{card.description}</p>}
         </div>
     );
 };

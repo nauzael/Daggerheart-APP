@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm } from '../types';
+import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
 import StatDisplay from './StatDisplay';
@@ -15,6 +15,8 @@ import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
 import { ALL_BEASTFORMS } from '../data/beastforms';
 import { WOLF_FORM_DATA } from '../data/wolfForm';
+import StanceSelectorModal from './StanceSelectorModal';
+import { MARTIAL_STANCES } from '../data/martialStances';
 
 interface CharacterSheetProps {
     character: Character;
@@ -29,8 +31,10 @@ const getSpellcastTrait = (char: Character): TraitName => {
     switch(char.class) {
         case 'Bard':
         case 'Seraph':
+        case 'Warlock':
             return 'presence';
         case 'Druid':
+        case 'Brawler': // Martial Artist uses Instinct
             return 'instinct';
         case 'Sorcerer':
         case 'Wizard':
@@ -40,6 +44,46 @@ const getSpellcastTrait = (char: Character): TraitName => {
     }
 }
 
+
+const EditableField: React.FC<{
+    label: string;
+    value: string;
+    onSave: (newValue: string) => void;
+    inputClass?: string;
+}> = ({ label, value, onSave, inputClass }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [text, setText] = useState(value);
+
+    const handleSave = () => {
+        onSave(text);
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <div className="flex items-center gap-2">
+                <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                    className={`bg-slate-900 p-1 rounded border border-slate-600 text-slate-100 focus:ring-teal-500 focus:border-teal-500 ${inputClass}`}
+                    autoFocus
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div onClick={() => setIsEditing(true)} className="group cursor-pointer flex items-center gap-2">
+            <span className={inputClass}>{value || `(${label})`}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+        </div>
+    );
+};
 
 const FeatureDisplayItem: React.FC<{ 
     name: string; 
@@ -202,6 +246,27 @@ const DomainCardDisplay: React.FC<{
         }
         return null;
     }
+    
+    const isGrimoire = card.type === 'Grimoire';
+
+    const renderGrimoireDescription = () => {
+        const spells = card.description.split('\n').filter(s => s.trim() !== '');
+        return (
+            <div className="mt-2 space-y-3">
+                {spells.map((spell, index) => {
+                    const parts = spell.split(':');
+                    const spellName = parts[0];
+                    const spellDescription = parts.slice(1).join(':').trim();
+                    return (
+                        <div key={index} className="p-2 bg-slate-800/50 rounded-md border border-slate-600/50">
+                            <h5 className="font-semibold text-slate-200">{spellName}</h5>
+                            <p className="text-sm text-slate-400">{spellDescription}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
     return (
         <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
@@ -222,7 +287,7 @@ const DomainCardDisplay: React.FC<{
                     {button}
                 </div>
             </div>
-            <p className="text-sm text-slate-300 mt-2">{card.description}</p>
+            {isGrimoire ? renderGrimoireDescription() : <p className="text-sm text-slate-300 mt-2">{card.description}</p>}
             {usageInfo && (
                 <div className="mt-2 pt-2 border-t border-slate-600/50">
                     {renderUsageTracker()}
@@ -239,6 +304,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [isAddDomainCardModalOpen, setIsAddDomainCardModalOpen] = useState(false);
     const [isRestModalOpen, setIsRestModalOpen] = useState(false);
     const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+    const [isStanceModalOpen, setIsStanceModalOpen] = useState(false);
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
@@ -257,6 +323,13 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         if (character.activeBeastformTraitBonus) {
             traits[character.activeBeastformTraitBonus.trait] = (traits[character.activeBeastformTraitBonus.trait] || 0) + character.activeBeastformTraitBonus.value;
         }
+        
+        // Brawler Martial Artist Stance Bonus
+        if (character.class === 'Brawler' && character.subclass === 'Martial Artist' && character.activeMartialStance) {
+            const stance = character.activeMartialStance;
+            if (stance.name === 'Flowing River Stance') evasion += 1;
+        }
+
 
         let armorScore: number;
         let majorThreshold: number;
@@ -317,6 +390,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             armorScore = 0;
             majorThreshold = character.level;
             severeThreshold = character.level * 2;
+        }
+        
+        // Brawler Martial Artist Stance Bonus for Armor
+        if (character.class === 'Brawler' && character.subclass === 'Martial Artist' && character.activeMartialStance?.name === 'Stone Mountain Stance') {
+            armorScore += 1;
         }
 
         const allItemsAndFeatures = [
@@ -408,6 +486,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const handleHopeChange = (value: number) => {
         onUpdateCharacter({ ...character, hope: value });
     };
+
+    const handleFavorChange = (change: number) => {
+        const currentValue = character.favor || 0;
+        const updatedValue = Math.max(0, currentValue + change);
+        onUpdateCharacter({ ...character, favor: updatedValue });
+    };
     
     const handleAbilityUsageChange = (name: string, value: boolean | number) => {
         const newUsage = { ...character.abilityUsage, [name]: value };
@@ -474,8 +558,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         return CLASS_FEATURES.filter(feature => feature.className === character.class);
     }, [character.class]);
     
-    const handleConfirmRest = (restData: { type: 'short' | 'long'; moves: string[] }) => {
-        const { type, moves } = restData;
+    const handleConfirmRest = (restData: { type: 'short' | 'long'; moves: string[]; newFocus?: number }) => {
+        const { type, moves, newFocus } = restData;
         
         const tempChar: Character = JSON.parse(JSON.stringify(character));
 
@@ -494,17 +578,23 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     case 'prepare':
                         tempChar.hope = Math.min(6, tempChar.hope + 1);
                         break;
+                    case 'tithe_to_patron': {
+                        const favorGained = Math.floor(Math.random() * 4) + 1;
+                        tempChar.favor = (tempChar.favor || 0) + favorGained;
+                        setTimeout(() => alert(`You paid your tithe and gained ${favorGained} Favor!`), 100);
+                        break;
+                    }
                     case 'work_on_project':
                         break;
                 }
             });
     
             if (moves.includes('work_on_project')) {
-                alert("Remember to describe your project work to your GM and manage its countdown.");
+                 setTimeout(() => alert("Remember to describe your project work to your GM and manage its countdown."), 100);
             }
             const prepareCount = moves.filter(m => m === 'prepare').length;
             if (prepareCount > 0) {
-                alert(`You prepared for the day and gained ${prepareCount} Hope! (If you prepared with party members, you each gain 2 per 'Prepare' action instead).`);
+                 setTimeout(() => alert(`You prepared for the day and gained ${prepareCount} Hope! (If you prepared with party members, you each gain 2 per 'Prepare' action instead).`), 100);
             }
         } else { // Short rest
             moves.forEach(moveId => {
@@ -520,12 +610,19 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         break;
                     case 'rummage_pack':
                         tempChar.hope = Math.max(0, tempChar.hope - 1);
-                        alert("You spent 1 Hope and found a useful mundane item! Describe it to your GM.");
+                        setTimeout(() => alert("You spent 1 Hope and found a useful mundane item! Describe it to your GM."), 100);
                         break;
                 }
             });
         }
         
+        // Brawler (Martial Artist) Focus Reset on ANY rest
+        if (tempChar.class === 'Brawler' && tempChar.subclass === 'Martial Artist' && newFocus !== undefined) {
+            const maxFocus = newFocus;
+            tempChar.focus = { current: maxFocus, max: maxFocus };
+            tempChar.activeMartialStance = undefined; // Stance deactivates on rest
+        }
+
         // Reset ability usages
         const newAbilityUsage = { ...tempChar.abilityUsage };
         const allTrackableAbilities = [
@@ -610,6 +707,60 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, vault: newVault, domainCards: newDomainCards, hope: newHope });
     };
 
+    const handleShiftStance = (stance: MartialStance) => {
+        if (character.focus && character.focus.current > 0) {
+            onUpdateCharacter({
+                ...character,
+                focus: { ...character.focus, current: character.focus.current - 1 },
+                activeMartialStance: stance
+            });
+        } else {
+            alert("Not enough Focus to shift stance.");
+        }
+    };
+
+    const handleDeactivateStance = () => {
+        onUpdateCharacter({ ...character, activeMartialStance: undefined });
+    };
+
+    const characterTier = useMemo(() => {
+        const level = character.level;
+        if (level >= 8) return 4;
+        if (level >= 5) return 3;
+        if (level >= 2) return 2;
+        return 1;
+    }, [character.level]);
+
+    const totalStancesAllowed = useMemo(() => {
+        let allowed = 0;
+        if (character.level >= 1) allowed = 2;
+        if (character.level >= 2) allowed = 4;
+        if (character.level >= 5) allowed = 6;
+        if (character.level >= 8) allowed = 8;
+        return allowed;
+    }, [character.level]);
+
+    const stancesToLearnCount = useMemo(() => {
+        if (character.class !== 'Brawler' || character.subclass !== 'Martial Artist') return 0;
+        const currentStances = character.martialStances?.length || 0;
+        return Math.max(0, totalStancesAllowed - currentStances);
+    }, [character, totalStancesAllowed]);
+
+    const availableStancesForLearning = useMemo(() => {
+        if (!stancesToLearnCount) return [];
+        const knownStances = new Set((character.martialStances || []).map(s => s.name));
+        return MARTIAL_STANCES.filter(s => s.tier <= characterTier && !knownStances.has(s.name));
+    }, [stancesToLearnCount, characterTier, character.martialStances]);
+
+    const handleLearnStances = (newStanceNames: string[]) => {
+        const newStances = MARTIAL_STANCES.filter(s => newStanceNames.includes(s.name));
+        onUpdateCharacter({
+            ...character,
+            martialStances: [...(character.martialStances || []), ...newStances]
+        });
+        setIsStanceModalOpen(false);
+    };
+
 
     const communityFeature = COMMUNITIES.find(c => c.name === character.community)?.feature;
 
@@ -625,6 +776,15 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     currentImage={character.profileImage}
                     onClose={() => setIsImageEditorOpen(false)}
                     onSave={handleProfileImageUpdate}
+                />
+            )}
+            {isStanceModalOpen && (
+                <StanceSelectorModal
+                    availableStances={availableStancesForLearning}
+                    onClose={() => setIsStanceModalOpen(false)}
+                    onConfirm={handleLearnStances}
+                    title="Learn New Stances"
+                    selectionLimit={stancesToLearnCount}
                 />
             )}
             <header className="flex flex-col sm:flex-row justify-between items-center gap-6">
@@ -708,6 +868,106 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
                         </div>
                     </Card>
+                    {character.class === 'Warlock' && (
+                        <Card title="Patron & Favor">
+                            <div className="space-y-4">
+                                <div>
+                                    <EditableField
+                                        label="Patron Name"
+                                        value={character.patronName || ''}
+                                        onSave={(newName) => onUpdateCharacter({ ...character, patronName: newName })}
+                                        inputClass="text-lg font-bold text-teal-300"
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h4 className="font-semibold text-slate-300 border-b border-slate-700 pb-1">Boons</h4>
+                                    {character.boons?.map((boon, index) => {
+                                        const characterTier = character.level >= 8 ? 4 : character.level >= 5 ? 3 : character.level >= 2 ? 2 : 1;
+                                        const boonValue = 3 + (characterTier - 1);
+
+                                        return (
+                                            <div key={index} className="flex justify-between items-center bg-slate-700/50 p-2 rounded-md">
+                                                <EditableField
+                                                    label={`Boon ${index + 1}`}
+                                                    value={boon.name}
+                                                    onSave={(newName) => {
+                                                        const newBoons = [...(character.boons || [])];
+                                                        newBoons[index] = { ...newBoons[index], name: newName };
+                                                        onUpdateCharacter({ ...character, boons: newBoons });
+                                                    }}
+                                                    inputClass="text-md text-slate-100"
+                                                />
+                                                <span className="text-xl font-bold text-teal-300 font-mono">+{boonValue}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <StatDisplay label="Favor" value={character.favor || 0} isEditable onUpdate={handleFavorChange} />
+
+                                <p className="text-xs text-slate-400 italic pt-2 border-t border-slate-700">
+                                    During a long rest, you may pay one of your downtime actions as a tithe to your patron to gain 1d4 Favor. If you forgo this offering, the GM gains a Fear. Before making an action roll where a Boon is applicable, you can spend a Favor to add its bonus to the roll.
+                                </p>
+                            </div>
+                        </Card>
+                    )}
+                    {character.class === 'Brawler' && character.subclass === 'Martial Artist' && character.focus && (
+                        <Card title="Martial Form & Focus" headerContent={
+                            stancesToLearnCount > 0 && (
+                                <button onClick={() => setIsStanceModalOpen(true)} className="text-sm bg-sky-600 hover:bg-sky-500 py-1 px-3 rounded-md">
+                                    Learn Stances ({stancesToLearnCount})
+                                </button>
+                            )
+                        }>
+                            <div className="space-y-4">
+                                <ThresholdTracker 
+                                    label="Focus" 
+                                    current={character.focus.current} 
+                                    max={character.focus.max} 
+                                    onSet={(v) => onUpdateCharacter({...character, focus: {...character.focus!, current: v}})}
+                                    color="bg-indigo-500" 
+                                />
+                                {character.activeMartialStance ? (
+                                    <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-xs text-indigo-300 font-semibold">Active Stance</p>
+                                                <h4 className="font-bold text-lg text-slate-100">{character.activeMartialStance.name}</h4>
+                                            </div>
+                                            <button onClick={handleDeactivateStance} className="text-xs bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded">Deactivate</button>
+                                        </div>
+                                        <p className="text-sm text-slate-300 mt-1">{character.activeMartialStance.description}</p>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-slate-400 text-sm">No active stance.</p>
+                                )}
+                                <div>
+                                    <h4 className="font-semibold text-slate-300 mb-2">Learned Stances</h4>
+                                    <div className="space-y-3">
+                                        {character.martialStances?.map(stance => (
+                                            <div key={stance.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <div>
+                                                        <h5 className="font-bold text-slate-100">{stance.name}</h5>
+                                                        <p className="text-xs text-slate-400 font-mono">Tier {stance.tier}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleShiftStance(stance)}
+                                                        disabled={character.focus!.current === 0 || character.activeMartialStance?.name === stance.name}
+                                                        className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-sm disabled:bg-slate-600 disabled:cursor-not-allowed"
+                                                    >
+                                                        Shift
+                                                    </button>
+                                                </div>
+                                                <p className="text-sm text-slate-300 mt-2 border-t border-slate-600/50 pt-2">{stance.description}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
                      {character.class === 'Druid' && (
                         <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
                     )}

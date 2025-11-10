@@ -7,7 +7,7 @@ interface RestModalProps {
     character: Character;
     armorScore: number;
     onClose: () => void;
-    onConfirm: (data: { type: 'short' | 'long'; moves: string[] }) => void;
+    onConfirm: (data: { type: 'short' | 'long'; moves: string[]; newFocus?: number }) => void;
 }
 
 const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, onConfirm }) => {
@@ -19,6 +19,9 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
     // For long rest
     const [firstMove, setFirstMove] = useState('');
     const [secondMove, setSecondMove] = useState('');
+    
+    const [newFocus, setNewFocus] = useState('');
+    const isMartialArtist = useMemo(() => character.class === 'Brawler' && character.subclass === 'Martial Artist', [character]);
 
     const handleShortMoveToggle = (moveId: string) => {
         setSelectedShortMoves(prev => {
@@ -37,21 +40,41 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
         setSelectedShortMoves([]);
         setFirstMove('');
         setSecondMove('');
+        setNewFocus('');
     };
     
-    const isConfirmDisabled = restType === 'short' 
-        ? selectedShortMoves.length !== 1
-        : !firstMove || !secondMove;
+    const isConfirmDisabled = useMemo(() => {
+        const restMovesInvalid = restType === 'short' 
+            ? selectedShortMoves.length !== 1
+            : !firstMove || !secondMove;
+        
+        const focusInvalid = isMartialArtist && (!newFocus || Number(newFocus) < 1 || Number(newFocus) > 6);
+
+        return restMovesInvalid || focusInvalid;
+    }, [restType, selectedShortMoves, firstMove, secondMove, isMartialArtist, newFocus]);
+
 
     const handleSubmit = () => {
         if (isConfirmDisabled) return;
 
-        if (restType === 'short') {
-            onConfirm({ type: 'short', moves: selectedShortMoves });
+        const baseData = {
+            type: restType,
+            moves: restType === 'short' ? selectedShortMoves : [firstMove, secondMove],
+        };
+
+        if (isMartialArtist) {
+            onConfirm({ ...baseData, newFocus: Number(newFocus) });
         } else {
-            onConfirm({ type: 'long', moves: [firstMove, secondMove] });
+            onConfirm(baseData);
         }
     };
+    
+    const availableLongRestMoves = useMemo(() => {
+        if (character.class !== 'Warlock') {
+            return LONG_REST_DOWNTIME_MOVES.filter(move => move.id !== 'tithe_to_patron');
+        }
+        return LONG_REST_DOWNTIME_MOVES;
+    }, [character.class]);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
@@ -126,11 +149,14 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
                             <div className="bg-slate-700/50 p-4 rounded-lg">
                                 <h3 className="text-xl font-semibold text-slate-100">Long Rest Effects</h3>
                                 <p className="text-slate-400 mt-1">Choose two downtime moves below. You may choose the same move twice.</p>
+                                {character.class === 'Warlock' && (
+                                    <p className="text-sm text-yellow-400/80 mt-2">Reminder: If you forgo your tithe, the GM gains a Fear.</p>
+                                )}
                             </div>
                             <div>
                                 <h3 className="text-xl font-semibold text-slate-200 mb-2">First Downtime Move</h3>
                                 <div className="space-y-2">
-                                    {LONG_REST_DOWNTIME_MOVES.map(move => (
+                                    {availableLongRestMoves.map(move => (
                                         <label key={move.id} className="p-3 border rounded-lg transition-all flex items-center gap-4 bg-slate-700 border-slate-600 cursor-pointer has-[:checked]:bg-sky-800/60 has-[:checked]:border-sky-600">
                                             <input type="radio" name="first-move" value={move.id} checked={firstMove === move.id} onChange={e => setFirstMove(e.target.value)} className="form-radio h-5 w-5 bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500 cursor-pointer"/>
                                             <div>
@@ -144,7 +170,7 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
                              <div>
                                 <h3 className="text-xl font-semibold text-slate-200 mb-2">Second Downtime Move</h3>
                                 <div className="space-y-2">
-                                     {LONG_REST_DOWNTIME_MOVES.map(move => (
+                                     {availableLongRestMoves.map(move => (
                                         <label key={move.id} className="p-3 border rounded-lg transition-all flex items-center gap-4 bg-slate-700 border-slate-600 cursor-pointer has-[:checked]:bg-sky-800/60 has-[:checked]:border-sky-600">
                                             <input type="radio" name="second-move" value={move.id} checked={secondMove === move.id} onChange={e => setSecondMove(e.target.value)} className="form-radio h-5 w-5 bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500 cursor-pointer"/>
                                             <div>
@@ -154,6 +180,24 @@ const RestModal: React.FC<RestModalProps> = ({ character, armorScore, onClose, o
                                         </label>
                                     ))}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+                    {isMartialArtist && (
+                        <div className="animate-fade-in">
+                            <div className="bg-slate-700/50 p-4 rounded-lg">
+                                <h3 className="text-xl font-semibold text-slate-100">Reset Focus</h3>
+                                <p className="text-slate-400 mt-1 mb-2">Roll a number of d6s equal to your Instinct ({character.traits.instinct}). Your new Focus is the highest value rolled.</p>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="6"
+                                    placeholder="Enter highest d6 roll"
+                                    value={newFocus}
+                                    onChange={(e) => setNewFocus(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                                    required
+                                />
                             </div>
                         </div>
                     )}

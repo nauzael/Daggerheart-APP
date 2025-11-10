@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm } from '../types';
+import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
@@ -11,8 +11,10 @@ import EquipmentSelectorModal from './EquipmentSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
 import SelectionModal from './SelectionModal';
 import { CLASS_FEATURES } from '../data/classFeatures';
-import { DOMAIN_CARDS } from '../data/domainCards';
+import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import BeastformCard from './BeastformCard';
+import StanceSelectorModal from './StanceSelectorModal';
+import { MARTIAL_STANCES } from '../data/martialStances';
 
 
 interface CharacterCreatorProps {
@@ -69,6 +71,10 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
   const [equipmentConfirmed, setEquipmentConfirmed] = useState(false);
   const [selectedBeastform, setSelectedBeastform] = useState('');
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [patronDetails, setPatronDetails] = useState({ name: '', boon1: '', boon2: '' });
+  const [isStanceModalOpen, setIsStanceModalOpen] = useState(false);
+  const [selectedStances, setSelectedStances] = useState<string[]>([]);
+  const [martialArtistFocus, setMartialArtistFocus] = useState<string>('');
   
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
@@ -91,16 +97,25 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       }
        if (selectedClass.name !== 'Druid') {
             setSelectedBeastform('');
-        }
-  }, [selectedClass, classItemOptions]);
+       }
+       if (selectedClass.name !== 'Warlock') {
+            setPatronDetails({ name: '', boon1: '', boon2: '' });
+       }
+       if (charData.subclass !== 'Martial Artist') {
+           setSelectedStances([]);
+           setMartialArtistFocus('');
+       }
+  }, [selectedClass, classItemOptions, charData.subclass]);
 
   const isFormValid = useMemo(() => {
     const allTraitsAssigned = Object.keys(assignedTraits).length === TRAIT_NAMES.length && Object.values(assignedTraits).every(v => v !== '');
     const mixedAncestryValid = !isMixedAncestry || (isMixedAncestry && mixedAncestryName.trim() !== '');
     const classItemValid = classItemOptions.length === 1 || (classItemOptions.length > 1 && classItemChoice !== '');
     const druidFormValid = selectedClass.name !== 'Druid' || (selectedClass.name === 'Druid' && selectedBeastform !== '');
-    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed && druidFormValid;
-  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed, selectedClass.name, selectedBeastform]);
+    const warlockValid = selectedClass.name !== 'Warlock' || (patronDetails.name.trim() !== '' && patronDetails.boon1.trim() !== '' && patronDetails.boon2.trim() !== '');
+    const martialArtistValid = !(selectedClass.name === 'Brawler' && charData.subclass === 'Martial Artist') || (selectedStances.length === 2 && martialArtistFocus.trim() !== '' && Number(martialArtistFocus) >= 1 && Number(martialArtistFocus) <= 6);
+    return charData.name?.trim() && charData.subclass && allTraitsAssigned && charData.domainCards?.filter(Boolean).length === 2 && charData.experiences?.every(e => e.name.trim()) && mixedAncestryValid && classItemValid && equipmentConfirmed && druidFormValid && warlockValid && martialArtistValid;
+  }, [charData, assignedTraits, isMixedAncestry, mixedAncestryName, classItemChoice, classItemOptions, equipmentConfirmed, selectedClass.name, selectedBeastform, patronDetails, selectedStances, martialArtistFocus]);
 
   const handleClassChange = (newClassName: string) => {
     setCharData(prev => ({
@@ -245,6 +260,22 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
         beastForms: finalBeastForms,
     } as Character;
+    
+    if (selectedClass.name === 'Warlock') {
+        finalCharacter.patronName = patronDetails.name;
+        finalCharacter.boons = [
+            { name: patronDetails.boon1, value: 3 },
+            { name: patronDetails.boon2, value: 3 }
+        ];
+        finalCharacter.favor = 2;
+    }
+    
+    if (selectedClass.name === 'Brawler' && charData.subclass === 'Martial Artist') {
+        finalCharacter.martialStances = MARTIAL_STANCES.filter(s => selectedStances.includes(s.name));
+        const maxFocus = parseInt(martialArtistFocus, 10);
+        finalCharacter.focus = { current: maxFocus, max: maxFocus };
+    }
+
     onCharacterCreate(finalCharacter);
   };
   
@@ -498,6 +529,24 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
             </div>
         );
     };
+
+    const renderGrimoireDescription = (card: DomainCard) => {
+        const spells = card.description.split('\n').filter(s => s.trim() !== '');
+        return (
+            <div className="mt-2 space-y-1 border-t border-slate-600/50 pt-2">
+                {spells.map((spell, index) => {
+                    const parts = spell.split(':');
+                    const spellName = parts[0];
+                    const spellDescription = parts.slice(1).join(':').trim();
+                    return (
+                        <div key={index} className="text-xs text-slate-400">
+                            <span className="font-semibold text-slate-300">{spellName}:</span> {spellDescription}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
     
     // Calculate final data for summary display
     const finalTraits: Character['traits'] = { strength: 0, agility: 0, finesse: 0, instinct: 0, knowledge: 0, presence: 0 };
@@ -524,7 +573,10 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
 
     const selectedDomainCards = DOMAIN_CARDS.filter(card => charData.domainCards?.includes(card.name));
     const beastformDetails = selectedClass.name === 'Druid' ? ALL_BEASTFORMS.find(b => b.name === selectedBeastform) : undefined;
-    
+    const finalMartialStances = selectedClass.name === 'Brawler' && charData.subclass === 'Martial Artist'
+        ? MARTIAL_STANCES.filter(s => selectedStances.includes(s.name))
+        : [];
+
     const finalInventory = ["A torch", "50 feet of rope", "Basic supplies"];
     if (potionChoice) finalInventory.push(potionChoice);
     if (classItemChoice) finalInventory.push(classItemChoice);
@@ -617,6 +669,10 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                             <div key={card.name} className="bg-slate-700/50 p-3 rounded-lg">
                                 <p className="font-bold text-slate-100">{card.name}</p>
                                 <p className="text-xs text-slate-400 font-mono">{card.domain} / {card.type}</p>
+                                {card.type === 'Grimoire'
+                                  ? renderGrimoireDescription(card)
+                                  : card.description && <p className="text-sm text-slate-400 mt-2 border-t border-slate-600/50 pt-2">{card.description}</p>
+                                }
                             </div>
                         ))}
                     </div>
@@ -629,6 +685,27 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                     <BeastformCard form={beastformDetails} />
                 </div>
             )}
+            
+            {finalMartialStances.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Starting Martial Stances & Focus</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-slate-700 p-3 rounded-lg sm:col-span-1 text-center">
+                            <p className="text-sm text-slate-400">Initial Focus</p>
+                            <p className="text-2xl font-bold text-teal-300">{parseInt(martialArtistFocus, 10)}</p>
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                            {finalMartialStances.map(stance => (
+                                <div key={stance.name} className="bg-slate-700/50 p-3 rounded-lg">
+                                    <p className="font-bold text-slate-100">{stance.name}</p>
+                                    <p className="text-sm text-slate-400 mt-1">{stance.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {notes.trim() && (
                  <div>
@@ -655,6 +732,15 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
     <form onSubmit={handleSubmit} className="space-y-6">
         {renderModal()}
         {renderConfirmationSummaryModal()}
+        {isStanceModalOpen && (
+            <StanceSelectorModal
+                availableStances={MARTIAL_STANCES.filter(s => s.tier === 1)}
+                onClose={() => setIsStanceModalOpen(false)}
+                onConfirm={(stances) => setSelectedStances(stances)}
+                title="Select Starting Stances"
+                selectionLimit={2}
+            />
+        )}
         <div className="grid grid-cols-1 md:grid-cols-10 gap-6">
             {/* Left Column (30%) */}
             <div className="md:col-span-3 space-y-6">
@@ -674,6 +760,78 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                         <SelectionDisplay label="Class" value={charData.class!} onClick={() => openModal('class')} />
                         <SelectionDisplay label="Subclass" value={charData.subclass!} onClick={() => openModal('subclass')} />
                     </div>
+                     {selectedClass.name === 'Warlock' && (
+                        <div className="mt-4 pt-4 border-t border-slate-700 space-y-3 animate-fade-in">
+                            <h4 className="text-md font-bold text-slate-300">Patron Details*</h4>
+                            <div>
+                                <label className="block text-xs font-bold mb-1 text-slate-400">Patron Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., The Keeper of Secrets"
+                                    value={patronDetails.name}
+                                    onChange={(e) => setPatronDetails(p => ({ ...p, name: e.target.value }))}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold mb-1 text-slate-400">Boon 1 Name (Sphere of Influence)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., Deception"
+                                        value={patronDetails.boon1}
+                                        onChange={(e) => setPatronDetails(p => ({ ...p, boon1: e.target.value }))}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold mb-1 text-slate-400">Boon 2 Name (Sphere of Influence)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., Persuasion"
+                                        value={patronDetails.boon2}
+                                        onChange={(e) => setPatronDetails(p => ({ ...p, boon2: e.target.value }))}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                     {selectedClass.name === 'Brawler' && charData.subclass === 'Martial Artist' && (
+                        <div className="mt-4 pt-4 border-t border-slate-700 space-y-3 animate-fade-in">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-md font-bold text-slate-300">Martial Stances*</h4>
+                                <span className={`font-mono px-2 py-0.5 rounded text-xs ${selectedStances.length === 2 ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                                    {selectedStances.length} / 2
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsStanceModalOpen(true)}
+                                className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                Select Stances
+                            </button>
+                            {selectedStances.length > 0 && (
+                                <ul className="text-sm text-slate-400 list-disc list-inside">
+                                    {selectedStances.map(s => <li key={s}>{s}</li>)}
+                                </ul>
+                            )}
+                             <div className="mt-4 pt-4 border-t border-slate-700">
+                                <h4 className="text-md font-bold text-slate-300">Initial Focus*</h4>
+                                <p className="text-xs text-slate-400 mb-2">Roll a number of d6s equal to your Instinct. Your Focus is the highest value rolled.</p>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="6"
+                                    placeholder="Enter highest d6 roll"
+                                    value={martialArtistFocus}
+                                    onChange={(e) => setMartialArtistFocus(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200"
+                                />
+                            </div>
+                        </div>
+                    )}
                      <div className="mt-4 pt-4 border-t border-slate-700">
                         <div className="flex items-center gap-3 mb-4">
                             <input type="checkbox" id="mixed-ancestry" checked={isMixedAncestry} onChange={e => setIsMixedAncestry(e.target.checked)} className="h-4 w-4 rounded bg-slate-700 border-slate-600 text-teal-500 focus:ring-teal-500" />

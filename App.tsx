@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Character, BeastForm } from './types';
 import CharacterCreator from './components/CharacterCreator';
@@ -78,6 +79,32 @@ const App: React.FC = () => {
       
       if (char.profileImage === undefined) {
           char.profileImage = undefined;
+      }
+      
+      // Warlock migration
+      if (char.class === 'Warlock') {
+          if (char.patronName === undefined) {
+              char.patronName = '';
+          }
+          if (char.boons === undefined || !Array.isArray(char.boons) || char.boons.length !== 2) {
+              char.boons = [{ name: '', value: 3 }, { name: '', value: 3 }];
+          }
+          if (char.favor === undefined) {
+              char.favor = 2;
+          }
+      }
+
+      // Brawler (Martial Artist) migration
+      if (char.class === 'Brawler' && char.subclass === 'Martial Artist') {
+          if (char.martialStances === undefined) {
+              char.martialStances = [];
+          }
+          if (char.activeMartialStance === undefined) {
+              char.activeMartialStance = undefined;
+          }
+          if (char.focus === undefined) {
+              char.focus = { current: 0, max: 0 };
+          }
       }
 
       return char as Character;
@@ -250,6 +277,7 @@ const App: React.FC = () => {
             return <CharacterSelection 
                       characters={characters}
                       onSelectCharacter={handleCharacterSelect}
+                      // Fix: Corrected typo from handleDeleteCharacter to handleCharacterDelete.
                       onDeleteCharacter={handleCharacterDelete}
                       onCreateNew={handleShowCreator}
                       onImport={handleImportCharacters}

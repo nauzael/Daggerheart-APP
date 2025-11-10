@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Character, TraitName, BeastForm } from '../types';
+import { Character, TraitName, BeastForm, MartialStance } from '../types';
 import { ADVANCEMENTS } from '../data/advancements';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { SUBCLASS_FEATURES } from '../data/subclassFeatures';
 import DomainCardSelectorModal from './DomainCardSelectorModal';
 import { ALL_BEASTFORMS } from '../data/beastforms';
 import BeastformCard from './BeastformCard';
+import StanceSelectorModal from './StanceSelectorModal';
+import { MARTIAL_STANCES } from '../data/martialStances';
 
 
 interface LevelUpModalProps {
@@ -35,12 +37,25 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
     const [selectorContext, setSelectorContext] = useState<{ type: 'mandatory' | 'advancement'; index: number; } | null>(null);
     const [newBeastform, setNewBeastform] = useState('');
     const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+    const [isStanceModalOpen, setIsStanceModalOpen] = useState(false);
+    const [newStances, setNewStances] = useState<string[]>([]);
 
 
     const isBeastformTierUp = useMemo(() => {
         if (character.class !== 'Druid') return false;
         return newLevel === 5 || newLevel === 8 || newLevel === 10;
     }, [newLevel, character.class]);
+    
+    const isMartialArtistTierUp = useMemo(() => {
+        if (character.class !== 'Brawler' || character.subclass !== 'Martial Artist') return false;
+        return newLevel === 2 || newLevel === 5 || newLevel === 8;
+    }, [newLevel, character.class, character.subclass]);
+
+    const availableStancesForLevelUp = useMemo(() => {
+        if (!isMartialArtistTierUp) return [];
+        const knownStances = new Set((character.martialStances || []).map(s => s.name));
+        return MARTIAL_STANCES.filter(s => s.tier <= newTier && !knownStances.has(s.name));
+    }, [isMartialArtistTierUp, newTier, character.martialStances]);
 
     const beastformTierToSelect = useMemo(() => {
         if (!isBeastformTierUp) return 0;
@@ -146,7 +161,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
         return filled && unique;
     }, [traitSelections, increaseTraitsCount]);
 
-    const canConfirm = totalSlotsUsed === 2 && mandatoryDomainCard !== '' && advancementDomainCards.every(c => c !== '') && traitSelectionsValid && (!isBeastformTierUp || newBeastform !== '');
+    const canConfirm = totalSlotsUsed === 2 && mandatoryDomainCard !== '' && advancementDomainCards.every(c => c !== '') && traitSelectionsValid && (!isBeastformTierUp || newBeastform !== '') && (!isMartialArtistTierUp || newStances.length === 2);
     
     const handleSubmit = () => {
         if (canConfirm) {
@@ -166,6 +181,8 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
             experiences: [...character.experiences],
             subclassFeatures: [...character.subclassFeatures],
             beastForms: [...(character.beastForms || [])],
+            domainCards: [...character.domainCards],
+            martialStances: [...(character.martialStances || [])],
         };
         
         if (newLevel === 2 || newLevel === 5 || newLevel === 8) {
@@ -197,9 +214,14 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                 updatedChar.beastForms = [...(updatedChar.beastForms || []), form];
             }
         }
+        
+        if (isMartialArtistTierUp && newStances.length > 0) {
+            const stances = MARTIAL_STANCES.filter(s => newStances.includes(s.name));
+            updatedChar.martialStances = [...(updatedChar.martialStances || []), ...stances];
+        }
 
         const newCards = [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean);
-        updatedChar.vault = [...updatedChar.vault, ...newCards];
+        updatedChar.domainCards = [...updatedChar.domainCards, ...newCards];
         
         onLevelUp(updatedChar);
     };
@@ -289,6 +311,17 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                 </div>
             );
         };
+        
+        const NewStanceDisplay: React.FC<{ stanceName: string }> = ({ stanceName }) => {
+            const stance = MARTIAL_STANCES.find(s => s.name === stanceName);
+            if (!stance) return null;
+            return (
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                     <p className="font-bold text-slate-100">{stance.name}</p>
+                     <p className="text-xs text-slate-400 font-mono">Tier {stance.tier}</p>
+                </div>
+            );
+        };
 
         // Pre-calculate all changes for display
         const changes = {
@@ -301,6 +334,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
             newSubclassFeature: null as (typeof SUBCLASS_FEATURES[0]) | null,
             newCards: [mandatoryDomainCard, ...advancementDomainCards].filter(Boolean),
             newBeastform: ALL_BEASTFORMS.find(b => b.name === newBeastform),
+            newStances: newStances,
             tierAchievements: tierAchievements,
         };
 
@@ -367,7 +401,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                         )}
                         
                         {/* New Abilities */}
-                        {(changes.newSubclassFeature || changes.newBeastform) && (
+                        {(changes.newSubclassFeature || changes.newBeastform || changes.newStances.length > 0) && (
                             <div>
                                 <h3 className="text-xl font-semibold text-slate-200 mb-2">New Abilities</h3>
                                 <div className="space-y-3">
@@ -384,6 +418,14 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                                             <BeastformCard form={changes.newBeastform} />
                                         </div>
                                     )}
+                                     {changes.newStances.length > 0 && (
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-semibold mb-1">New Martial Stances Learned</p>
+                                            <div className="space-y-2">
+                                                {changes.newStances.map(stance => <NewStanceDisplay key={stance} stanceName={stance} />)}
+                                            </div>
+                                        </div>
+                                     )}
                                 </div>
                             </div>
                         )}
@@ -391,7 +433,7 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                         {/* New Cards */}
                         {changes.newCards.length > 0 && (
                             <div>
-                                <h3 className="text-xl font-semibold text-slate-200 mb-2">New Domain Cards (Added to Vault)</h3>
+                                <h3 className="text-xl font-semibold text-slate-200 mb-2">New Domain Cards (Added to Loadout)</h3>
                                 <div className="space-y-2">
                                     {changes.newCards.map(cardName => <NewCardDisplay key={cardName} cardName={cardName} />)}
                                 </div>
@@ -419,6 +461,15 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                     onClose={() => setIsSelectorOpen(false)}
                     onCardSelect={handleCardSelectedFromModal}
                     title="Seleccionar Carta de Dominio"
+                />
+            )}
+             {isStanceModalOpen && (
+                <StanceSelectorModal
+                    availableStances={availableStancesForLevelUp}
+                    onClose={() => setIsStanceModalOpen(false)}
+                    onConfirm={setNewStances}
+                    title={`Learn New Stances (Tier ${newTier})`}
+                    selectionLimit={2}
                 />
             )}
             {renderConfirmationModal()}
@@ -530,6 +581,25 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({ character, onClose, onLevel
                         </div>
                     )}
                     
+                    {isMartialArtistTierUp && (
+                        <div>
+                            <h3 className="text-xl font-semibold text-teal-400 mb-2">Martial Artist Progression: New Stances</h3>
+                             <p className="text-slate-400 mb-2 text-sm">You have reached Tier {newTier}. Choose two new stances to master.</p>
+                             <button
+                                type="button"
+                                onClick={() => setIsStanceModalOpen(true)}
+                                className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                Select 2 New Stances*
+                            </button>
+                             {newStances.length > 0 && (
+                                <ul className="text-sm text-slate-400 list-disc list-inside mt-2">
+                                    {newStances.map(s => <li key={s}>{s}</li>)}
+                                </ul>
+                            )}
+                        </div>
+                    )}
+
                     <div className="text-center pt-4">
                         <div className="flex justify-center items-center gap-4">
                             <button 

@@ -73,6 +73,12 @@ export interface BeastForm {
     features: { name: string; description: string }[];
 }
 
+export interface MartialStance {
+    name: string;
+    tier: number;
+    description: string;
+}
+
 export interface Character {
     id: string;
     name: string;
@@ -107,4 +113,12 @@ export interface Character {
     activeBeastFormName?: string;
     activeBeastformTraitBonus?: { trait: TraitName; value: number };
     isWolfFormActive?: boolean;
+    // Warlock specific
+    patronName?: string;
+    boons?: { name: string; value: number }[];
+    favor?: number;
+    // Brawler (Martial Artist) specific
+    martialStances?: MartialStance[];
+    activeMartialStance?: MartialStance;
+    focus?: Stat;
 }

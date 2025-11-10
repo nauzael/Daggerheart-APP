@@ -27,6 +27,7 @@ const urlsToCache = [
   '/components/SelectionModal.tsx',
   '/components/WolfFormDisplay.tsx',
   '/components/ProfileImageEditorModal.tsx',
+  '/components/StanceSelectorModal.tsx',
   '/data/classes.ts',
   '/data/domains.ts',
   '/data/ancestries.ts',
@@ -39,7 +40,8 @@ const urlsToCache = [
   '/data/downtimeMoves.ts',
   '/data/longRestDowntimeMoves.ts',
   '/data/beastforms.ts',
-  '/data/wolfForm.ts'
+  '/data/wolfForm.ts',
+  '/data/martialStances.ts'
 ];
 
 self.addEventListener('install', event => {
