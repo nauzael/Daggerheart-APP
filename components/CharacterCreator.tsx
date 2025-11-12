@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat } from '../types';
+import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat, TraitName } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
@@ -40,6 +40,24 @@ const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp'
     bolsa: 0,
     domainCards: ['', ''],
 };
+
+// Helper to determine the primary spellcasting trait for a class
+const getSpellcastTrait = (char: Partial<Pick<Character, 'class'>>): TraitName => {
+    switch(char.class) {
+        case 'Bard':
+        case 'Seraph':
+        case 'Warlock':
+            return 'presence';
+        case 'Druid':
+        case 'Brawler': // Martial Artist uses Instinct
+            return 'instinct';
+        case 'Sorcerer':
+        case 'Wizard':
+            return 'knowledge';
+        default:
+            return 'knowledge'; // A sensible default
+    }
+}
 
 // Helper component for displaying selection and opening modal
 const SelectionDisplay: React.FC<{label: string, value: string, onClick: () => void, className?: string}> = ({ label, value, onClick, className }) => (
@@ -243,6 +261,37 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         }
     }
 
+    const finalAbilityUsage: { [key: string]: boolean | number } = {};
+    const spellcastTraitName = getSpellcastTrait({ class: selectedClass.name });
+    const selectedDomainCardNames = charData.domainCards!.filter(Boolean);
+    const allCardsForUsage = DOMAIN_CARDS.filter(c => selectedDomainCardNames.includes(c.name));
+
+    allCardsForUsage.forEach(card => {
+        if (!card) return;
+        const desc = card.description.toLowerCase();
+        const startsFull = desc.includes('after a long rest') || desc.includes('at the beginning of a session');
+
+        if (startsFull) {
+            let maxValue: number | undefined;
+            const tokenMatch = desc.match(/place a number of tokens equal to your (\w+)/);
+
+            if (tokenMatch && tokenMatch[1]) {
+                const attribute = tokenMatch[1] as TraitName | 'proficiency';
+                maxValue = finalTraits[attribute] ?? 1; // proficiency is 1 at level 1
+            } else if (card.name === 'Unleash Chaos' || card.name === 'Restoration') {
+                maxValue = finalTraits[spellcastTraitName];
+            } else if (card.name === 'Inspirational Words') {
+                maxValue = finalTraits.presence;
+            } else if (card.name === 'Fane of the Wilds') {
+                const sageCardsCount = allCardsForUsage.filter(c => c?.domain === 'Sage').length;
+                maxValue = sageCardsCount;
+            }
+
+            if (maxValue !== undefined) {
+                finalAbilityUsage[card.name] = maxValue;
+            }
+        }
+    });
 
     const finalCharacter: Character = {
         ...(initialCharacterState as any),
@@ -264,7 +313,7 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         armor: { max: armor.baseScore, current: armor.baseScore },
         domainCards: charData.domainCards!.filter(Boolean),
         vault: [],
-        abilityUsage: {},
+        abilityUsage: finalAbilityUsage,
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
         beastForms: finalBeastForms,
     } as Character;

@@ -109,6 +109,18 @@ const App: React.FC = () => {
           }
       }
 
+      // Seraph migration
+      if (char.class === 'Seraph') {
+          if (char.prayerDice === undefined) {
+              char.prayerDice = { current: 0, max: 0 };
+          } else if (Array.isArray(char.prayerDice)) {
+              // It's the old array format, either number[] or {value, used}[]
+              const usedCount = char.prayerDice.filter((d: any) => d.used === true).length;
+              const max = char.prayerDice.length;
+              char.prayerDice = { current: max - usedCount, max: max };
+          }
+      }
+
       return char as Character;
   };
 

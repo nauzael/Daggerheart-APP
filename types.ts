@@ -121,4 +121,6 @@ export interface Character {
     martialStances?: MartialStance[];
     activeMartialStance?: MartialStance;
     focus?: Stat;
+    // Seraph specific
+    prayerDice?: Stat;
 }

@@ -28,7 +28,7 @@ interface CharacterSheetProps {
 const TRAIT_NAMES_ORDER: TraitName[] = ['strength', 'agility', 'finesse', 'instinct', 'knowledge', 'presence'];
 const MAX_LOADOUT = 5;
 
-const getSpellcastTrait = (char: Character): TraitName => {
+const getSpellcastTrait = (char: Pick<Character, 'class'>): TraitName => {
     switch(char.class) {
         case 'Bard':
         case 'Seraph':
@@ -182,25 +182,33 @@ const DomainCardDisplay: React.FC<{
     
     const usageInfo = useMemo(() => {
         const descLower = card.description.toLowerCase();
+        
         if (descLower.includes('once per long rest')) return { type: 'once-per-long-rest' };
         if (descLower.includes('once per rest')) return { type: 'once-per-rest' };
 
         const tokenMatch = descLower.match(/place a number of tokens equal to your (\w+)/);
         const spellcastTraitName = getSpellcastTrait(character);
+        const startsFull = descLower.includes('after a long rest') || descLower.includes('at the beginning of a session');
 
         if (tokenMatch && tokenMatch[1]) {
             const attribute = tokenMatch[1] as TraitName | 'proficiency';
-            return { type: 'tokens', attribute, maxValue: character.traits[attribute] || character.proficiency };
+            return { type: 'tokens', attribute, maxValue: character.traits[attribute] || character.proficiency, startsFull };
         }
         
+        const sageCardsCount = (character.domainCards.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter(c => c?.domain === 'Sage').length) + (character.vault.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter(c => c?.domain === 'Sage').length);
+
         // Special cases for tokens
-        const specialTokenCases: { [key: string]: { attribute: TraitName | 'proficiency', maxValue: number } } = {
+        const specialTokenCases: { [key: string]: { attribute: TraitName | 'proficiency' | 'custom', maxValue: number } } = {
             'Unleash Chaos': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
             'Inspirational Words': { attribute: 'presence', maxValue: character.traits.presence },
             'Thorn Skin': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
             'Restoration': { attribute: spellcastTraitName, maxValue: character.traits[spellcastTraitName] },
+            'Fane of the Wilds': { attribute: 'custom', maxValue: sageCardsCount },
         };
-        if (specialTokenCases[card.name]) return { type: 'tokens', ...specialTokenCases[card.name] };
+        
+        if (specialTokenCases[card.name]) {
+            return { type: 'tokens', ...(specialTokenCases[card.name] as any), startsFull };
+        }
 
         return null;
     }, [card.description, card.name, character]);
@@ -227,9 +235,9 @@ const DomainCardDisplay: React.FC<{
 
         if (usageInfo.type === 'tokens') {
             const maxTokens = usageInfo.maxValue;
-
-            // Per user request, all token trackers start at 0 and reset to 0.
-            const defaultValue = 0;
+            const defaultValue = usageInfo.startsFull ? maxTokens : 0;
+            
+            // If the value is not a number (e.g., undefined for a new character, or a boolean from a migration error), use the calculated default.
             const currentTokens = typeof usageValue === 'number' ? usageValue : defaultValue;
             const resetValue = defaultValue;
 
@@ -447,6 +455,43 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     useEffect(() => {
         let updateNeeded = false;
         const changes: Partial<Character> = {};
+        const newAbilityUsage = { ...character.abilityUsage };
+
+        // Initialize token abilities that start full but don't have a value set yet
+        const allCards = DOMAIN_CARDS.filter(c => character.domainCards.includes(c.name) || character.vault.includes(c.name));
+        const spellcastTraitName = getSpellcastTrait(character);
+
+        allCards.forEach(card => {
+            if (!card) return;
+            const desc = card.description.toLowerCase();
+            const startsFull = desc.includes('after a long rest') || desc.includes('at the beginning of a session');
+
+            if (startsFull && newAbilityUsage[card.name] === undefined) {
+                let maxValue: number | undefined;
+                const tokenMatch = desc.match(/place a number of tokens equal to your (\w+)/);
+
+                if (tokenMatch && tokenMatch[1]) {
+                    const attribute = tokenMatch[1] as TraitName | 'proficiency';
+                    maxValue = character.traits[attribute] ?? character.proficiency;
+                } else if (card.name === 'Unleash Chaos' || card.name === 'Restoration') {
+                    maxValue = character.traits[spellcastTraitName];
+                } else if (card.name === 'Inspirational Words') {
+                    maxValue = character.traits.presence;
+                } else if (card.name === 'Fane of the Wilds') {
+                    const sageCardsCount = (character.domainCards.map(n => DOMAIN_CARDS.find(c => c.name === n)).filter(c => c?.domain === 'Sage').length) + (character.vault.map(n => DOMAIN_CARDS.find(c => c.name === n)).filter(c => c?.domain === 'Sage').length);
+                    maxValue = sageCardsCount;
+                }
+
+                if (maxValue !== undefined) {
+                    newAbilityUsage[card.name] = maxValue;
+                    updateNeeded = true;
+                }
+            }
+        });
+
+        if (updateNeeded) {
+            changes.abilityUsage = newAbilityUsage;
+        }
     
         // Armor update logic
         if (character.armor.max !== derivedStats.armorScore || (derivedStats.armorScore === 0 && character.armor.current !== 0)) {
@@ -486,6 +531,19 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
 
     const handleHopeChange = (value: number) => {
         onUpdateCharacter({ ...character, hope: value });
+    };
+
+    const handlePrayerDiceChange = (change: number) => {
+        if (!character.prayerDice) return;
+        const currentDice = character.prayerDice.current;
+        const newCurrent = Math.max(0, currentDice + change);
+
+        if (newCurrent !== currentDice) {
+            onUpdateCharacter({
+                ...character,
+                prayerDice: { ...character.prayerDice, current: newCurrent }
+            });
+        }
     };
 
     const handleFavorChange = (change: number) => {
@@ -597,6 +655,13 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             if (prepareCount > 0) {
                  setTimeout(() => alert(`You prepared for the day and gained ${prepareCount} Hope! (If you prepared with party members, you each gain 2 per 'Prepare' action instead).`), 100);
             }
+            
+            // Seraph prayer dice reset
+            if (tempChar.class === 'Seraph') {
+                const presence = derivedStats.traits.presence;
+                const numDice = Math.max(0, presence);
+                tempChar.prayerDice = { current: numDice, max: numDice };
+            }
         } else { // Short rest
             moves.forEach(moveId => {
                 switch (moveId) {
@@ -630,42 +695,66 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             ...classFeatures,
             ...character.subclassFeatures,
             ...loadoutCards,
+            ...character.vault.map(name => DOMAIN_CARDS.find(c => c.name === name)).filter(Boolean)
         ];
 
+        const spellcastTraitName = getSpellcastTrait(tempChar);
+
         allTrackableAbilities.forEach(ability => {
+            if (!ability) return;
             const desc = 'description' in ability ? ability.description.toLowerCase() : '';
-            const isOncePerRest = desc.includes('once per rest');
-            const isOncePerLongRest = desc.includes('once per long rest');
             
             const resetAbility = (name: string) => {
                 delete newAbilityUsage[name];
             };
             
+            const isOncePerRest = desc.includes('once per rest');
+            const isOncePerLongRest = desc.includes('once per long rest');
+            const startsFull = desc.includes('after a long rest') || desc.includes('at the beginning of a session');
+            const clearsOnAnyRest = desc.includes('when you take a rest, clear');
+            const clearsOnLongRestOnly = desc.includes('on your next long rest, clear');
+            
             if (type === 'long') {
-                if (isOncePerRest || isOncePerLongRest) resetAbility(ability.name);
-                
-                // Special case for multi-use abilities
-                if (ability.name === 'Gifted Performer') {
-                    resetAbility(`${ability.name}: Relaxing Song`);
-                    resetAbility(`${ability.name}: Epic Song`);
-                    resetAbility(`${ability.name}: Heartbreaking Song`);
-                }
-                
-                // Handle token resets for long rests
-                const spellcastTraitName = getSpellcastTrait(tempChar);
-                const tokenResets: { [key: string]: number } = {
-                    'Inspirational Words': tempChar.traits.presence,
-                    'Strategic Approach': tempChar.traits.knowledge,
-                    'Restoration': tempChar.traits[spellcastTraitName],
-                };
-                if (tokenResets[ability.name] !== undefined) {
-                    newAbilityUsage[ability.name] = tokenResets[ability.name];
+                if (isOncePerRest || isOncePerLongRest) {
+                    resetAbility(ability.name);
                 }
 
+                if (startsFull) {
+                    let maxValue: number | undefined;
+                    const tokenMatch = desc.match(/place a number of tokens equal to your (\w+)/);
+                    
+                    if (tokenMatch && tokenMatch[1]) {
+                        const attribute = tokenMatch[1] as TraitName | 'proficiency';
+                        maxValue = tempChar.traits[attribute] ?? tempChar.proficiency;
+                    } else if (ability.name === 'Unleash Chaos' || ability.name === 'Restoration') {
+                        maxValue = tempChar.traits[spellcastTraitName];
+                    } else if (ability.name === 'Inspirational Words') {
+                        maxValue = tempChar.traits.presence;
+                    } else if (ability.name === 'Fane of the Wilds') {
+                        const sageCardsCount = (tempChar.domainCards.map(n => DOMAIN_CARDS.find(c => c.name === n)).filter(c => c?.domain === 'Sage').length) + (tempChar.vault.map(n => DOMAIN_CARDS.find(c => c.name === n)).filter(c => c?.domain === 'Sage').length);
+                        maxValue = sageCardsCount;
+                    }
+                    
+                    if (maxValue !== undefined) {
+                         newAbilityUsage[ability.name] = maxValue;
+                    }
+                } else if (clearsOnAnyRest || clearsOnLongRestOnly) {
+                    resetAbility(ability.name);
+                }
             } else if (type === 'short') {
                 if (isOncePerRest) resetAbility(ability.name);
+                if (clearsOnAnyRest) resetAbility(ability.name);
             }
         });
+
+        // Special case for multi-use abilities (must be after main loop to avoid being deleted)
+        if (type === 'long') {
+             if (allTrackableAbilities.some(a => a?.name === 'Gifted Performer')) {
+                delete newAbilityUsage['Gifted Performer: Relaxing Song'];
+                delete newAbilityUsage['Gifted Performer: Epic Song'];
+                delete newAbilityUsage['Gifted Performer: Heartbreaking Song'];
+            }
+        }
         
         tempChar.abilityUsage = newAbilityUsage;
     
@@ -760,6 +849,36 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             martialStances: [...(character.martialStances || []), ...newStances]
         });
         setIsStanceModalOpen(false);
+    };
+
+    const handlePrayerDieValueChange = (index: number, value: string) => {
+        const newPrayerDice = [...(character.prayerDice || [])];
+        if (newPrayerDice[index]) {
+            const originalValue = newPrayerDice[index].value;
+            let newValue = originalValue;
+
+            if (value === '') {
+                newValue = 0;
+            } else {
+                const numValue = parseInt(value, 10);
+                if (!isNaN(numValue) && numValue >= 1 && numValue <= 4) {
+                    newValue = numValue;
+                }
+            }
+
+            if (newValue !== originalValue) {
+                newPrayerDice[index] = { ...newPrayerDice[index], value: newValue };
+                onUpdateCharacter({ ...character, prayerDice: newPrayerDice });
+            }
+        }
+    };
+
+    const handleTogglePrayerDieUsed = (index: number) => {
+        const newPrayerDice = [...(character.prayerDice || [])];
+        if (newPrayerDice[index]) {
+            newPrayerDice[index] = { ...newPrayerDice[index], used: !newPrayerDice[index].used };
+            onUpdateCharacter({ ...character, prayerDice: newPrayerDice });
+        }
     };
 
 
@@ -865,6 +984,22 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
                         </div>
                     </Card>
+                    {character.class === 'Seraph' && character.prayerDice && (
+                        <Card title="Prayer Dice">
+                            <div className="space-y-3">
+                                <p className="text-sm text-slate-400">
+                                    After a long rest, you gain a number of Prayer Dice equal to your Presence ({derivedStats.traits.presence}). Roll that many d4s at the start of a session and track their usage here. Spend them to reduce damage, add to a roll, or gain Hope.
+                                </p>
+                                <StatDisplay
+                                    label="Available Dice"
+                                    value={character.prayerDice.current}
+                                    isEditable
+                                    onUpdate={handlePrayerDiceChange}
+                                />
+                                <p className="text-center text-slate-400 text-xs">Max dice from Presence: {character.prayerDice.max}</p>
+                            </div>
+                        </Card>
+                    )}
                     {character.class === 'Warlock' && (
                         <Card title="Patron & Favor">
                             <div className="space-y-4">
