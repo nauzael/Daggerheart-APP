@@ -812,6 +812,24 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const handleDeactivateStance = () => {
         onUpdateCharacter({ ...character, activeMartialStance: undefined });
     };
+    
+    const handleShareCharacter = () => {
+        try {
+            const jsonString = JSON.stringify(character);
+            const encodedData = btoa(jsonString);
+            const url = `${window.location.origin}${window.location.pathname}?character=${encodedData}`;
+
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Shareable link copied to clipboard!');
+            }, (err) => {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy link. Please check browser permissions.');
+            });
+        } catch (error) {
+            console.error("Failed to create shareable link:", error);
+            alert('Could not create a shareable link.');
+        }
+    };
 
     const characterTier = useMemo(() => {
         const level = character.level;
@@ -931,9 +949,12 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
                     </div>
                 </div>
-                 <div className="flex gap-2 justify-center sm:justify-end">
+                 <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
                     <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
                         Rest
+                    </button>
+                    <button onClick={handleShareCharacter} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg">
+                        Share Snapshot
                     </button>
                     <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
                         Level Up!
@@ -1241,7 +1262,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             ))}
                     </Card>
                     <Card title="Inventory">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
                             <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
                             <StatDisplay label="Posiones" value={character.potions || 0} isEditable onUpdate={(c) => handleSimpleValueChange('potions', c)} />

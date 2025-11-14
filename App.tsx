@@ -131,10 +131,42 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const savedCharactersJSON = localStorage.getItem('daggerheart-characters');
+    let initialCharacters: Character[] = [];
     if (savedCharactersJSON) {
         const parsedCharacters: any[] = JSON.parse(savedCharactersJSON);
-        const migratedCharacters = parsedCharacters.map(migrateCharacter);
-        setCharacters(migratedCharacters);
+        initialCharacters = parsedCharacters.map(migrateCharacter);
+        setCharacters(initialCharacters);
+    }
+    
+    // Check for character data in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const characterData = urlParams.get('character');
+
+    if (characterData) {
+        try {
+            const jsonString = atob(characterData);
+            const importedChar = JSON.parse(jsonString);
+
+            if (importedChar.id && importedChar.name && importedChar.class) {
+                let newChar = migrateCharacter(importedChar);
+
+                const existingIds = new Set(initialCharacters.map(c => c.id));
+                if (existingIds.has(newChar.id)) {
+                    newChar.id = crypto.randomUUID();
+                }
+
+                setCharacters(prevChars => [...prevChars, newChar]);
+                alert(`Character snapshot for "${newChar.name}" imported successfully!`);
+
+            } else {
+                alert("Could not import character from link: Invalid data format.");
+            }
+        } catch (error) {
+            console.error("Failed to import character from URL:", error);
+            alert("Could not import character from link: The data is corrupted.");
+        } finally {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
 }, []);
 
