@@ -94,6 +94,7 @@ export interface Character {
     hope: number;
     gold: number;
     bolsa: number;
+    potions: number;
     inventory: string[];
     domains: string[];
     domainCards: string[];

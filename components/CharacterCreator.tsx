@@ -38,6 +38,7 @@ const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp'
     hope: 2,
     gold: 1, // Handful
     bolsa: 0,
+    potions: 0,
     domainCards: ['', ''],
 };
 

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { Character, BeastForm } from './types';
 import CharacterCreator from './components/CharacterCreator';
@@ -107,6 +108,10 @@ const App: React.FC = () => {
           if (char.focus === undefined) {
               char.focus = { current: 0, max: 0 };
           }
+      }
+      
+      if (char.potions === undefined) {
+          char.potions = 0;
       }
 
       // Seraph migration

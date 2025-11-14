@@ -557,7 +557,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, abilityUsage: newUsage });
     };
 
-    const handleSimpleValueChange = (field: 'gold' | 'bolsa', change: number) => {
+    const handleSimpleValueChange = (field: 'gold' | 'bolsa' | 'potions', change: number) => {
         const currentValue = character[field] || 0;
         const updatedValue = Math.max(0, currentValue + change);
         const updatedCharacter = { ...character, [field]: updatedValue };
@@ -1241,9 +1241,10 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                             ))}
                     </Card>
                     <Card title="Inventory">
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
                             <StatDisplay label="Gold" value={character.gold} isEditable onUpdate={(c) => handleSimpleValueChange('gold', c)} />
                             <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
+                            <StatDisplay label="Posiones" value={character.potions || 0} isEditable onUpdate={(c) => handleSimpleValueChange('potions', c)} />
                         </div>
                         <ul className="space-y-2 pr-2">
                             {inventory.map((item, i) => (
