@@ -1,6 +1,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Configuración proporcionada por el usuario
 const firebaseConfig = {
@@ -14,13 +15,17 @@ const firebaseConfig = {
 
 let app;
 let db: any = null;
+let auth: any = null;
+let googleProvider: any = null;
 
 try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
     console.log("Firebase initialized successfully linked to project: daggerheart-75adc");
 } catch (error) {
     console.error("Error initializing Firebase:", error);
 }
 
-export { db };
+export { db, auth, googleProvider };

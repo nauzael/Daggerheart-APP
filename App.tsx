@@ -5,21 +5,51 @@ import { Character } from './types';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
+import LoginScreen from './components/LoginScreen';
+import GMPanel from './components/GMPanel';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 import { SUBCLASS_FEATURES } from './data/subclassFeatures';
 import { ANCESTRIES } from './data/ancestries';
 import { DEFAULT_PROFILE_IMAGE } from './data/defaultProfileImage';
 import { characterService } from './services/characterService';
+import { campaignService } from './services/campaignService';
+import { auth } from './firebaseConfig';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 
-type View = 'selection' | 'creator' | 'sheet';
+type View = 'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel';
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [view, setView] = useState<View>('selection');
+  const [view, setView] = useState<View>('login');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Auth Listener
+  useEffect(() => {
+    if (!auth) {
+        // If auth isn't initialized (e.g. missing config), bypass login for dev/fallback
+        setIsAuthLoading(false);
+        setView('selection'); 
+        return;
+    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setIsAuthLoading(false);
+        // If user is logged in, go to selection. If not, go to login.
+        // If user manually selected Guest mode, we handle that in LoginScreen callback.
+        if (currentUser) {
+             setView(prev => prev === 'login' ? 'selection' : prev);
+        } else if (view !== 'login' && !localStorage.getItem('daggerheart-characters')) {
+             // Optional: Could force back to login if not guest, but keeping it simple.
+        }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const migrateCharacter = (char: any): Character => {
       // Ensure subclassFeatures exists and has foundation if it should.
@@ -131,9 +161,9 @@ const App: React.FC = () => {
 
   // Real-time Subscription Load
   useEffect(() => {
+    // Always subscribe, service handles auth/guest logic internally
     setIsLoading(true);
     
-    // Subscribe to real-time updates
     const unsubscribe = characterService.subscribe((updatedCharacters) => {
         try {
             const migratedChars = updatedCharacters.map(migrateCharacter);
@@ -151,11 +181,11 @@ const App: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    });
+    }, 'user'); // Explicitly user mode
     
     // Clean up subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [user]); // Re-subscribe if user state changes (e.g. login/logout)
 
   // Import via URL logic
   useEffect(() => {
@@ -179,6 +209,10 @@ const App: React.FC = () => {
                 let newChar = migrateCharacter(importedChar);
                 // Always assign new ID for imports to avoid collisions
                 newChar.id = crypto.randomUUID(); 
+                // Assign to current user if logged in
+                if (user) {
+                    newChar.userId = user.uid;
+                }
 
                 // Save immediately
                 characterService.save(newChar).then(() => {
@@ -195,7 +229,7 @@ const App: React.FC = () => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
-  }, []);
+  }, [user]);
 
 
   useEffect(() => {
@@ -227,6 +261,10 @@ const App: React.FC = () => {
   }, [view, selectedCharacter]);
 
   const handleCharacterCreate = async (newCharacter: Character) => {
+    // Assign owner
+    if (user) {
+        newCharacter.userId = user.uid;
+    }
     // Optimistic UI update (subscription will double confirm this shortly)
     setCharacters(prev => [...prev, newCharacter]);
     setSelectedCharacter(newCharacter);
@@ -277,6 +315,13 @@ const App: React.FC = () => {
         setInstallPrompt(null);
     });
   };
+  
+  const handleSignOut = () => {
+      if (auth) {
+          signOut(auth);
+          // View will switch via useEffect listener
+      }
+  }
 
   const handleExportCharacters = () => {
     const dataStr = JSON.stringify(characters, null, 2);
@@ -299,25 +344,25 @@ const App: React.FC = () => {
           try {
             const imported = JSON.parse(e.target.result as string);
             if (Array.isArray(imported)) {
-              const validImportedCharacters: Character[] = [];
-              const existingIds = new Set(characters.map(c => c.id));
+              let count = 0;
               
               for (const char of imported) {
                 if (char.id && char.name && char.class) {
                   let newChar = migrateCharacter({ ...char });
-                  // Ensure unique ID
-                  if (existingIds.has(newChar.id)) {
-                    newChar.id = crypto.randomUUID();
-                  }
+                  newChar.id = crypto.randomUUID();
+                  if (user) newChar.userId = user.uid; // Claim ownership
                   
-                  await characterService.save(newChar); // Save individually
-                  validImportedCharacters.push(newChar);
-                  existingIds.add(newChar.id);
+                  await characterService.save(newChar); // Save individually (triggers subscription update)
+                  count++;
                 }
               }
               
               // No need to setCharacters manually here as subscribe will catch the updates
-              alert(`${validImportedCharacters.length} character(s) imported successfully.`);
+              if (count > 0) {
+                  alert(`${count} character(s) imported successfully.`);
+              } else {
+                   alert("No valid characters found in file.");
+              }
             } else {
               alert("Error: JSON file is not a valid character array.");
             }
@@ -333,12 +378,12 @@ const App: React.FC = () => {
   };
   
   const handleMigrateToCloud = async () => {
-      const confirmMigrate = window.confirm("This will upload all characters found in your browser's LocalStorage to the connected Firebase Database. Continue?");
+      const confirmMigrate = window.confirm("This will upload all characters found in your browser's LocalStorage to your account. Continue?");
       if(confirmMigrate) {
           setIsLoading(true);
           try {
               await characterService.syncLocalToCloud();
-              alert("Migration complete! Your characters are now in the cloud.");
+              alert("Migration complete! Your local characters are now saved to your account.");
               // Subscription will auto-update the list
           } catch (e) {
               console.error(e);
@@ -348,12 +393,65 @@ const App: React.FC = () => {
       }
   }
 
+  const handleJoinCampaign = async () => {
+      if (!user) {
+          alert("You must be logged in to join a campaign. Guest users cannot join online campaigns.");
+          return;
+      }
+
+      const code = prompt("Enter the Campaign Invite Code provided by your GM:");
+      if (!code) return;
+      
+      try {
+          const campaign = await campaignService.findCampaignByCode(code.toUpperCase().trim());
+          if (!campaign) {
+              alert("Invalid invite code. Please check with your GM.");
+              return;
+          }
+          
+          // Filter for unassigned chars:
+          const availableChars = characters;
+          if (availableChars.length === 0) {
+              alert("You need to create a character first.");
+              return;
+          }
+          
+          const charName = prompt(`Found campaign: "${campaign.name}".\n\nType the EXACT name of the character you want to join with:\n` + availableChars.map(c => `- ${c.name} ${c.campaignId ? '(Already in a campaign)' : ''}`).join('\n'));
+          
+          if (!charName) return;
+          
+          const targetChar = availableChars.find(c => c.name.toLowerCase() === charName.toLowerCase());
+          
+          if (!targetChar) {
+              alert("Character not found.");
+              return;
+          }
+          
+          if (confirm(`Join "${campaign.name}" with ${targetChar.name}?`)) {
+             await characterService.joinCampaign(targetChar.id, campaign.id);
+             alert(`Success! ${targetChar.name} has joined the campaign. Your GM can now see your sheet.`);
+          }
+
+      } catch (e: any) {
+          console.error(e);
+          alert("Error joining campaign: " + e.message);
+      }
+  }
+  
+  const handleLeaveCampaign = async (charId: string) => {
+      if (confirm("Are you sure you want to leave the campaign? The GM will no longer see this character.")) {
+          await characterService.leaveCampaign(charId);
+      }
+  }
+
   const getHeaderTitle = () => {
     switch(view) {
         case 'creator':
             return 'New Character';
         case 'sheet':
             return 'Character Sheet'; 
+        case 'gm_panel':
+            return 'Game Master';
         case 'selection':
         default:
             return 'Character Roster';
@@ -361,6 +459,16 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
+    if (isAuthLoading) return <div className="flex h-screen items-center justify-center text-teal-400 animate-pulse">Loading Application...</div>;
+
+    if (view === 'login') {
+        return <LoginScreen onLoginSuccess={() => setView('selection')} />;
+    }
+    
+    if (view === 'gm_panel') {
+        return <GMPanel onExit={() => setView('selection')} />;
+    }
+
     if (isLoading) {
         return <div className="flex justify-center items-center h-64 text-teal-400 animate-pulse">Loading Arcane Data...</div>;
     }
@@ -376,11 +484,28 @@ const App: React.FC = () => {
                          onReturnToSelection={handleReturnToSelection}
                        />;
             }
-            return null; // Should not happen
+            return null; 
         case 'selection':
         default:
             return (
                 <>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 px-4 sm:px-0 max-w-5xl mx-auto gap-2">
+                        <div className="text-slate-400 text-sm">
+                            {user ? (
+                                <span>Logged in as: <span className="text-teal-300 font-bold">{user.email}</span></span>
+                            ) : (
+                                <span className="text-amber-400 font-bold">Guest Mode (Offline)</span>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                             <button onClick={() => setView('gm_panel')} className="text-xs bg-indigo-800 hover:bg-indigo-700 text-indigo-200 py-1 px-3 rounded transition-colors border border-indigo-600">
+                                GM Panel
+                            </button>
+                            <button onClick={handleSignOut} className="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded transition-colors">
+                                {user ? 'Sign Out' : 'Log In'}
+                            </button>
+                        </div>
+                    </div>
                     <CharacterSelection 
                         characters={characters}
                         onSelectCharacter={handleCharacterSelect}
@@ -390,13 +515,37 @@ const App: React.FC = () => {
                         onExport={handleExportCharacters}
                     />
                     
-                    {/* Cloud Migration Helper */}
-                    <div className="text-center mt-12 p-4 border-t border-slate-800">
-                        <p className="text-slate-500 text-xs mb-2">Database Connected: daggerheart-75adc</p>
-                        <button onClick={handleMigrateToCloud} className="text-xs text-teal-600 hover:text-teal-400 underline transition-colors">
-                            Upload Local Characters to Database
+                    <div className="flex flex-col items-center gap-4 mt-8 pb-12">
+                         <button 
+                            onClick={handleJoinCampaign}
+                            className="bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105"
+                        >
+                            Join a Campaign
                         </button>
-                        <p className="text-[10px] text-slate-600 mt-1">Use this if you created characters before connecting to the database.</p>
+                        {!user && <p className="text-xs text-slate-500">Log in to access campaign features.</p>}
+                        
+                        {/* Leave Campaign Helper List */}
+                        {characters.some(c => c.campaignId) && (
+                            <div className="mt-4 w-full max-w-md">
+                                <p className="text-center text-slate-500 text-xs mb-2">Active Campaigns:</p>
+                                {characters.filter(c => c.campaignId).map(c => (
+                                    <div key={c.id} className="flex justify-between items-center bg-slate-800/50 p-2 rounded mb-1">
+                                        <span className="text-sm text-slate-300">{c.name}</span>
+                                        <button onClick={() => handleLeaveCampaign(c.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Leave Campaign</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Cloud Migration Helper - Only show if logged in */}
+                        {user && (
+                            <div className="text-center mt-8 p-4 border-t border-slate-800 w-full max-w-2xl">
+                                <button onClick={handleMigrateToCloud} className="text-xs text-slate-500 hover:text-teal-400 underline transition-colors">
+                                    Find & Upload Local Storage Characters
+                                </button>
+                                <p className="text-[10px] text-slate-600 mt-1">Use this if you created characters on this device before logging in.</p>
+                            </div>
+                        )}
                     </div>
                 </>
             );
@@ -412,8 +561,8 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      <header className="text-center mb-8 relative z-10">
-        {view !== 'sheet' && (
+      <header className={`text-center mb-8 relative z-10 ${view === 'login' ? 'hidden' : ''}`}>
+        {view !== 'sheet' && view !== 'gm_panel' && (
           <>
             <div className="inline-block mx-auto mb-2">
                 <DaggerheartLogo />
@@ -438,10 +587,12 @@ const App: React.FC = () => {
       <main className="container mx-auto max-w-7xl relative z-10">
         {renderContent()}
       </main>
-      <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed relative z-10">
-        <p>This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License. More information can be found at <a href="https://www.daggerheart.com" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">https://www.daggerheart.com</a>. There are no previous modifications by others.</p>
-        <p className="mt-2">This is an unofficial fan-made tool and is not affiliated with, endorsed, sponsored, or specifically approved by Darrington Press LLC.</p>
-      </footer>
+      {view !== 'login' && (
+          <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed relative z-10 pb-4">
+            <p>This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License. More information can be found at <a href="https://www.daggerheart.com" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">https://www.daggerheart.com</a>. There are no previous modifications by others.</p>
+            <p className="mt-2">This is an unofficial fan-made tool and is not affiliated with, endorsed, sponsored, or specifically approved by Darrington Press LLC.</p>
+          </footer>
+      )}
     </div>
   );
 };

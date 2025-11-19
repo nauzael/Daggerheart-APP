@@ -1,3 +1,4 @@
+
 // Fix: Removed self-import of 'SubclassFeature' that was conflicting with the local declaration.
 
 // Fix: Moved SubclassFeature definition here to break a circular dependency and export it correctly.
@@ -81,6 +82,8 @@ export interface MartialStance {
 
 export interface Character {
     id: string;
+    userId?: string; // Owner ID
+    campaignId?: string; // Linked Campaign ID
     name: string;
     level: number;
     class: string;
@@ -124,4 +127,12 @@ export interface Character {
     focus?: Stat;
     // Seraph specific
     prayerDice?: Stat;
+}
+
+export interface Campaign {
+    id: string;
+    name: string;
+    gmId: string;
+    inviteCode: string;
+    createdAt: number;
 }

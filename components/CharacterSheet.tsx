@@ -1,5 +1,5 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { compressToEncodedURIComponent } from 'lz-string';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
@@ -814,24 +814,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         onUpdateCharacter({ ...character, activeMartialStance: undefined });
     };
     
-    const handleShareCharacter = () => {
-        try {
-            const jsonString = JSON.stringify(character);
-            const compressedData = compressToEncodedURIComponent(jsonString);
-            const url = `${window.location.origin}${window.location.pathname}?character=${compressedData}`;
-
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Shareable link copied to clipboard!');
-            }, (err) => {
-                console.error('Could not copy text: ', err);
-                alert('Failed to copy link. Please check browser permissions.');
-            });
-        } catch (error) {
-            console.error("Failed to create shareable link:", error);
-            alert('Could not create a shareable link.');
-        }
-    };
-
     const characterTier = useMemo(() => {
         const level = character.level;
         if (level >= 8) return 4;
@@ -951,11 +933,11 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     </div>
                 </div>
                  <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                    <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg">
+                        Back
+                    </button>
                     <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
                         Rest
-                    </button>
-                    <button onClick={handleShareCharacter} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg">
-                        Share Snapshot
                     </button>
                     <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
                         Level Up!
@@ -1310,12 +1292,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                 </div>
             </div>
             
-            <div className="mt-8 text-center">
-                <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-6 rounded-lg">
-                    Back to Selection
-                </button>
-            </div>
-
             {isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
             {isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
             {isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddCardToVault} onClose={() => setIsAddDomainCardModalOpen(false)} />}
