@@ -10,6 +10,9 @@ import { characterService } from './services/characterService';
 import { campaignService } from './services/campaignService';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 
 const App: React.FC = () => {
   const [view, setView] = useState<'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel'>('selection');
@@ -31,6 +34,26 @@ const App: React.FC = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  // Handle Android Hardware Back Button
+  useEffect(() => {
+      if (Capacitor.isNativePlatform()) {
+          const backListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+              if (view === 'selection' || view === 'login') {
+                  CapacitorApp.exitApp();
+              } else {
+                  // If in a sub-view, return to selection
+                  if (view === 'sheet') {
+                       setSelectedCharacterId(null);
+                  }
+                  setView('selection');
+              }
+          });
+          return () => {
+              backListener.then(h => h.remove());
+          };
+      }
+  }, [view]);
 
   const handleInstallClick = () => {
     if (installPrompt) {
@@ -106,14 +129,29 @@ const App: React.FC = () => {
       event.target.value = ''; 
   };
 
-  const handleExport = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(characters));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", "daggerheart_characters.json");
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
+  const handleExport = async () => {
+      const dataStr = JSON.stringify(characters, null, 2);
+      
+      if (Capacitor.isNativePlatform()) {
+          try {
+              await Share.share({
+                  title: 'Daggerheart Characters',
+                  text: dataStr,
+                  dialogTitle: 'Export Characters JSON',
+              });
+          } catch (err) {
+              console.error('Share failed:', err);
+              alert('Failed to share characters. Please try again.');
+          }
+      } else {
+          const dataUri = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
+          const downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.setAttribute("href", dataUri);
+          downloadAnchorNode.setAttribute("download", "daggerheart_characters.json");
+          document.body.appendChild(downloadAnchorNode);
+          downloadAnchorNode.click();
+          downloadAnchorNode.remove();
+      }
   };
 
   const handleJoinCampaign = async () => {
