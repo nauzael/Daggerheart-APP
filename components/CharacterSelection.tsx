@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { Character } from '../types';
 import Card from './Card';
 import { DaggerheartLogo } from './DaggerheartLogo';
+import { DEFAULT_PROFILE_IMAGE } from '../data/defaultProfileImage';
 
 interface CharacterSelectionProps {
     characters: Character[];
@@ -76,18 +77,28 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({
                 {characters.length > 0 ? (
                     <div className="space-y-3 animate-fade-in pb-4">
                         {characters.map(char => (
-                            <div key={char.id} className="bg-slate-800 border border-slate-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3 shadow-lg hover:border-teal-500/50 transition-colors">
-                                <div className="text-center sm:text-left">
-                                    <h3 className="text-xl font-bold text-slate-100">{char.name}</h3>
-                                    <p className="text-slate-400 text-sm">{char.ancestry} {char.class} <span className="text-slate-600">|</span> Lvl {char.level}</p>
-                                    {char.campaignId && (
-                                         <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
-                                            <span className="text-xs text-teal-400 bg-teal-900/30 px-2 py-0.5 rounded border border-teal-800">In Campaign</span>
-                                            <button onClick={() => onLeaveCampaign(char.id)} className="text-[10px] text-red-400 hover:text-red-300 underline">Leave</button>
-                                        </div>
-                                    )}
+                            <div key={char.id} className="bg-slate-800 border border-slate-700 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg hover:border-teal-500/50 transition-colors">
+                                <div className="flex items-center gap-4 w-full sm:w-auto">
+                                    <div className="relative w-16 h-16 rounded-full bg-slate-700 border-2 border-slate-600 overflow-hidden flex-shrink-0">
+                                        <img 
+                                            src={char.profileImage || DEFAULT_PROFILE_IMAGE} 
+                                            alt={char.name} 
+                                            className="w-full h-full object-cover" 
+                                        />
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <h3 className="text-xl font-bold text-slate-100 truncate">{char.name}</h3>
+                                        <p className="text-slate-400 text-sm">{char.ancestry} {char.class} <span className="text-slate-600">|</span> Lvl {char.level}</p>
+                                        {char.campaignId && (
+                                            <div className="flex items-center justify-start gap-2 mt-1">
+                                                <span className="text-xs text-teal-400 bg-teal-900/30 px-2 py-0.5 rounded border border-teal-800">In Campaign</span>
+                                                <button onClick={() => onLeaveCampaign(char.id)} className="text-[10px] text-red-400 hover:text-red-300 underline">Leave</button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex gap-3 w-full sm:w-auto">
+
+                                <div className="flex gap-3 w-full sm:w-auto mt-2 sm:mt-0">
                                     <button
                                         onClick={() => onSelectCharacter(char.id)}
                                         className="flex-1 sm:flex-none bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-6 rounded-md transition-colors shadow-md"
