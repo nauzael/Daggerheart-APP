@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Updated viewport: user-scalable=no and viewport-fit=cover make it feel like a native app (no pinch zoom, handles notches) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Community Character Sheet for Daggerheart</title>
     <link rel="manifest" href="/manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +20,10 @@
     "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
     "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
     "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4"
   }
 }
 </script>
@@ -30,6 +34,15 @@
       }
       .animate-fade-in {
         animation: fadeIn 0.5s ease-out forwards;
+      }
+      /* Disable text selection to feel more like an App UI, enable on inputs */
+      body {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        user-select: text;
       }
     </style>
 </head>
