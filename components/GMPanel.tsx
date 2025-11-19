@@ -3,9 +3,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { campaignService } from '../services/campaignService';
 import { characterService } from '../services/characterService';
 import { auth } from '../firebaseConfig';
-import { Campaign, Character, TraitName } from '../types';
+import { Campaign, Character, TraitName, Adversary } from '../types';
 import CharacterSheet from './CharacterSheet';
 import { DOMAIN_CARDS } from '../data/domainCards';
+import RuleSearchModal from './RuleSearchModal';
+import { ADVERSARY_TEMPLATES } from '../data/adversaries';
+import AdversaryCard from './AdversaryCard';
 
 interface GMPanelProps {
     onExit: () => void;
@@ -22,6 +25,12 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const [inspectingCharacter, setInspectingCharacter] = useState<Character | null>(null);
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
     const [viewingAbility, setViewingAbility] = useState<{name: string, type: string, description: string, cost?: number} | null>(null);
+    const [isRuleSearchOpen, setIsRuleSearchOpen] = useState(false);
+    
+    // Battle Tracker State
+    const [activeAdversaries, setActiveAdversaries] = useState<Adversary[]>([]);
+    const [isAdversaryModalOpen, setIsAdversaryModalOpen] = useState(false);
+    const [adversarySearch, setAdversarySearch] = useState('');
 
     // Load GM's campaigns
     useEffect(() => {
@@ -80,6 +89,11 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         }
     };
 
+    const handleCopyCode = (code: string) => {
+        navigator.clipboard.writeText(code);
+        alert(`Invite code ${code} copied to clipboard!`);
+    };
+
     // No-op function for Read Only view, ensuring no data is saved accidentally
     const handleGMUpdateCharacter = async (updatedChar: Character) => {
         console.log("GM View is Read Only. Changes not saved.");
@@ -98,6 +112,47 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         });
     };
     
+    // --- BATTLE TRACKER FUNCTIONS ---
+    const handleAddAdversary = (template: Omit<Adversary, 'id' | 'name'>, count: number = 1) => {
+        const newAdversaries: Adversary[] = [];
+        const existingCount = activeAdversaries.filter(a => a.originalName === template.originalName).length;
+        
+        for (let i = 0; i < count; i++) {
+            const num = existingCount + i + 1;
+            newAdversaries.push({
+                ...template,
+                id: crypto.randomUUID(),
+                name: `${template.originalName} ${num}`,
+                // Deep copy mutable objects to ensure independence
+                hp: { ...template.hp },
+                stress: { ...template.stress }
+            });
+        }
+        
+        setActiveAdversaries(prev => [...prev, ...newAdversaries]);
+        setIsAdversaryModalOpen(false);
+        setAdversarySearch('');
+    };
+
+    const handleUpdateAdversary = (updated: Adversary) => {
+        setActiveAdversaries(prev => prev.map(adv => adv.id === updated.id ? updated : adv));
+    };
+
+    const handleRemoveAdversary = (id: string) => {
+        setActiveAdversaries(prev => prev.filter(adv => adv.id !== id));
+    };
+    
+    const filteredAdversaryTemplates = useMemo(() => {
+        if (!adversarySearch) return ADVERSARY_TEMPLATES;
+        const lowerQuery = adversarySearch.toLowerCase();
+        return ADVERSARY_TEMPLATES.filter(adv => 
+            adv.originalName.toLowerCase().includes(lowerQuery) || 
+            adv.type.toLowerCase().includes(lowerQuery) ||
+            adv.motives?.toLowerCase().includes(lowerQuery) ||
+            String(adv.tier) === lowerQuery
+        );
+    }, [adversarySearch]);
+
     const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
 
     // Helper to estimate thresholds for display
@@ -189,9 +244,18 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                 <h1 className="text-2xl font-bold text-white leading-none">{selectedCampaign.name}</h1>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="text-xs text-slate-400 uppercase font-bold">Invite Code:</span>
-                                    <span className="text-teal-300 font-mono font-bold text-sm bg-slate-900/50 px-2 rounded select-all cursor-pointer" title="Click to copy" onClick={() => navigator.clipboard.writeText(selectedCampaign.inviteCode)}>
+                                    <span className="text-teal-300 font-mono font-bold text-sm bg-slate-900/50 px-2 rounded select-all">
                                         {selectedCampaign.inviteCode}
                                     </span>
+                                    <button 
+                                        onClick={() => handleCopyCode(selectedCampaign.inviteCode)}
+                                        className="bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white p-1 rounded transition-colors"
+                                        title="Copy to Clipboard"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -207,225 +271,273 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
 
                 {/* Dashboard Content */}
                 <main className="flex-1 overflow-y-auto bg-slate-900 p-4 sm:p-6">
-                    <div className="max-w-7xl mx-auto">
-                        {isLoadingPlayers ? (
-                            <div className="flex justify-center items-center h-64">
-                                <div className="text-teal-500 animate-pulse text-xl font-bold flex flex-col items-center gap-2">
-                                    <svg className="animate-spin h-8 w-8 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <div className="max-w-7xl mx-auto space-y-8">
+                        
+                        {/* ADVERSARY SECTION */}
+                        <section>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    Summoning Heroes...
+                                    Battle Tracker
+                                </h2>
+                                <button 
+                                    onClick={() => setIsAdversaryModalOpen(true)}
+                                    className="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Add Adversary
+                                </button>
+                            </div>
+                            
+                            {activeAdversaries.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {activeAdversaries.map(adv => (
+                                        <AdversaryCard 
+                                            key={adv.id} 
+                                            adversary={adv} 
+                                            onUpdate={handleUpdateAdversary}
+                                            onRemove={handleRemoveAdversary}
+                                        />
+                                    ))}
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {players.map(char => {
-                                        const activeWeapon = char.isWolfFormActive 
-                                        ? { name: 'Wolf Form', damage: 'd12', type: 'Melee' } 
-                                        : char.activeBeastFormName 
-                                            ? { name: char.activeBeastFormName, damage: 'See Form', type: 'Beast' }
-                                            : char.primaryWeapon 
-                                                ? { name: char.primaryWeapon.name, damage: char.primaryWeapon.damage, type: char.primaryWeapon.range }
-                                                : { name: 'Unarmed', damage: 'd6', type: 'Melee' };
-                                    
-                                    const thresholds = getDisplayThresholds(char);
-                                    const isExpanded = expandedCards.has(char.id);
+                            ) : (
+                                <div className="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-8 text-center text-slate-500">
+                                    <p>No active adversaries. The path is clear... for now.</p>
+                                </div>
+                            )}
+                        </section>
 
-                                    return (
-                                        <div 
-                                            key={char.id} 
-                                            onClick={() => setInspectingCharacter(char)}
-                                            className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-teal-500/50 transition-all cursor-pointer group shadow-lg hover:shadow-teal-900/20 flex flex-col h-fit"
-                                        >
-                                            {/* Card Header */}
-                                            <div className="p-3 bg-slate-800 border-b border-slate-600 flex justify-between items-center">
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white group-hover:text-teal-300 transition-colors truncate">{char.name}</h3>
-                                                    <p className="text-xs text-slate-400">{char.class} <span className="text-slate-600">|</span> {char.subclass}</p>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                     <span className="bg-teal-900/30 text-teal-300 text-xs font-bold px-2 py-0.5 rounded border border-teal-800/50">Lvl {char.level}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Card Body */}
-                                            <div className="p-3 flex-1 flex flex-col gap-3">
-                                                
-                                                {/* Vitals Row */}
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    {/* HP */}
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-bold text-red-400 w-6 text-right">HP</span>
-                                                        <div className="flex-1 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700 relative">
-                                                            <div className="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-500" style={{ width: `${(char.hp.current / char.hp.max) * 100}%` }} />
-                                                            <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">
-                                                                {char.hp.current}/{char.hp.max}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {/* Stress */}
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-bold text-purple-400 w-6 text-right">STR</span>
-                                                        <div className="flex-1 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700 relative">
-                                                            <div className="h-full bg-gradient-to-r from-purple-900 to-purple-600 transition-all duration-500" style={{ width: `${(char.stress.current / char.stress.max) * 100}%` }} />
-                                                            <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">
-                                                                {char.stress.current}/{char.stress.max}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Stats Grid */}
-                                                <div className="grid grid-cols-3 gap-2 bg-slate-900/40 p-2 rounded-lg border border-slate-700/50 text-center">
-                                                    <div>
-                                                        <div className="text-[9px] text-slate-500 uppercase font-bold">Evasion</div>
-                                                        <div className="text-lg font-bold text-white leading-none">{char.evasion}</div>
-                                                    </div>
-                                                    <div className="border-l border-slate-700">
-                                                        <div className="text-[9px] text-slate-500 uppercase font-bold">Armor</div>
-                                                        <div className="text-lg font-bold text-sky-300 leading-none">{char.armor.current}</div>
-                                                    </div>
-                                                    <div className="border-l border-slate-700">
-                                                        <div className="text-[9px] text-slate-500 uppercase font-bold">Hope</div>
-                                                        <div className="text-lg font-bold text-yellow-400 leading-none">{char.hope}</div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Traits Mini-Grid */}
-                                                <div className="grid grid-cols-6 gap-1">
-                                                    {TRAIT_ORDER.map(trait => (
-                                                        <div key={trait} className="flex flex-col items-center">
-                                                            <div className="text-[8px] text-slate-500 uppercase font-bold mb-0.5">{trait.substring(0, 3)}</div>
-                                                            <div className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded ${char.traits[trait] > 0 ? 'bg-teal-900/30 text-teal-300 border border-teal-800/50' : 'bg-slate-900/50 text-slate-500 border border-slate-800'}`}>
-                                                                {char.traits[trait] > 0 ? '+' : ''}{char.traits[trait]}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Expanded Abilities Section */}
-                                            {isExpanded && (
-                                                <div className="px-3 pb-3 bg-slate-900/80 border-t border-slate-700/50 animate-fade-in">
-                                                    <div className="pt-2 space-y-3">
-                                                        {/* Ancestry */}
-                                                        <div>
-                                                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Ancestry: {char.ancestry}</p>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {char.ancestryFeatures.map((f, i) => (
-                                                                    <button 
-                                                                        key={i} 
-                                                                        onClick={(e) => { e.stopPropagation(); setViewingAbility({name: f.name, type: 'Ancestry Feature', description: f.description}); }}
-                                                                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 transition-colors text-left"
-                                                                    >
-                                                                        {f.name}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {/* Subclass */}
-                                                        <div>
-                                                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Subclass: {char.subclass}</p>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {char.subclassFeatures.map((f, i) => (
-                                                                    <button 
-                                                                        key={i} 
-                                                                        onClick={(e) => { e.stopPropagation(); setViewingAbility({name: f.name, type: 'Subclass Feature', description: f.description}); }}
-                                                                        className="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 text-xs px-2 py-1 rounded border border-indigo-800/50 transition-colors text-left"
-                                                                    >
-                                                                        {f.name}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Domain Cards */}
-                                                        <div>
-                                                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Domain Cards</p>
-                                                            <div className="flex flex-col gap-1">
-                                                                {char.domainCards.map((cardName, i) => {
-                                                                    const details = DOMAIN_CARDS.find(c => c.name === cardName);
-                                                                    return (
-                                                                        <div 
-                                                                            key={i} 
-                                                                            onClick={(e) => { 
-                                                                                e.stopPropagation(); 
-                                                                                if(details) setViewingAbility({name: details.name, type: `Domain Card (${details.domain})`, description: details.description, cost: details.recallCost}); 
-                                                                            }}
-                                                                            className="bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 flex justify-between items-center cursor-pointer transition-colors"
-                                                                        >
-                                                                            <span className="font-medium">{cardName}</span>
-                                                                            {details?.recallCost !== undefined && (
-                                                                                <span className="text-[9px] text-yellow-500 font-bold">Cost: {details.recallCost}</span>
-                                                                            )}
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Card Footer: Weapon & Thresholds + Expand Button */}
-                                            <div className="bg-slate-900/50 p-3 border-t border-slate-700 text-xs">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="font-semibold text-slate-300 truncate w-2/3" title={activeWeapon.name}>{activeWeapon.name}</span>
-                                                    <span className="font-mono text-teal-400 font-bold">{activeWeapon.damage}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between bg-slate-900 rounded px-2 py-1 border border-slate-800 mb-2">
-                                                    <span className="text-[9px] text-slate-500 uppercase font-bold">Thresholds</span>
-                                                    <div className="flex gap-2 font-mono">
-                                                        <span className="text-sky-300" title="Minor">{1}-{thresholds.major - 1}</span>
-                                                        <span className="text-slate-600">|</span>
-                                                        <span className="text-amber-400" title="Major">{thresholds.major}-{thresholds.severe - 1}</span>
-                                                        <span className="text-slate-600">|</span>
-                                                        <span className="text-red-500 font-bold" title="Severe">{thresholds.severe}+</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* Expand Toggle */}
-                                                <button 
-                                                    onClick={(e) => toggleCardExpansion(e, char.id)}
-                                                    className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                                                >
-                                                    {isExpanded ? (
-                                                        <>
-                                                            <span>Hide Abilities</span>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                                            </svg>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <span>See Abilities</span>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                            </svg>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                
-                                {players.length === 0 && (
-                                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/20">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        {/* PLAYERS SECTION */}
+                        <section>
+                             <h2 className="text-xl font-bold text-teal-400 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Heroes
+                            </h2>
+                            {isLoadingPlayers ? (
+                                <div className="flex justify-center items-center h-40">
+                                    <div className="text-teal-500 animate-pulse text-xl font-bold flex flex-col items-center gap-2">
+                                        <svg className="animate-spin h-8 w-8 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        <p className="text-xl font-medium text-slate-400">The tavern is empty.</p>
-                                        <div className="mt-4 text-center">
-                                            <p className="text-sm text-slate-500 mb-2">Invite players using code</p>
-                                            <span className="font-mono text-3xl font-bold text-teal-400 tracking-widest bg-slate-800 px-4 py-2 rounded-lg border border-teal-500/30 shadow-lg">{selectedCampaign.inviteCode}</span>
-                                        </div>
+                                        Summoning Heroes...
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {players.map(char => {
+                                            const activeWeapon = char.isWolfFormActive 
+                                            ? { name: 'Wolf Form', damage: 'd12', type: 'Melee' } 
+                                            : char.activeBeastFormName 
+                                                ? { name: char.activeBeastFormName, damage: 'See Form', type: 'Beast' }
+                                                : char.primaryWeapon 
+                                                    ? { name: char.primaryWeapon.name, damage: char.primaryWeapon.damage, type: char.primaryWeapon.range }
+                                                    : { name: 'Unarmed', damage: 'd6', type: 'Melee' };
+                                        
+                                        const thresholds = getDisplayThresholds(char);
+                                        const isExpanded = expandedCards.has(char.id);
+
+                                        return (
+                                            <div 
+                                                key={char.id} 
+                                                onClick={() => setInspectingCharacter(char)}
+                                                className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-teal-500/50 transition-all cursor-pointer group shadow-lg hover:shadow-teal-900/20 flex flex-col h-fit"
+                                            >
+                                                {/* Card Header */}
+                                                <div className="p-3 bg-slate-800 border-b border-slate-600 flex justify-between items-center">
+                                                    <div>
+                                                        <h3 className="text-lg font-bold text-white group-hover:text-teal-300 transition-colors truncate">{char.name}</h3>
+                                                        <p className="text-xs text-slate-400">{char.class} <span className="text-slate-600">|</span> {char.subclass}</p>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="bg-teal-900/30 text-teal-300 text-xs font-bold px-2 py-0.5 rounded border border-teal-800/50">Lvl {char.level}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Body */}
+                                                <div className="p-3 flex-1 flex flex-col gap-3">
+                                                    
+                                                    {/* Vitals Row */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {/* HP */}
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] font-bold text-red-400 w-6 text-right">HP</span>
+                                                            <div className="flex-1 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700 relative">
+                                                                <div className="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-500" style={{ width: `${(char.hp.current / char.hp.max) * 100}%` }} />
+                                                                <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">
+                                                                    {char.hp.current}/{char.hp.max}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {/* Stress */}
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] font-bold text-purple-400 w-6 text-right">STR</span>
+                                                            <div className="flex-1 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700 relative">
+                                                                <div className="h-full bg-gradient-to-r from-purple-900 to-purple-600 transition-all duration-500" style={{ width: `${(char.stress.current / char.stress.max) * 100}%` }} />
+                                                                <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">
+                                                                    {char.stress.current}/{char.stress.max}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Stats Grid */}
+                                                    <div className="grid grid-cols-3 gap-2 bg-slate-900/40 p-2 rounded-lg border border-slate-700/50 text-center">
+                                                        <div>
+                                                            <div className="text-[9px] text-slate-500 uppercase font-bold">Evasion</div>
+                                                            <div className="text-lg font-bold text-white leading-none">{char.evasion}</div>
+                                                        </div>
+                                                        <div className="border-l border-slate-700">
+                                                            <div className="text-[9px] text-slate-500 uppercase font-bold">Armor</div>
+                                                            <div className="text-lg font-bold text-sky-300 leading-none">{char.armor.current}</div>
+                                                        </div>
+                                                        <div className="border-l border-slate-700">
+                                                            <div className="text-[9px] text-slate-500 uppercase font-bold">Hope</div>
+                                                            <div className="text-lg font-bold text-yellow-400 leading-none">{char.hope}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Traits Mini-Grid */}
+                                                    <div className="grid grid-cols-6 gap-1">
+                                                        {TRAIT_ORDER.map(trait => (
+                                                            <div key={trait} className="flex flex-col items-center">
+                                                                <div className="text-[8px] text-slate-500 uppercase font-bold mb-0.5">{trait.substring(0, 3)}</div>
+                                                                <div className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded ${char.traits[trait] > 0 ? 'bg-teal-900/30 text-teal-300 border border-teal-800/50' : 'bg-slate-900/50 text-slate-500 border border-slate-800'}`}>
+                                                                    {char.traits[trait] > 0 ? '+' : ''}{char.traits[trait]}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Expanded Abilities Section */}
+                                                {isExpanded && (
+                                                    <div className="px-3 pb-3 bg-slate-900/80 border-t border-slate-700/50 animate-fade-in">
+                                                        <div className="pt-2 space-y-3">
+                                                            {/* Ancestry */}
+                                                            <div>
+                                                                <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Ancestry: {char.ancestry}</p>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {char.ancestryFeatures.map((f, i) => (
+                                                                        <button 
+                                                                            key={i} 
+                                                                            onClick={(e) => { e.stopPropagation(); setViewingAbility({name: f.name, type: 'Ancestry Feature', description: f.description}); }}
+                                                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 transition-colors text-left"
+                                                                        >
+                                                                            {f.name}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Subclass */}
+                                                            <div>
+                                                                <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Subclass: {char.subclass}</p>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {char.subclassFeatures.map((f, i) => (
+                                                                        <button 
+                                                                            key={i} 
+                                                                            onClick={(e) => { e.stopPropagation(); setViewingAbility({name: f.name, type: 'Subclass Feature', description: f.description}); }}
+                                                                            className="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 text-xs px-2 py-1 rounded border border-indigo-800/50 transition-colors text-left"
+                                                                        >
+                                                                            {f.name}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Domain Cards */}
+                                                            <div>
+                                                                <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Active Domain Cards</p>
+                                                                <div className="flex flex-col gap-1">
+                                                                    {char.domainCards.map((cardName, i) => {
+                                                                        const details = DOMAIN_CARDS.find(c => c.name === cardName);
+                                                                        return (
+                                                                            <div 
+                                                                                key={i} 
+                                                                                onClick={(e) => { 
+                                                                                    e.stopPropagation(); 
+                                                                                    if(details) setViewingAbility({name: details.name, type: `Domain Card (${details.domain})`, description: details.description, cost: details.recallCost}); 
+                                                                                }}
+                                                                                className="bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded border border-slate-700 flex justify-between items-center cursor-pointer transition-colors"
+                                                                            >
+                                                                                <span className="font-medium">{cardName}</span>
+                                                                                {details?.recallCost !== undefined && (
+                                                                                    <span className="text-[9px] text-yellow-500 font-bold">Cost: {details.recallCost}</span>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Card Footer: Weapon & Thresholds + Expand Button */}
+                                                <div className="bg-slate-900/50 p-3 border-t border-slate-700 text-xs">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className="font-semibold text-slate-300 truncate w-2/3" title={activeWeapon.name}>{activeWeapon.name}</span>
+                                                        <span className="font-mono text-teal-400 font-bold">{activeWeapon.damage}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between bg-slate-900 rounded px-2 py-1 border border-slate-800 mb-2">
+                                                        <span className="text-[9px] text-slate-500 uppercase font-bold">Thresholds</span>
+                                                        <div className="flex gap-2 font-mono">
+                                                            <span className="text-sky-300" title="Minor">{1}-{thresholds.major - 1}</span>
+                                                            <span className="text-slate-600">|</span>
+                                                            <span className="text-amber-400" title="Major">{thresholds.major}-{thresholds.severe - 1}</span>
+                                                            <span className="text-slate-600">|</span>
+                                                            <span className="text-red-500 font-bold" title="Severe">{thresholds.severe}+</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Expand Toggle */}
+                                                    <button 
+                                                        onClick={(e) => toggleCardExpansion(e, char.id)}
+                                                        className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                                                    >
+                                                        {isExpanded ? (
+                                                            <>
+                                                                <span>Hide Abilities</span>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                </svg>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span>See Abilities</span>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                </svg>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    
+                                    {players.length === 0 && (
+                                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/20">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            <p className="text-xl font-medium text-slate-400">The tavern is empty.</p>
+                                            <div className="mt-4 text-center">
+                                                <p className="text-sm text-slate-500 mb-2">Invite players using code</p>
+                                                <span className="font-mono text-3xl font-bold text-teal-400 tracking-widest bg-slate-800 px-4 py-2 rounded-lg border border-teal-500/30 shadow-lg">{selectedCampaign.inviteCode}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </section>
                     </div>
                 </main>
                 
@@ -456,6 +568,83 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                         </div>
                     </div>
                 )}
+                
+                {/* Add Adversary Modal */}
+                {isAdversaryModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsAdversaryModalOpen(false)}>
+                        <div className="bg-slate-800 p-6 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-red-400">Select Adversary</h3>
+                                <button onClick={() => setIsAdversaryModalOpen(false)} className="text-slate-400 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            {/* Search Bar */}
+                            <div className="mb-4 relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Search by name, type, motive or tier..." 
+                                    value={adversarySearch}
+                                    onChange={(e) => setAdversarySearch(e.target.value)}
+                                    className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
+                                    autoFocus
+                                />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-2">
+                                {filteredAdversaryTemplates.length > 0 ? (
+                                    filteredAdversaryTemplates.map(template => (
+                                        <div key={template.originalName} className="bg-slate-700 border border-slate-600 p-3 rounded-lg hover:border-red-500/50 transition-colors cursor-pointer group" onClick={() => handleAddAdversary(template)}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-slate-100 group-hover:text-red-300 transition-colors">{template.originalName}</h4>
+                                                <span className="bg-slate-800 text-xs px-1.5 py-0.5 rounded border border-slate-600">T{template.tier}</span>
+                                            </div>
+                                            <div className="text-xs text-slate-400 mb-2 flex gap-2">
+                                                <span>{template.type}</span>
+                                                <span>•</span>
+                                                <span>Diff {template.difficulty}</span>
+                                            </div>
+                                            <div className="text-xs text-slate-300 bg-slate-800/50 p-1.5 rounded mb-2">
+                                                <span className="font-bold text-slate-400">Atk:</span> {template.attack.name} ({template.attack.damage})
+                                            </div>
+                                            <button className="w-full bg-slate-600 hover:bg-red-700 text-white text-xs font-bold py-1 rounded transition-colors">
+                                                Add to Battle
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full text-center py-8 text-slate-500">
+                                        No adversaries found matching "{adversarySearch}"
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* GM Rules Button */}
+                <button
+                    onClick={() => setIsRuleSearchOpen(true)}
+                    className="fixed bottom-6 right-6 z-40 bg-teal-600 hover:bg-teal-500 text-white p-3 rounded-full shadow-lg shadow-black/50 border border-teal-400 transition-transform hover:scale-110 flex items-center justify-center group"
+                    title="Search Rules"
+                    aria-label="Search Rules"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-600 pointer-events-none">
+                        Rules Lookup
+                    </span>
+                </button>
+                {isRuleSearchOpen && <RuleSearchModal onClose={() => setIsRuleSearchOpen(false)} />}
             </div>
         );
     }
@@ -529,6 +718,22 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                 </div>
 
             </div>
+            
+            {/* GM Rules Button */}
+            <button
+                onClick={() => setIsRuleSearchOpen(true)}
+                className="fixed bottom-6 right-6 z-40 bg-teal-600 hover:bg-teal-500 text-white p-3 rounded-full shadow-lg shadow-black/50 border border-teal-400 transition-transform hover:scale-110 flex items-center justify-center group"
+                title="Search Rules"
+                aria-label="Search Rules"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-600 pointer-events-none">
+                    Rules Lookup
+                </span>
+            </button>
+            {isRuleSearchOpen && <RuleSearchModal onClose={() => setIsRuleSearchOpen(false)} />}
         </div>
     );
 };

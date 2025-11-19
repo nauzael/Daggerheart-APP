@@ -11,6 +11,7 @@ import RestModal from './RestModal';
 import BeastformDisplay from './BeastformDisplay';
 import WolfFormDisplay from './WolfFormDisplay';
 import ProfileImageEditorModal from './ProfileImageEditorModal';
+import RuleSearchModal from './RuleSearchModal';
 import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import { COMMUNITIES } from '../data/communities';
 import { CLASS_FEATURES } from '../data/classFeatures';
@@ -325,6 +326,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const [isRestModalOpen, setIsRestModalOpen] = useState(false);
     const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
     const [isStanceModalOpen, setIsStanceModalOpen] = useState(false);
+    const [isRuleSearchOpen, setIsRuleSearchOpen] = useState(false);
     const [inventory, setInventory] = useState(character.inventory);
     const [newItem, setNewItem] = useState('');
     const [newNote, setNewNote] = useState('');
@@ -841,6 +843,25 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     selectionLimit={stancesToLearnCount}
                 />
             )}
+            {isRuleSearchOpen && (
+                <RuleSearchModal onClose={() => setIsRuleSearchOpen(false)} />
+            )}
+            
+            {/* Floating Rules Button */}
+            <button
+                onClick={() => setIsRuleSearchOpen(true)}
+                className="fixed bottom-6 right-6 z-40 bg-teal-600 hover:bg-teal-500 text-white p-3 rounded-full shadow-lg shadow-black/50 border border-teal-400 transition-transform hover:scale-110 flex items-center justify-center group"
+                title="Search Rules"
+                aria-label="Search Rules"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-600 pointer-events-none">
+                    Rules Lookup
+                </span>
+            </button>
+
             <header className="flex flex-col sm:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4 sm:gap-6">
                     <div 

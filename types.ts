@@ -136,3 +136,32 @@ export interface Campaign {
     inviteCode: string;
     createdAt: number;
 }
+
+export interface AdversaryFeature {
+    name: string;
+    type: 'Action' | 'Reaction' | 'Passive' | 'Fear';
+    description: string;
+}
+
+export interface Adversary {
+    id: string; // Unique instance ID for the board
+    originalName: string; // To reference the base stats
+    name: string; // Display name (e.g., "Skeleton 1")
+    tier: number;
+    type: string; // e.g., "Minion", "Solo"
+    difficulty: number;
+    thresholds: {
+        major: number;
+        severe: number;
+    };
+    hp: Stat;
+    stress: Stat;
+    attack: {
+        modifier: number;
+        name: string;
+        range: string;
+        damage: string;
+    };
+    features: AdversaryFeature[];
+    motives?: string;
+}

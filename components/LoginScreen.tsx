@@ -132,19 +132,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                     </svg>
                     Continue with Google
                 </button>
-                
-                <div className="mt-4 pt-4 border-t border-slate-700">
-                     <button 
-                        type="button"
-                        onClick={onLoginSuccess}
-                        className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 rounded transition-colors text-sm"
-                    >
-                        Continue as Guest (Offline)
-                    </button>
-                    <p className="text-xs text-slate-500 text-center mt-2">
-                        Guest mode saves data to your browser only.
-                    </p>
-                </div>
 
                 <p className="mt-6 text-center text-slate-400 text-sm">
                     {isRegistering ? "Already have an account?" : "Don't have an account?"} 
