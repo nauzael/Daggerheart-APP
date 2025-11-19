@@ -27,7 +27,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     const handleGoogleLogin = async () => {
         if (isNative) {
             const proceed = window.confirm(
-                "Google Sign-In may not work in this APK without specific advanced configuration (SHA-1 keys). If you see a blank screen, please restart and use Email/Password. Try anyway?"
+                "Note for APK Users: Google Sign-In via web popup is often blocked by Android security. If this fails or shows a blank screen, please use Email/Password login instead. Try anyway?"
             );
             if (!proceed) return;
         }
@@ -42,6 +42,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             onLoginSuccess();
         } catch (err: any) {
             console.error("Google Login Error:", err);
+            const errorMessage = err.message || "";
+            
             if (err.code === 'auth/unauthorized-domain') {
                 setError(`Domain Unauthorized: Firebase is blocking this URL.`);
                 setShowBypass(true);
@@ -49,8 +51,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 setError("Sign-in cancelled.");
             } else if (err.code === 'auth/popup-blocked') {
                 setError("Popup blocked. Please allow popups for this site.");
+            } else if (errorMessage.includes("missing initial state") || errorMessage.includes("sessionStorage")) {
+                // Specific handling for the Capacitor/Android WebView error
+                setError("Google Auth failed due to Android WebView restrictions. Please use 'Sign Up' with Email and Password instead.");
             } else {
-                setError(err.message || "Failed to sign in with Google.");
+                setError(errorMessage || "Failed to sign in with Google.");
             }
         }
     };
@@ -115,7 +120,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                     
                     {error && (
                         <div className="bg-red-900/50 border border-red-700 p-3 rounded text-sm">
-                            <p className="text-red-200 font-bold mb-1">Error: {error}</p>
+                            <p className="text-red-200 font-bold mb-1">Error</p>
+                            <p className="text-red-100">{error}</p>
                             {showBypass && (
                                 <div className="mt-2 text-slate-300 text-xs">
                                     <p className="mb-2">To fix "Unauthorized Domain", add this domain to <strong>Firebase Console &gt; Authentication &gt; Settings &gt; Authorized Domains</strong>:</p>
@@ -153,7 +159,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 
                 {isNative && (
                     <div className="mt-4 p-3 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-200 text-center">
-                        <strong>APK Note:</strong> If Google Login shows a blank screen, it is due to Google security restrictions in standard APKs. Please use <strong>Email/Password</strong> for guaranteed access.
+                        <strong>APK Note:</strong> Google Login is restricted in APKs. Please use <strong>Email/Password</strong> for guaranteed access.
                     </div>
                 )}
 

@@ -1,7 +1,8 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { initializeAuth, GoogleAuthProvider, indexedDBLocalPersistence, browserLocalPersistence } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 
 // Configuración proporcionada por el usuario
 const firebaseConfig = {
@@ -21,7 +22,16 @@ let googleProvider: any = null;
 try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-    auth = getAuth(app);
+    
+    // CRITICAL FIX FOR CAPACITOR/ANDROID:
+    // Use indexedDBLocalPersistence for mobile apps to prevent storage partitioning issues.
+    // Standard browserLocalPersistence (localStorage) is often cleared by Android WebViews.
+    const persistence = Capacitor.isNativePlatform() ? indexedDBLocalPersistence : browserLocalPersistence;
+    
+    auth = initializeAuth(app, {
+      persistence: persistence
+    });
+
     googleProvider = new GoogleAuthProvider();
     console.log("Firebase initialized successfully linked to project: daggerheart-75adc");
 } catch (error) {
