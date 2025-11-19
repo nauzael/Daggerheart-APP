@@ -270,8 +270,8 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                 </header>
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-y-auto bg-slate-900 p-4 sm:p-6">
-                    <div className="max-w-7xl mx-auto space-y-8">
+                <main className="flex-1 overflow-y-auto bg-slate-900 p-4">
+                    <div className="max-w-7xl mx-auto space-y-6">
                         
                         {/* ADVERSARY SECTION */}
                         <section>
@@ -305,7 +305,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-8 text-center text-slate-500">
+                                <div className="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-4 text-center text-slate-500">
                                     <p>No active adversaries. The path is clear... for now.</p>
                                 </div>
                             )}
@@ -330,7 +330,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                     {players.map(char => {
                                             const activeWeapon = char.isWolfFormActive 
                                             ? { name: 'Wolf Form', damage: 'd12', type: 'Melee' } 
@@ -595,7 +595,6 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                     value={adversarySearch}
                                     onChange={(e) => setAdversarySearch(e.target.value)}
                                     className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
-                                    autoFocus
                                 />
                             </div>
                             
@@ -652,7 +651,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     // --- VIEW 3: CAMPAIGN SELECTOR (HOME) ---
     return (
         <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col">
-            <div className="flex-1 max-w-4xl w-full mx-auto p-6 flex flex-col">
+            <div className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col">
                 
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-teal-400">Game Master Nexus</h1>
@@ -663,7 +662,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
 
                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl mb-8">
                     <h2 className="text-xl font-bold text-white mb-4">Create New Campaign</h2>
-                    <form onSubmit={handleCreateCampaign} className="flex gap-4">
+                    <form onSubmit={handleCreateCampaign} className="flex flex-col sm:flex-row gap-4">
                         <input 
                             type="text" 
                             placeholder="Campaign Name (e.g. The Fall of Whitewall)" 

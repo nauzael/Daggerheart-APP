@@ -1170,7 +1170,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                         </div>
                     </Card>
                     <Card title="The Vault">
-                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                        <div className="space-y-3 pr-2">
                             {vaultCards.map(card => {
                                 const recallCost = card.recallCost ?? 0;
                                 const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
@@ -1252,7 +1252,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                     </Card>
                     <Card title="Notes & Background">
                         {character.notes && character.notes.length > 0 ? (
-                            <ul className="space-y-2 max-h-48 overflow-y-auto pr-2 mb-4">
+                            <ul className="space-y-2 pr-2 mb-4">
                                 {character.notes.map((note, i) => (
                                     <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
                                         <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>

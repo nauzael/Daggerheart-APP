@@ -62,7 +62,6 @@ const RuleSearchModal: React.FC<RuleSearchModalProps> = ({ onClose }) => {
                             placeholder="Search rules (e.g., 'Rest', 'Fear', 'Vulnerable')..." 
                             value={query}
                             onChange={e => setQuery(e.target.value)}
-                            autoFocus
                             className="w-full bg-slate-900 border border-slate-600 rounded-lg py-2.5 pl-10 pr-4 text-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
                         />
                     </div>

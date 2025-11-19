@@ -28,7 +28,6 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('login');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Auth Listener
   useEffect(() => {
@@ -187,27 +186,6 @@ const App: React.FC = () => {
     // Clean up subscription on unmount
     return () => unsubscribe();
   }, [user]); // Re-subscribe if user state changes (e.g. login/logout)
-
-  // Full Screen Logic
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-        setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
 
   // Import via URL logic
   useEffect(() => {
@@ -481,7 +459,7 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
-    if (isAuthLoading) return <div className="flex h-screen items-center justify-center text-teal-400 animate-pulse">Loading Application...</div>;
+    if (isAuthLoading) return <div className="flex h-full items-center justify-center text-teal-400 animate-pulse">Loading Application...</div>;
 
     if (view === 'login') {
         return <LoginScreen onLoginSuccess={() => setView('selection')} />;
@@ -510,89 +488,29 @@ const App: React.FC = () => {
         case 'selection':
         default:
             return (
-                <>
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 px-4 sm:px-0 max-w-5xl mx-auto gap-2">
-                        <div className="text-slate-400 text-sm">
-                            {user ? (
-                                <span>Logged in as: <span className="text-teal-300 font-bold">{user.email}</span></span>
-                            ) : (
-                                <span className="text-amber-400 font-bold">Guest Mode (Offline)</span>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                             <button onClick={() => setView('gm_panel')} className="text-xs bg-indigo-800 hover:bg-indigo-700 text-indigo-200 py-1 px-3 rounded transition-colors border border-indigo-600">
-                                GM Panel
-                            </button>
-                            <button onClick={handleSignOut} className="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded transition-colors">
-                                {user ? 'Sign Out' : 'Log In'}
-                            </button>
-                        </div>
-                    </div>
-                    <CharacterSelection 
-                        characters={characters}
-                        onSelectCharacter={handleCharacterSelect}
-                        onDeleteCharacter={handleCharacterDelete}
-                        onCreateNew={handleShowCreator}
-                        onImport={handleImportCharacters}
-                        onExport={handleExportCharacters}
-                    />
-                    
-                    <div className="flex flex-col items-center gap-4 mt-8 pb-12">
-                         <button 
-                            onClick={handleJoinCampaign}
-                            className="bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105"
-                        >
-                            Join a Campaign
-                        </button>
-                        {!user && <p className="text-xs text-slate-500">Log in to access campaign features.</p>}
-                        
-                        {/* Leave Campaign Helper List */}
-                        {characters.some(c => c.campaignId) && (
-                            <div className="mt-4 w-full max-w-md">
-                                <p className="text-center text-slate-500 text-xs mb-2">Active Campaigns:</p>
-                                {characters.filter(c => c.campaignId).map(c => (
-                                    <div key={c.id} className="flex justify-between items-center bg-slate-800/50 p-2 rounded mb-1">
-                                        <span className="text-sm text-slate-300">{c.name}</span>
-                                        <button onClick={() => handleLeaveCampaign(c.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Leave Campaign</button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Cloud Migration Helper - Only show if logged in */}
-                        {user && (
-                            <div className="text-center mt-8 p-4 border-t border-slate-800 w-full max-w-2xl">
-                                <button onClick={handleMigrateToCloud} className="text-xs text-slate-500 hover:text-teal-400 underline transition-colors">
-                                    Find & Upload Local Storage Characters
-                                </button>
-                                <p className="text-[10px] text-slate-600 mt-1">Use this if you created characters on this device before logging in.</p>
-                            </div>
-                        )}
-                    </div>
-                </>
+                <CharacterSelection 
+                    characters={characters}
+                    onSelectCharacter={handleCharacterSelect}
+                    onDeleteCharacter={handleCharacterDelete}
+                    onCreateNew={handleShowCreator}
+                    onImport={handleImportCharacters}
+                    onExport={handleExportCharacters}
+                    user={user}
+                    onJoinCampaign={handleJoinCampaign}
+                    onSignOut={handleSignOut}
+                    onGMPanel={() => setView('gm_panel')}
+                    onMigrateToCloud={handleMigrateToCloud}
+                    onLeaveCampaign={handleLeaveCampaign}
+                />
             );
     }
   }
 
-  return (
-    <div className="relative min-h-screen bg-slate-900 text-slate-200 font-sans p-2 sm:p-4 md:p-6 lg:p-8 overflow-hidden">
-       {/* Full Screen Button */}
-      <button
-        onClick={toggleFullScreen}
-        className="fixed top-3 right-3 z-50 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full border border-slate-600 transition-colors backdrop-blur-sm shadow-lg"
-        title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}
-      >
-        {isFullscreen ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 9h4m0 0V5m0 4L4 4m11 5h-4m0 0V5m0 4l5-5M5 15h4m0 0v4m0-4l-5 5m15-5h-4m0 0v4m0-4l5 5" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-          </svg>
-        )}
-      </button>
+  const isLogin = view === 'login';
+  const isSelection = view === 'selection';
 
+  return (
+    <div className={`relative bg-slate-900 text-slate-200 font-sans flex flex-col overflow-hidden ${isLogin || isSelection ? 'h-full' : 'h-full'}`}>
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80rem] h-[50rem] blur-3xl pointer-events-none"
         style={{
@@ -600,13 +518,13 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      <header className={`text-center mb-8 relative z-10 ${view === 'login' ? 'hidden' : ''}`}>
+      <header className={`text-center mb-2 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' ? 'hidden' : 'pt-4'}`}>
         {view !== 'sheet' && view !== 'gm_panel' && (
           <>
             <div className="inline-block mx-auto mb-2">
                 <DaggerheartLogo />
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 tracking-tight">
               {getHeaderTitle()}
             </h1>
           </>
@@ -623,15 +541,9 @@ const App: React.FC = () => {
           </div>
         )}
       </header>
-      <main className="container mx-auto max-w-7xl relative z-10">
+      <main className={`relative z-10 flex-1 overflow-hidden ${isLogin ? 'w-full' : 'w-full'} ${view !== 'login' && view !== 'selection' && view !== 'gm_panel' ? 'overflow-y-auto' : ''} ${view !== 'login' && view !== 'gm_panel' && view !== 'selection' ? 'container mx-auto max-w-7xl p-4' : ''}`}>
         {renderContent()}
       </main>
-      {view !== 'login' && (
-          <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed relative z-10 pb-4">
-            <p>This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License. More information can be found at <a href="https://www.daggerheart.com" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">https://www.daggerheart.com</a>. There are no previous modifications by others.</p>
-            <p className="mt-2">This is an unofficial fan-made tool and is not affiliated with, endorsed, sponsored, or specifically approved by Darrington Press LLC.</p>
-          </footer>
-      )}
     </div>
   );
 };
