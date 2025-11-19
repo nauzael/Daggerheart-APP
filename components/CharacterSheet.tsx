@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { compressToEncodedURIComponent } from 'lz-string';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
@@ -816,8 +817,8 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     const handleShareCharacter = () => {
         try {
             const jsonString = JSON.stringify(character);
-            const encodedData = btoa(jsonString);
-            const url = `${window.location.origin}${window.location.pathname}?character=${encodedData}`;
+            const compressedData = compressToEncodedURIComponent(jsonString);
+            const url = `${window.location.origin}${window.location.pathname}?character=${compressedData}`;
 
             navigator.clipboard.writeText(url).then(() => {
                 alert('Shareable link copied to clipboard!');

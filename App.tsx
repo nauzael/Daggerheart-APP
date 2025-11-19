@@ -1,16 +1,15 @@
 
-
-
 import React, { useState, useEffect } from 'react';
-import { Character, BeastForm } from './types';
+import { decompressFromEncodedURIComponent } from 'lz-string';
+import { Character } from './types';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
 import { SUBCLASS_FEATURES } from './data/subclassFeatures';
 import { ANCESTRIES } from './data/ancestries';
-import { ALL_BEASTFORMS } from './data/beastforms';
 import { DEFAULT_PROFILE_IMAGE } from './data/defaultProfileImage';
+import { characterService } from './services/characterService';
 
 
 type View = 'selection' | 'creator' | 'sheet';
@@ -20,6 +19,7 @@ const App: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [view, setView] = useState<View>('selection');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const migrateCharacter = (char: any): Character => {
       // Ensure subclassFeatures exists and has foundation if it should.
@@ -129,34 +129,50 @@ const App: React.FC = () => {
       return char as Character;
   };
 
+  // Initial Load
   useEffect(() => {
-    const savedCharactersJSON = localStorage.getItem('daggerheart-characters');
-    let initialCharacters: Character[] = [];
-    if (savedCharactersJSON) {
-        const parsedCharacters: any[] = JSON.parse(savedCharactersJSON);
-        initialCharacters = parsedCharacters.map(migrateCharacter);
-        setCharacters(initialCharacters);
-    }
+    const loadCharacters = async () => {
+        setIsLoading(true);
+        try {
+            const loadedChars = await characterService.fetchAll();
+            const migratedChars = loadedChars.map(migrateCharacter);
+            setCharacters(migratedChars);
+        } catch (e) {
+            console.error("Failed to load characters", e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    loadCharacters();
     
-    // Check for character data in URL
+    // Check for character data in URL (Import Logic)
     const urlParams = new URLSearchParams(window.location.search);
     const characterData = urlParams.get('character');
 
     if (characterData) {
         try {
-            const jsonString = atob(characterData);
+            let jsonString = decompressFromEncodedURIComponent(characterData);
+            if (!jsonString) {
+                try {
+                    jsonString = atob(characterData);
+                } catch (e) {
+                    throw new Error("Invalid character data in URL.");
+                }
+            }
+
             const importedChar = JSON.parse(jsonString);
 
             if (importedChar.id && importedChar.name && importedChar.class) {
                 let newChar = migrateCharacter(importedChar);
+                // Always assign new ID for imports to avoid collisions
+                newChar.id = crypto.randomUUID(); 
 
-                const existingIds = new Set(initialCharacters.map(c => c.id));
-                if (existingIds.has(newChar.id)) {
-                    newChar.id = crypto.randomUUID();
-                }
-
-                setCharacters(prevChars => [...prevChars, newChar]);
-                alert(`Character snapshot for "${newChar.name}" imported successfully!`);
+                // Save immediately
+                characterService.save(newChar).then(() => {
+                     setCharacters(prevChars => [...prevChars, newChar]);
+                     alert(`Character snapshot for "${newChar.name}" imported successfully!`);
+                });
 
             } else {
                 alert("Could not import character from link: Invalid data format.");
@@ -168,12 +184,8 @@ const App: React.FC = () => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
-}, []);
+  }, []);
 
-
-  useEffect(() => {
-    localStorage.setItem('daggerheart-characters', JSON.stringify(characters));
-  }, [characters]);
 
   useEffect(() => {
     const handleInstallPrompt = (e: Event) => {
@@ -203,15 +215,26 @@ const App: React.FC = () => {
     }
   }, [view, selectedCharacter]);
 
-  const handleCharacterCreate = (newCharacter: Character) => {
+  const handleCharacterCreate = async (newCharacter: Character) => {
+    // Optimistic UI update
     setCharacters(prev => [...prev, newCharacter]);
     setSelectedCharacter(newCharacter);
     setView('sheet');
+    
+    try {
+        await characterService.save(newCharacter);
+    } catch (e) {
+        console.error("Error saving character", e);
+        alert("Failed to save character to the database. Please check your connection.");
+    }
   };
 
-  const handleCharacterUpdate = (updatedCharacter: Character) => {
+  const handleCharacterUpdate = async (updatedCharacter: Character) => {
+    // Optimistic update
     setCharacters(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
     setSelectedCharacter(updatedCharacter);
+    // Persist
+    await characterService.save(updatedCharacter);
   };
 
   const handleCharacterSelect = (characterId: string) => {
@@ -222,8 +245,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCharacterDelete = (characterId: string) => {
+  const handleCharacterDelete = async (characterId: string) => {
     setCharacters(prev => prev.filter(c => c.id !== characterId));
+    await characterService.delete(characterId);
   };
   
   const handleReturnToSelection = () => {
@@ -259,7 +283,7 @@ const App: React.FC = () => {
     const fileReader = new FileReader();
     if (event.target.files && event.target.files[0]) {
       fileReader.readAsText(event.target.files[0], "UTF-8");
-      fileReader.onload = e => {
+      fileReader.onload = async e => {
         if (e.target?.result) {
           try {
             const imported = JSON.parse(e.target.result as string);
@@ -267,18 +291,19 @@ const App: React.FC = () => {
               const validImportedCharacters: Character[] = [];
               const existingIds = new Set(characters.map(c => c.id));
               
-              imported.forEach((char: any) => {
-                // Basic validation
+              for (const char of imported) {
                 if (char.id && char.name && char.class) {
                   let newChar = migrateCharacter({ ...char });
                   // Ensure unique ID
                   if (existingIds.has(newChar.id)) {
                     newChar.id = crypto.randomUUID();
                   }
+                  
+                  await characterService.save(newChar); // Save individually
                   validImportedCharacters.push(newChar);
                   existingIds.add(newChar.id);
                 }
-              });
+              }
               
               setCharacters(prev => [...prev, ...validImportedCharacters]);
               alert(`${validImportedCharacters.length} character(s) imported successfully.`);
@@ -295,14 +320,29 @@ const App: React.FC = () => {
       event.target.value = '';
     }
   };
+  
+  const handleMigrateToCloud = async () => {
+      const confirmMigrate = window.confirm("This will upload all characters found in your browser's LocalStorage to the connected Firebase Database. Continue?");
+      if(confirmMigrate) {
+          setIsLoading(true);
+          try {
+              await characterService.syncLocalToCloud();
+              alert("Migration complete! Your characters are now in the cloud.");
+              // Reload to fetch freshly from cloud
+              window.location.reload();
+          } catch (e) {
+              console.error(e);
+              alert("Migration failed. See console for details.");
+              setIsLoading(false);
+          }
+      }
+  }
 
   const getHeaderTitle = () => {
     switch(view) {
         case 'creator':
             return 'New Character';
         case 'sheet':
-            // The sheet itself has a prominent H1 with the character name, 
-            // so keep the main header generic for this view.
             return 'Character Sheet'; 
         case 'selection':
         default:
@@ -311,6 +351,10 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64 text-teal-400 animate-pulse">Loading Arcane Data...</div>;
+    }
+
     switch(view) {
         case 'creator':
             return <CharacterCreator onCharacterCreate={handleCharacterCreate} onCancel={handleReturnToSelection} />;
@@ -325,15 +369,27 @@ const App: React.FC = () => {
             return null; // Should not happen
         case 'selection':
         default:
-            return <CharacterSelection 
-                      characters={characters}
-                      onSelectCharacter={handleCharacterSelect}
-                      // Fix: Corrected typo from handleDeleteCharacter to handleCharacterDelete.
-                      onDeleteCharacter={handleCharacterDelete}
-                      onCreateNew={handleShowCreator}
-                      onImport={handleImportCharacters}
-                      onExport={handleExportCharacters}
-                   />;
+            return (
+                <>
+                    <CharacterSelection 
+                        characters={characters}
+                        onSelectCharacter={handleCharacterSelect}
+                        onDeleteCharacter={handleCharacterDelete}
+                        onCreateNew={handleShowCreator}
+                        onImport={handleImportCharacters}
+                        onExport={handleExportCharacters}
+                    />
+                    
+                    {/* Cloud Migration Helper */}
+                    <div className="text-center mt-12 p-4 border-t border-slate-800">
+                        <p className="text-slate-500 text-xs mb-2">Database Connected: daggerheart-75adc</p>
+                        <button onClick={handleMigrateToCloud} className="text-xs text-teal-600 hover:text-teal-400 underline transition-colors">
+                            Upload Local Characters to Database
+                        </button>
+                        <p className="text-[10px] text-slate-600 mt-1">Use this if you created characters before connecting to the database.</p>
+                    </div>
+                </>
+            );
     }
   }
 
@@ -346,7 +402,7 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      <header className="text-center mb-8">
+      <header className="text-center mb-8 relative z-10">
         {view !== 'sheet' && (
           <>
             <div className="inline-block mx-auto mb-2">
@@ -369,10 +425,10 @@ const App: React.FC = () => {
           </div>
         )}
       </header>
-      <main className="container mx-auto max-w-7xl">
+      <main className="container mx-auto max-w-7xl relative z-10">
         {renderContent()}
       </main>
-      <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed">
+      <footer className="text-center mt-12 text-slate-500 text-xs leading-relaxed relative z-10">
         <p>This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License. More information can be found at <a href="https://www.daggerheart.com" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">https://www.daggerheart.com</a>. There are no previous modifications by others.</p>
         <p className="mt-2">This is an unofficial fan-made tool and is not affiliated with, endorsed, sponsored, or specifically approved by Darrington Press LLC.</p>
       </footer>

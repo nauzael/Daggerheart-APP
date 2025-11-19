@@ -1,5 +1,5 @@
 {
-  "name": "daggerhearth-character-sheet---estable-1.0",
+  "name": "copy-of-daggerhearth-character-sheet---pruebas-para-firebase",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "lz-string": "1.5.0",
+    "firebase": "^12.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
