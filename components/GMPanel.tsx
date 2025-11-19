@@ -174,7 +174,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     // --- VIEW 0: AUTH REQUIRED ---
     if (!auth?.currentUser) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-4">
+            <div className="flex flex-col items-center justify-center h-full bg-slate-900 p-4">
                 <div className="bg-slate-800 p-8 rounded-lg border border-slate-700 text-center max-w-lg shadow-2xl">
                     <h2 className="text-3xl font-bold text-teal-400 mb-4">GM Access Restricted</h2>
                     <p className="text-slate-400 mb-6">
@@ -192,8 +192,8 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     // --- VIEW 1: INSPECTING CHARACTER (FULL SHEET) ---
     if (inspectingCharacter) {
         return (
-            <div className="bg-slate-900 min-h-screen pb-12">
-                <div className="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-20 shadow-md flex justify-between items-center">
+            <div className="bg-slate-900 h-full flex flex-col overflow-hidden">
+                <div className="bg-slate-800 border-b border-slate-700 p-4 flex-shrink-0 shadow-md flex justify-between items-center z-20">
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => setInspectingCharacter(null)}
@@ -211,13 +211,15 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                         VIEW ONLY MODE
                     </div>
                 </div>
-                <div className="p-4 max-w-7xl mx-auto pointer-events-auto">
-                    <CharacterSheet 
-                        character={inspectingCharacter} 
-                        onUpdateCharacter={handleGMUpdateCharacter} 
-                        onReturnToSelection={() => setInspectingCharacter(null)}
-                        isReadOnly={true}
-                    />
+                <div className="flex-1 overflow-y-auto p-4 w-full">
+                    <div className="max-w-7xl mx-auto">
+                        <CharacterSheet 
+                            character={inspectingCharacter} 
+                            onUpdateCharacter={handleGMUpdateCharacter} 
+                            onReturnToSelection={() => setInspectingCharacter(null)}
+                            isReadOnly={true}
+                        />
+                    </div>
                 </div>
             </div>
         );
@@ -226,7 +228,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     // --- VIEW 2: CAMPAIGN DASHBOARD (ACTIVE CAMPAIGN) ---
     if (selectedCampaign) {
         return (
-            <div className="flex flex-col h-screen bg-slate-900 text-slate-200 overflow-hidden">
+            <div className="flex flex-col h-full bg-slate-900 text-slate-200 overflow-hidden">
                 {/* Dashboard Header */}
                 <header className="bg-slate-800 border-b border-slate-700 p-4 shrink-0 z-10 shadow-md">
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -650,72 +652,75 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
 
     // --- VIEW 3: CAMPAIGN SELECTOR (HOME) ---
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col">
-            <div className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col">
-                
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-teal-400">Game Master Nexus</h1>
-                    <button onClick={onExit} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                        Exit Panel
-                    </button>
-                </div>
-
-                <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl mb-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Create New Campaign</h2>
-                    <form onSubmit={handleCreateCampaign} className="flex flex-col sm:flex-row gap-4">
-                        <input 
-                            type="text" 
-                            placeholder="Campaign Name (e.g. The Fall of Whitewall)" 
-                            value={newCampaignName}
-                            onChange={e => setNewCampaignName(e.target.value)}
-                            className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
-                        />
-                        <button 
-                            type="submit"
-                            className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-105"
-                        >
-                            Create & Launch
-                        </button>
-                    </form>
-                </div>
-
-                <div className="flex-1">
-                    <h2 className="text-xl font-bold text-slate-400 uppercase tracking-wider mb-4 text-sm">Your Campaigns</h2>
+        <div className="h-full bg-slate-900 text-slate-200 flex flex-col overflow-hidden">
+             {/* Main Scroll Area */}
+            <div className="flex-1 overflow-y-auto w-full">
+                <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col min-h-full">
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {campaigns.length > 0 ? campaigns.map(campaign => (
-                            <div 
-                                key={campaign.id} 
-                                onClick={() => setSelectedCampaignId(campaign.id)}
-                                className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 cursor-pointer hover:bg-slate-800 hover:border-teal-500/50 transition-all group relative hover:shadow-xl"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors mb-1">{campaign.name}</h3>
-                                        <p className="text-sm text-slate-500 font-mono">Code: {campaign.inviteCode}</p>
-                                    </div>
-                                    <div className="bg-slate-900 p-2 rounded-full text-slate-500 group-hover:text-teal-400 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={(e) => handleDeleteCampaign(e, campaign.id)}
-                                    className="absolute bottom-4 right-4 text-slate-600 hover:text-red-400 p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-xs uppercase font-bold tracking-wide"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        )) : (
-                            <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/20">
-                                <p>No active campaigns found.</p>
-                                <p className="text-sm">Create one above to get started.</p>
-                            </div>
-                        )}
+                    <div className="flex justify-between items-center mb-8 flex-shrink-0">
+                        <h1 className="text-3xl font-bold text-teal-400">Game Master Nexus</h1>
+                        <button onClick={onExit} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                            Exit Panel
+                        </button>
                     </div>
-                </div>
 
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl mb-8 flex-shrink-0">
+                        <h2 className="text-xl font-bold text-white mb-4">Create New Campaign</h2>
+                        <form onSubmit={handleCreateCampaign} className="flex flex-col sm:flex-row gap-4">
+                            <input 
+                                type="text" 
+                                placeholder="Campaign Name (e.g. The Fall of Whitewall)" 
+                                value={newCampaignName}
+                                onChange={e => setNewCampaignName(e.target.value)}
+                                className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
+                            />
+                            <button 
+                                type="submit"
+                                className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-105"
+                            >
+                                Create & Launch
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="flex-1">
+                        <h2 className="text-xl font-bold text-slate-400 uppercase tracking-wider mb-4 text-sm">Your Campaigns</h2>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {campaigns.length > 0 ? campaigns.map(campaign => (
+                                <div 
+                                    key={campaign.id} 
+                                    onClick={() => setSelectedCampaignId(campaign.id)}
+                                    className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 cursor-pointer hover:bg-slate-800 hover:border-teal-500/50 transition-all group relative hover:shadow-xl"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors mb-1">{campaign.name}</h3>
+                                            <p className="text-sm text-slate-500 font-mono">Code: {campaign.inviteCode}</p>
+                                        </div>
+                                        <div className="bg-slate-900 p-2 rounded-full text-slate-500 group-hover:text-teal-400 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={(e) => handleDeleteCampaign(e, campaign.id)}
+                                        className="absolute bottom-4 right-4 text-slate-600 hover:text-red-400 p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-xs uppercase font-bold tracking-wide"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            )) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/20">
+                                    <p>No active campaigns found.</p>
+                                    <p className="text-sm">Create one above to get started.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                </div>
             </div>
             
             {/* GM Rules Button */}
