@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
@@ -269,8 +270,8 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      <header className={`text-center mb-4 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' || view === 'gm_panel' || view === 'sheet' ? 'hidden' : 'pt-8'}`}>
-        {view !== 'sheet' && view !== 'gm_panel' && (
+      <header className={`text-center mb-4 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' || view === 'gm_panel' || view === 'sheet' || view === 'creator' ? 'hidden' : 'pt-8'}`}>
+        {view !== 'sheet' && view !== 'gm_panel' && view !== 'creator' && (
           <>
             <div className="inline-block mx-auto mb-2">
                 <DaggerheartLogo />

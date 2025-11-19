@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat, TraitName } from '../types';
 import Card from './Card';
@@ -15,6 +16,7 @@ import { DOMAIN_CARDS, DomainCard } from '../data/domainCards';
 import BeastformCard from './BeastformCard';
 import StanceSelectorModal from './StanceSelectorModal';
 import { MARTIAL_STANCES } from '../data/martialStances';
+import { DaggerheartLogo } from './DaggerheartLogo';
 
 
 interface CharacterCreatorProps {
@@ -791,6 +793,15 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="text-center mb-6 pt-4">
+            <div className="inline-block mx-auto mb-2">
+                <DaggerheartLogo />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 tracking-tight">
+              Create Character
+            </h1>
+        </div>
+
         {renderModal()}
         {renderConfirmationSummaryModal()}
         {isStanceModalOpen && (

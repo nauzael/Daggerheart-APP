@@ -1,8 +1,9 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.daggerheart.communitysheet',
-  appName: 'Daggerheart Character Sheet',
+  appId: 'com.bloodreborn.app',
+  appName: 'Blood Reborn',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

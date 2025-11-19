@@ -1,7 +1,8 @@
+
 {
-  "short_name": "Daggerheart",
-  "name": "Daggerheart Character Sheet",
-  "description": "An application to create and manage your character for the TTRPG Daggerheart.",
+  "short_name": "Blood Reborn",
+  "name": "Blood Reborn",
+  "description": "Character management for Daggerheart",
   "icons": [
     {
       "src": "/icon-192.png",
