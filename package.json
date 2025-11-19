@@ -18,7 +18,8 @@
     "@capacitor/cli": "6",
     "@capacitor/core": "6",
     "@capacitor/app": "6",
-    "@capacitor/share": "6"
+    "@capacitor/share": "6",
+    "@capacitor/android": "6"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
