@@ -1,516 +1,229 @@
-
 import React, { useState, useEffect } from 'react';
-import { decompressFromEncodedURIComponent } from 'lz-string';
-import { Character } from './types';
 import CharacterCreator from './components/CharacterCreator';
 import CharacterSheet from './components/CharacterSheet';
 import CharacterSelection from './components/CharacterSelection';
 import LoginScreen from './components/LoginScreen';
 import GMPanel from './components/GMPanel';
 import { DaggerheartLogo } from './components/DaggerheartLogo';
-import { SUBCLASS_FEATURES } from './data/subclassFeatures';
-import { ANCESTRIES } from './data/ancestries';
-import { DEFAULT_PROFILE_IMAGE } from './data/defaultProfileImage';
+import { Character } from './types';
 import { characterService } from './services/characterService';
 import { campaignService } from './services/campaignService';
 import { auth } from './firebaseConfig';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-
-
-type View = 'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  
+  const [view, setView] = useState<'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel'>('selection');
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [view, setView] = useState<View>('login');
-  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Auth Listener
-  useEffect(() => {
-    if (!auth) {
-        // If auth isn't initialized (e.g. missing config), bypass login for dev/fallback
-        setIsAuthLoading(false);
-        setView('selection'); 
-        return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setIsAuthLoading(false);
-        // If user is logged in, go to selection. If not, go to login.
-        // If user manually selected Guest mode, we handle that in LoginScreen callback.
-        if (currentUser) {
-             setView(prev => prev === 'login' ? 'selection' : prev);
-        } else if (view !== 'login' && !localStorage.getItem('daggerheart-characters')) {
-             // Optional: Could force back to login if not guest, but keeping it simple.
-        }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const migrateCharacter = (char: any): Character => {
-      // Ensure subclassFeatures exists and has foundation if it should.
-      if (!char.subclassFeatures || (Array.isArray(char.subclassFeatures) && char.subclassFeatures.length === 0)) {
-          const foundationFeature = SUBCLASS_FEATURES.find(f => f.subclass === char.subclass && f.type === 'Foundation');
-          char.subclassFeatures = foundationFeature ? [foundationFeature] : [];
-      }
-      
-      // Add default for 'bolsa' if missing
-      if (char.bolsa === undefined) {
-          char.bolsa = 0;
-      }
-      
-      // Migrate notes from string to string[]
-      if (typeof char.notes === 'string' || char.notes === undefined || char.notes === null) {
-          char.notes = typeof char.notes === 'string' && char.notes.trim() !== '' ? char.notes.split('\n') : [];
-      }
-
-      // Migrate to include ancestryFeatures for older characters
-      if (!char.ancestryFeatures) {
-          const ancestryData = ANCESTRIES.find(a => a.name === char.ancestry);
-          char.ancestryFeatures = ancestryData ? ancestryData.features : [];
-      }
-      
-      // Add vault if it's missing
-      if (char.vault === undefined) {
-          char.vault = [];
-      }
-
-      // Add abilityUsage if it's missing
-      if (char.abilityUsage === undefined) {
-          char.abilityUsage = {};
-      }
-      
-      // Handle Beastform data structure change
-      if (char.class === 'Druid') {
-          if (char.beastForms && Array.isArray(char.beastForms) && char.beastForms.length > 0) {
-              // If the first beastform has an old property (like hpBonus), it's the old structure.
-              // Clear the list to prevent crashes. The user will need to re-select forms on level up.
-              if (char.beastForms[0].hpBonus !== undefined) {
-                  char.beastForms = [];
-                  char.activeBeastFormName = undefined; 
-              }
-          } else {
-             char.beastForms = [];
-          }
-      }
-
-      if (char.activeBeastFormName === undefined) {
-          char.activeBeastFormName = undefined;
-      }
-      
-      if (char.activeBeastformTraitBonus === undefined) {
-          char.activeBeastformTraitBonus = undefined;
-      }
-
-      if (char.isWolfFormActive === undefined) {
-          char.isWolfFormActive = false;
-      }
-      
-      if (char.profileImage === undefined) {
-          char.profileImage = DEFAULT_PROFILE_IMAGE;
-      }
-      
-      // Warlock migration
-      if (char.class === 'Warlock') {
-          if (char.patronName === undefined) {
-              char.patronName = '';
-          }
-          if (char.boons === undefined || !Array.isArray(char.boons) || char.boons.length !== 2) {
-              char.boons = [{ name: '', value: 3 }, { name: '', value: 3 }];
-          }
-          if (char.favor === undefined) {
-              char.favor = 2;
-          }
-      }
-
-      // Brawler (Martial Artist) migration
-      if (char.class === 'Brawler' && char.subclass === 'Martial Artist') {
-          if (char.martialStances === undefined) {
-              char.martialStances = [];
-          }
-          if (char.activeMartialStance === undefined) {
-              char.activeMartialStance = undefined;
-          }
-          if (char.focus === undefined) {
-              char.focus = { current: 0, max: 0 };
-          }
-      }
-      
-      if (char.potions === undefined) {
-          char.potions = 0;
-      }
-
-      // Seraph migration
-      if (char.class === 'Seraph') {
-          if (char.prayerDice === undefined) {
-              char.prayerDice = { current: 0, max: 0 };
-          } else if (Array.isArray(char.prayerDice)) {
-              // It's the old array format, either number[] or {value, used}[]
-              const usedCount = char.prayerDice.filter((d: any) => d.used === true).length;
-              const max = char.prayerDice.length;
-              char.prayerDice = { current: max - usedCount, max: max };
-          }
-      }
-
-      return char as Character;
-  };
-
-  // Real-time Subscription Load
-  useEffect(() => {
-    // Always subscribe, service handles auth/guest logic internally
-    setIsLoading(true);
-    
-    const unsubscribe = characterService.subscribe((updatedCharacters) => {
-        try {
-            const migratedChars = updatedCharacters.map(migrateCharacter);
-            setCharacters(migratedChars);
-            
-            // Also update selected character if they are currently open and were updated remotely
-            setSelectedCharacter(currentChar => {
-                if (!currentChar) return null;
-                const updatedCurrent = migratedChars.find(c => c.id === currentChar.id);
-                return updatedCurrent || currentChar;
-            });
-
-        } catch (e) {
-            console.error("Failed to process character updates", e);
-        } finally {
-            setIsLoading(false);
-        }
-    }, 'user'); // Explicitly user mode
-    
-    // Clean up subscription on unmount
-    return () => unsubscribe();
-  }, [user]); // Re-subscribe if user state changes (e.g. login/logout)
-
-  // Import via URL logic
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const characterData = urlParams.get('character');
-
-    if (characterData) {
-        try {
-            let jsonString = decompressFromEncodedURIComponent(characterData);
-            if (!jsonString) {
-                try {
-                    jsonString = atob(characterData);
-                } catch (e) {
-                    throw new Error("Invalid character data in URL.");
-                }
-            }
-
-            const importedChar = JSON.parse(jsonString);
-
-            if (importedChar.id && importedChar.name && importedChar.class) {
-                let newChar = migrateCharacter(importedChar);
-                // Always assign new ID for imports to avoid collisions
-                newChar.id = crypto.randomUUID(); 
-                // Assign to current user if logged in
-                if (user) {
-                    newChar.userId = user.uid;
-                }
-
-                // Save immediately
-                characterService.save(newChar).then(() => {
-                     alert(`Character snapshot for "${newChar.name}" imported successfully!`);
-                });
-
-            } else {
-                alert("Could not import character from link: Invalid data format.");
-            }
-        } catch (error) {
-            console.error("Failed to import character from URL:", error);
-            alert("Could not import character from link: The data is corrupted.");
-        } finally {
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    }
-  }, [user]);
-
+  const [user, setUser] = useState<User | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
-    const handleInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setInstallPrompt(e);
     };
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
-    const handleAppInstalled = () => {
-      setInstallPrompt(null);
-    };
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
 
-  useEffect(() => {
-    if (view === 'sheet' && selectedCharacter) {
-      document.title = `${selectedCharacter.name} - Community Sheet for Daggerheart`;
-    } else if (view === 'creator') {
-      document.title = 'New Character - Community Sheet for Daggerheart';
-    } else {
-      document.title = 'Character Roster - Community Sheet for Daggerheart';
+  const handleInstallClick = () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      installPrompt.userChoice.then((choiceResult: any) => {
+        setInstallPrompt(null);
+      });
     }
-  }, [view, selectedCharacter]);
+  };
+
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        if (view === 'login') setView('selection');
+      }
+    });
+    return () => unsubscribe();
+  }, [view]);
+
+  useEffect(() => {
+    const unsubscribe = characterService.subscribe((chars) => {
+      setCharacters(chars);
+    }, 'user');
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleCharacterCreate = async (newCharacter: Character) => {
-    // Assign owner
-    if (user) {
-        newCharacter.userId = user.uid;
-    }
-    // Optimistic UI update (subscription will double confirm this shortly)
-    setCharacters(prev => [...prev, newCharacter]);
-    setSelectedCharacter(newCharacter);
-    setView('sheet');
-    
-    try {
-        await characterService.save(newCharacter);
-    } catch (e) {
-        console.error("Error saving character", e);
-        alert("Failed to save character to the database. Please check your connection.");
-    }
+    await characterService.save(newCharacter);
+    setView('selection');
   };
 
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
-    // Optimistic update
-    setCharacters(prev => prev.map(c => c.id === updatedCharacter.id ? updatedCharacter : c));
-    setSelectedCharacter(updatedCharacter);
-    // Persist
     await characterService.save(updatedCharacter);
   };
 
-  const handleCharacterSelect = (characterId: string) => {
-    const charToSelect = characters.find(c => c.id === characterId);
-    if (charToSelect) {
-        setSelectedCharacter(charToSelect);
-        setView('sheet');
+  const handleCharacterDelete = async (id: string) => {
+    await characterService.delete(id);
+    if (selectedCharacterId === id) {
+      setSelectedCharacterId(null);
+      setView('selection');
     }
   };
-
-  const handleCharacterDelete = async (characterId: string) => {
-    setCharacters(prev => prev.filter(c => c.id !== characterId));
-    await characterService.delete(characterId);
-  };
   
-  const handleReturnToSelection = () => {
-    setSelectedCharacter(null);
-    setView('selection');
-  }
-
-  const handleShowCreator = () => {
-    setView('creator');
-  }
-
-  const handleInstallClick = () => {
-    if (!installPrompt) return;
-    (installPrompt as any).prompt();
-    (installPrompt as any).userChoice.then(() => {
-        setInstallPrompt(null);
-    });
-  };
-  
-  const handleSignOut = () => {
-      if (auth) {
-          signOut(auth);
-          // View will switch via useEffect listener
-      }
-  }
-
-  const handleExportCharacters = () => {
-    const dataStr = JSON.stringify(characters, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = 'daggerheart-characters.json';
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+  const handleSelectCharacter = (id: string) => {
+      setSelectedCharacterId(id);
+      setView('sheet');
   };
 
-  const handleImportCharacters = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileReader = new FileReader();
-    if (event.target.files && event.target.files[0]) {
-      fileReader.readAsText(event.target.files[0], "UTF-8");
-      fileReader.onload = async e => {
-        if (e.target?.result) {
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
           try {
-            const imported = JSON.parse(e.target.result as string);
-            if (Array.isArray(imported)) {
-              let count = 0;
+              const importedData = JSON.parse(e.target?.result as string);
+              const charsToImport = Array.isArray(importedData) ? importedData : [importedData];
               
-              for (const char of imported) {
-                if (char.id && char.name && char.class) {
-                  let newChar = migrateCharacter({ ...char });
-                  newChar.id = crypto.randomUUID();
-                  if (user) newChar.userId = user.uid; // Claim ownership
-                  
-                  await characterService.save(newChar); // Save individually (triggers subscription update)
-                  count++;
-                }
+              for (const char of charsToImport) {
+                   const newChar = { ...char, id: crypto.randomUUID(), userId: user?.uid };
+                   await characterService.save(newChar);
               }
-              
-              // No need to setCharacters manually here as subscribe will catch the updates
-              if (count > 0) {
-                  alert(`${count} character(s) imported successfully.`);
-              } else {
-                   alert("No valid characters found in file.");
-              }
-            } else {
-              alert("Error: JSON file is not a valid character array.");
-            }
+              alert('Import successful!');
           } catch (error) {
-            console.error("Import error:", error);
-            alert("Error reading file. Please ensure it's valid JSON.");
+              console.error('Import failed:', error);
+              alert('Failed to import character(s). Invalid JSON.');
           }
-        }
       };
-      // Allow re-importing the same file
-      event.target.value = '';
-    }
+      reader.readAsText(file);
+      event.target.value = ''; 
   };
-  
-  const handleMigrateToCloud = async () => {
-      const confirmMigrate = window.confirm("This will upload all characters found in your browser's LocalStorage to your account. Continue?");
-      if(confirmMigrate) {
-          setIsLoading(true);
-          try {
-              await characterService.syncLocalToCloud();
-              alert("Migration complete! Your local characters are now saved to your account.");
-              // Subscription will auto-update the list
-          } catch (e) {
-              console.error(e);
-              alert("Migration failed. See console for details.");
-              setIsLoading(false);
-          }
-      }
-  }
+
+  const handleExport = () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(characters));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "daggerheart_characters.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+  };
 
   const handleJoinCampaign = async () => {
       if (!user) {
-          alert("You must be logged in to join a campaign. Guest users cannot join online campaigns.");
+          alert("Please log in to join a campaign.");
           return;
       }
-
-      const code = prompt("Enter the Campaign Invite Code provided by your GM:");
+      const code = prompt("Enter Campaign Invite Code:");
       if (!code) return;
       
       try {
-          const campaign = await campaignService.findCampaignByCode(code.toUpperCase().trim());
+          const campaign = await campaignService.findCampaignByCode(code);
           if (!campaign) {
-              alert("Invalid invite code. Please check with your GM.");
+              alert("Campaign not found.");
               return;
           }
-          
-          // Filter for unassigned chars:
-          const availableChars = characters;
-          if (availableChars.length === 0) {
+
+          const myChars = characters;
+          if (myChars.length === 0) {
               alert("You need to create a character first.");
               return;
           }
           
-          const charName = prompt(`Found campaign: "${campaign.name}".\n\nType the EXACT name of the character you want to join with:\n` + availableChars.map(c => `- ${c.name} ${c.campaignId ? '(Already in a campaign)' : ''}`).join('\n'));
+          const charNames = myChars.map((c, i) => `${i + 1}. ${c.name} (Lvl ${c.level})`).join('\n');
+          const selectionIndex = prompt(`Enter number of character to join "${campaign.name}":\n${charNames}`);
           
-          if (!charName) return;
-          
-          const targetChar = availableChars.find(c => c.name.toLowerCase() === charName.toLowerCase());
-          
-          if (!targetChar) {
-              alert("Character not found.");
-              return;
+          if (selectionIndex) {
+              const index = parseInt(selectionIndex) - 1;
+              if (index >= 0 && index < myChars.length) {
+                  const char = myChars[index];
+                  if (char.campaignId) {
+                      if(!confirm(`${char.name} is already in a campaign. Switch to ${campaign.name}?`)) return;
+                  }
+                  await characterService.joinCampaign(char.id, campaign.id);
+                  alert(`${char.name} successfully joined ${campaign.name}!`);
+              } else {
+                  alert("Invalid selection.");
+              }
           }
-          
-          if (confirm(`Join "${campaign.name}" with ${targetChar.name}?`)) {
-             await characterService.joinCampaign(targetChar.id, campaign.id);
-             alert(`Success! ${targetChar.name} has joined the campaign. Your GM can now see your sheet.`);
-          }
-
-      } catch (e: any) {
-          console.error(e);
-          alert("Error joining campaign: " + e.message);
+      } catch (error) {
+          console.error("Error joining campaign:", error);
+          alert("An error occurred while joining the campaign.");
       }
-  }
-  
-  const handleLeaveCampaign = async (charId: string) => {
-      if (confirm("Are you sure you want to leave the campaign? The GM will no longer see this character.")) {
-          await characterService.leaveCampaign(charId);
-      }
-  }
+  };
 
   const getHeaderTitle = () => {
-    switch(view) {
-        case 'creator':
-            return 'New Character';
-        case 'sheet':
-            return 'Character Sheet'; 
-        case 'gm_panel':
-            return 'Game Master';
-        case 'selection':
-        default:
-            return 'Character Roster';
+    switch (view) {
+      case 'creator': return 'Create Character';
+      case 'sheet': return '';
+      case 'selection': return '';
+      case 'login': return '';
+      case 'gm_panel': return '';
+      default: return 'Daggerheart Companion';
     }
-  }
+  };
 
   const renderContent = () => {
-    if (isAuthLoading) return <div className="flex h-full items-center justify-center text-teal-400 animate-pulse">Loading Application...</div>;
-
-    if (view === 'login') {
+    switch (view) {
+      case 'login':
         return <LoginScreen onLoginSuccess={() => setView('selection')} />;
+      case 'creator':
+        return <CharacterCreator onCharacterCreate={handleCharacterCreate} onCancel={() => setView('selection')} />;
+      case 'sheet':
+        const character = characters.find(c => c.id === selectedCharacterId);
+        if (!character) return <div className="text-center text-slate-400 mt-10">Character not found</div>;
+        return (
+          <CharacterSheet
+            character={character}
+            onUpdateCharacter={handleCharacterUpdate}
+            onReturnToSelection={() => {
+                setSelectedCharacterId(null);
+                setView('selection');
+            }}
+          />
+        );
+      case 'gm_panel':
+          return <GMPanel onExit={() => setView('selection')} />;
+      case 'selection':
+      default:
+        return (
+          <CharacterSelection 
+            characters={characters}
+            onSelectCharacter={handleSelectCharacter}
+            onDeleteCharacter={handleCharacterDelete}
+            onCreateNew={() => setView('creator')}
+            onImport={handleImport}
+            onExport={handleExport}
+            user={user}
+            onJoinCampaign={handleJoinCampaign}
+            onSignOut={() => {
+                if (user) {
+                    auth.signOut();
+                } else {
+                    setView('login');
+                }
+            }}
+            onGMPanel={() => setView('gm_panel')}
+            onMigrateToCloud={characterService.syncLocalToCloud}
+            onLeaveCampaign={(id) => characterService.leaveCampaign(id)}
+          />
+        );
     }
-    
-    if (view === 'gm_panel') {
-        return <GMPanel onExit={() => setView('selection')} />;
-    }
+  };
 
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-64 text-teal-400 animate-pulse">Loading Arcane Data...</div>;
-    }
-
-    switch(view) {
-        case 'creator':
-            return <CharacterCreator onCharacterCreate={handleCharacterCreate} onCancel={handleReturnToSelection} />;
-        case 'sheet':
-            if (selectedCharacter) {
-                return <CharacterSheet 
-                         character={selectedCharacter} 
-                         onUpdateCharacter={handleCharacterUpdate} 
-                         onReturnToSelection={handleReturnToSelection}
-                       />;
-            }
-            return null; 
-        case 'selection':
-        default:
-            return (
-                <CharacterSelection 
-                    characters={characters}
-                    onSelectCharacter={handleCharacterSelect}
-                    onDeleteCharacter={handleCharacterDelete}
-                    onCreateNew={handleShowCreator}
-                    onImport={handleImportCharacters}
-                    onExport={handleExportCharacters}
-                    user={user}
-                    onJoinCampaign={handleJoinCampaign}
-                    onSignOut={handleSignOut}
-                    onGMPanel={() => setView('gm_panel')}
-                    onMigrateToCloud={handleMigrateToCloud}
-                    onLeaveCampaign={handleLeaveCampaign}
-                />
-            );
-    }
-  }
-
-  const isLogin = view === 'login';
-  const isSelection = view === 'selection';
+  useEffect(() => {
+      setIsLogin(view === 'login');
+  }, [view]);
 
   return (
-    <div className={`relative bg-slate-900 text-slate-200 font-sans flex flex-col overflow-hidden ${isLogin || isSelection ? 'h-full' : 'h-full'}`}>
+    <div className="flex flex-col h-screen bg-slate-900 text-slate-200 font-sans overflow-hidden relative selection:bg-teal-500 selection:text-white">
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80rem] h-[50rem] blur-3xl pointer-events-none"
         style={{
@@ -518,8 +231,7 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      {/* Hide Header in GM Panel explicitly, otherwise add top padding for safe areas */}
-      <header className={`text-center mb-4 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' || view === 'gm_panel' ? 'hidden' : 'pt-8'}`}>
+      <header className={`text-center mb-4 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' || view === 'gm_panel' || view === 'sheet' ? 'hidden' : 'pt-8'}`}>
         {view !== 'sheet' && view !== 'gm_panel' && (
           <>
             <div className="inline-block mx-auto mb-2">
@@ -542,7 +254,7 @@ const App: React.FC = () => {
           </div>
         )}
       </header>
-      <main className={`relative z-10 flex-1 overflow-hidden ${isLogin ? 'w-full' : 'w-full'} ${view !== 'login' && view !== 'selection' && view !== 'gm_panel' ? 'overflow-y-auto' : ''} ${view !== 'login' && view !== 'gm_panel' && view !== 'selection' ? 'container mx-auto max-w-7xl p-4' : ''}`}>
+      <main className={`relative z-10 flex-1 overflow-hidden ${isLogin ? 'w-full' : 'w-full'} ${view !== 'login' && view !== 'selection' && view !== 'gm_panel' && view !== 'sheet' ? 'overflow-y-auto' : ''} ${view !== 'login' && view !== 'gm_panel' && view !== 'selection' && view !== 'sheet' ? 'container mx-auto max-w-7xl p-4' : ''}`}>
         {renderContent()}
       </main>
     </div>

@@ -826,7 +826,452 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
     }, [character.vault]);
 
     return (
-        <div className="space-y-6">
+        <div className="h-full flex flex-col overflow-hidden relative">
+            {/* Content Area with Internal Scroll */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+                 <div className="container mx-auto max-w-7xl space-y-6 pb-20"> {/* Added pb-20 for breathing room at bottom */}
+
+                    <header className="flex flex-col sm:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-4 sm:gap-6">
+                            <div 
+                                className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-700 border-2 border-slate-600 flex-shrink-0 ${!isReadOnly ? "group cursor-pointer" : ""}`}
+                                onClick={() => !isReadOnly && setIsImageEditorOpen(true)}
+                                role={!isReadOnly ? "button" : undefined}
+                                aria-label={!isReadOnly ? "Change profile image" : undefined}
+                            >
+                                <img 
+                                    src={character.profileImage || DEFAULT_PROFILE_IMAGE} 
+                                    alt={character.name} 
+                                    className="w-full h-full rounded-full object-cover" 
+                                />
+                                {!isReadOnly && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-center sm:text-left">
+                                <h1 className="text-4xl sm:text-5xl font-bold text-teal-400">{character.name}</h1>
+                                <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                            <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg">
+                                Back
+                            </button>
+                            {!isReadOnly && (
+                                <>
+                                    <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
+                                        Rest
+                                    </button>
+                                    <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
+                                        Level Up!
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* --- Left Column (33%) --- */}
+                        <div className="space-y-6 md:col-span-1">
+                            <Card title="Combat Stats">
+                                <div className="space-y-4">
+                                    <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked readOnly={isReadOnly} />
+                                    <ThresholdTracker label="Stress" current={character.stress.current} max={derivedStats.maxStress} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', derivedStats.maxStress)} color="bg-purple-500" showAsMarked readOnly={isReadOnly} />
+                                    <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked readOnly={isReadOnly} />
+                                    <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" readOnly={isReadOnly} />
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-slate-700">
+                                    <h4 className="font-semibold text-slate-300 mb-2 text-center">Damage Thresholds</h4>
+                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                        <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
+                                            <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
+                                            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
+                                                1-{derivedStats.damageThresholds.major - 1}
+                                            </div>
+                                        </div>
+                                        <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
+                                            <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
+                                            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
+                                                {derivedStats.damageThresholds.major}
+                                            </div>
+                                        </div>
+                                        <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
+                                            <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
+                                            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
+                                                {derivedStats.damageThresholds.severe}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 mt-4">
+                                    <StatDisplay label="Proficiency" value={character.proficiency} />
+                                    <StatDisplay label="Evasion" value={derivedStats.evasion} />
+                                </div>
+                            </Card>
+                            <Card title="Traits">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
+                                </div>
+                            </Card>
+                            {character.class === 'Seraph' && character.prayerDice && (
+                                <Card title="Prayer Dice">
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-slate-400">
+                                            After a long rest, you gain a number of Prayer Dice equal to your Presence ({derivedStats.traits.presence}). Roll that many d4s at the start of a session and track their usage here. Spend them to reduce damage, add to a roll, or gain Hope.
+                                        </p>
+                                        <StatDisplay
+                                            label="Available Dice"
+                                            value={character.prayerDice.current}
+                                            isEditable={!isReadOnly}
+                                            onUpdate={handlePrayerDiceChange}
+                                        />
+                                        <p className="text-center text-slate-400 text-xs">Max dice from Presence: {character.prayerDice.max}</p>
+                                    </div>
+                                </Card>
+                            )}
+                            {character.class === 'Warlock' && (
+                                <Card title="Patron & Favor">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <EditableField
+                                                label="Patron Name"
+                                                value={character.patronName || ''}
+                                                onSave={(newName) => onUpdateCharacter({ ...character, patronName: newName })}
+                                                inputClass="text-lg font-bold text-teal-300"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h4 className="font-semibold text-slate-300 border-b border-slate-700 pb-1">Boons</h4>
+                                            {character.boons?.map((boon, index) => {
+                                                const characterTier = character.level >= 8 ? 4 : character.level >= 5 ? 3 : character.level >= 2 ? 2 : 1;
+                                                const boonValue = 3 + (characterTier - 1);
+
+                                                return (
+                                                    <div key={index} className="flex justify-between items-center bg-slate-700/50 p-2 rounded-md">
+                                                        <EditableField
+                                                            label={`Boon ${index + 1}`}
+                                                            value={boon.name}
+                                                            onSave={(newName) => {
+                                                                const newBoons = [...(character.boons || [])];
+                                                                newBoons[index] = { ...newBoons[index], name: newName };
+                                                                onUpdateCharacter({ ...character, boons: newBoons });
+                                                            }}
+                                                            inputClass="text-md text-slate-100"
+                                                            readOnly={isReadOnly}
+                                                        />
+                                                        <span className="text-xl font-bold text-teal-300 font-mono">+{boonValue}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <StatDisplay label="Favor" value={character.favor || 0} isEditable={!isReadOnly} onUpdate={handleFavorChange} />
+
+                                        <p className="text-xs text-slate-400 italic pt-2 border-t border-slate-700">
+                                            During a long rest, you may pay one of your downtime actions as a tithe to your patron to gain 1d4 Favor. If you forgo this offering, the GM gains a Fear. Before making an action roll where a Boon is applicable, you can spend a Favor to add its bonus to the roll.
+                                        </p>
+                                    </div>
+                                </Card>
+                            )}
+                            {character.class === 'Brawler' && character.subclass === 'Martial Artist' && character.focus && (
+                                <Card title="Martial Form & Focus" headerContent={
+                                    stancesToLearnCount > 0 && !isReadOnly && (
+                                        <button onClick={() => setIsStanceModalOpen(true)} className="text-sm bg-sky-600 hover:bg-sky-500 py-1 px-3 rounded-md">
+                                            Learn Stances ({stancesToLearnCount})
+                                        </button>
+                                    )
+                                }>
+                                    <div className="space-y-4">
+                                        <ThresholdTracker 
+                                            label="Focus" 
+                                            current={character.focus.current} 
+                                            max={character.focus.max} 
+                                            onSet={(v) => onUpdateCharacter({...character, focus: {...character.focus!, current: v}})}
+                                            color="bg-indigo-500" 
+                                            readOnly={isReadOnly}
+                                        />
+                                        {character.activeMartialStance ? (
+                                            <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className="text-xs text-indigo-300 font-semibold">Active Stance</p>
+                                                        <h4 className="font-bold text-lg text-slate-100">{character.activeMartialStance.name}</h4>
+                                                    </div>
+                                                    {!isReadOnly && <button onClick={handleDeactivateStance} className="text-xs bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded">Deactivate</button>}
+                                                </div>
+                                                <p className="text-sm text-slate-300 mt-1">{character.activeMartialStance.description}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-center text-slate-400 text-sm">No active stance.</p>
+                                        )}
+                                        <div>
+                                            <h4 className="font-semibold text-slate-300 mb-2">Learned Stances</h4>
+                                            <div className="space-y-3">
+                                                {character.martialStances?.map(stance => (
+                                                    <div key={stance.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <div>
+                                                                <h5 className="font-bold text-slate-100">{stance.name}</h5>
+                                                                <p className="text-xs text-slate-400 font-mono">Tier {stance.tier}</p>
+                                                            </div>
+                                                            {!isReadOnly && (
+                                                                <button
+                                                                    onClick={() => handleShiftStance(stance)}
+                                                                    disabled={character.focus!.current === 0 || character.activeMartialStance?.name === stance.name}
+                                                                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-sm disabled:bg-slate-600 disabled:cursor-not-allowed"
+                                                                >
+                                                                    Shift
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-slate-300 mt-2 border-t border-slate-600/50 pt-2">{stance.description}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            )}
+                            {character.class === 'Druid' && (
+                                <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
+                                // Note: BeastformDisplay internally renders buttons. In a future iteration, pass isReadOnly to it as well.
+                                // For now, GM can see but clicking might trigger update. 
+                                // Since we pass a NO-OP function from GM Panel, they won't persist anyway.
+                            )}
+                            {character.class === 'Blood Hunter' && character.subclass === 'Order of the Lycan' && (
+                                <WolfFormDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
+                            )}
+                            <Card title="Class & Subclass Features">
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
+                                        <div className="space-y-3">
+                                            {classFeatures.map(feature => (
+                                                <FeatureDisplayItem 
+                                                    key={feature.name}
+                                                    name={feature.name}
+                                                    type={feature.type}
+                                                    description={feature.description}
+                                                    character={character}
+                                                    onUsageChange={handleAbilityUsageChange}
+                                                    readOnly={isReadOnly}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {character.subclassFeatures && character.subclassFeatures.length > 0 && (
+                                        <div>
+                                            <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
+                                            <div className="space-y-3">
+                                                {character.subclassFeatures.map(feature => (
+                                                    <FeatureDisplayItem 
+                                                        key={feature.name}
+                                                        name={feature.name}
+                                                        type={feature.type}
+                                                        description={feature.description}
+                                                        character={character}
+                                                        onUsageChange={handleAbilityUsageChange}
+                                                        readOnly={isReadOnly}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                            <Card title="Combat & Equipment" headerContent={!isReadOnly && <button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {character.isWolfFormActive ? (
+                                        <EquipmentItem item={WOLF_FORM_DATA.unarmedStrike as any} isBeastformAttack={true} />
+                                    ) : character.activeBeastFormName ? (
+                                        <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
+                                    ) : (
+                                        <>
+                                            {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
+                                            {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
+                                            {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
+                                        </>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* --- Right Column (67%) --- */}
+                        <div className="space-y-6 md:col-span-2">
+                            <Card 
+                                title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
+                                headerContent={
+                                    !isReadOnly && (
+                                        <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
+                                            + Add Card
+                                        </button>
+                                    )
+                                }
+                            >
+                                <div className="space-y-3">
+                                    {loadoutCards.map(card => (
+                                        <DomainCardDisplay 
+                                            key={card.name} 
+                                            card={card}
+                                            button={
+                                                !isReadOnly && (
+                                                    <button 
+                                                        onClick={() => handleSendToVault(card.name)} 
+                                                        className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
+                                                        title="Send to Vault"
+                                                    >
+                                                        Vault
+                                                    </button>
+                                                )
+                                            }
+                                            character={character}
+                                            onUsageChange={handleAbilityUsageChange}
+                                            readOnly={isReadOnly}
+                                        />
+                                    ))}
+                                    {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
+                                </div>
+                            </Card>
+                            <Card title="The Vault">
+                                <div className="space-y-3 pr-2">
+                                    {vaultCards.map(card => {
+                                        const recallCost = card.recallCost ?? 0;
+                                        const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
+                                        const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
+                                        
+                                        return (
+                                            <DomainCardDisplay
+                                                key={card.name}
+                                                card={card}
+                                                button={
+                                                    !isReadOnly && (
+                                                        <button
+                                                            onClick={() => handleRecallFromVault(card.name)}
+                                                            disabled={isDisabled}
+                                                            className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
+                                                            title={title}
+                                                        >
+                                                            Recall
+                                                        </button>
+                                                    )
+                                                }
+                                                character={character}
+                                                onUsageChange={handleAbilityUsageChange}
+                                                readOnly={isReadOnly}
+                                            />
+                                        );
+                                    })}
+                                    {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
+                                </div>
+                            </Card>
+                            <Card title="Characteristics & Experiences">
+                                {character.ancestryFeatures && (
+                                    <div className="mb-4">
+                                        <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
+                                        {character.ancestryFeatures.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
+                                    </div>
+                                )}
+                                {communityFeature && (
+                                        <div className="mb-4">
+                                        <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
+                                        <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
+                                    </div>
+                                )}
+                                    {character.experiences.map((exp, i) => (
+                                        isReadOnly ? (
+                                            <div key={i} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 mb-2">
+                                                <h4 className="font-bold text-slate-100">{exp.name} <span className="font-mono text-teal-300 text-sm">+{exp.modifier}</span></h4>
+                                                {exp.description && <p className="text-sm text-slate-400 italic mt-1">{exp.description}</p>}
+                                            </div>
+                                        ) : (
+                                            <EditableExperienceDisplay
+                                                key={i}
+                                                experience={exp}
+                                                onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
+                                            />
+                                        )
+                                    ))}
+                            </Card>
+                            <Card title="Inventory">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <StatDisplay label="Gold" value={character.gold} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('gold', c)} />
+                                    <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
+                                    <StatDisplay label="Posiones" value={character.potions || 0} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('potions', c)} />
+                                </div>
+                                <ul className="space-y-2 pr-2">
+                                    {inventory.map((item, i) => (
+                                        <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
+                                            <span>{item}</span>
+                                            {!isReadOnly && <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>}
+                                        </li>
+                                    ))}
+                                </ul>
+                                {!isReadOnly && (
+                                    <div className="flex gap-2 mt-4">
+                                        <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
+                                        <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
+                                    </div>
+                                )}
+                            </Card>
+                            <Card title="Notes & Background">
+                                {character.notes && character.notes.length > 0 ? (
+                                    <ul className="space-y-2 pr-2 mb-4">
+                                        {character.notes.map((note, i) => (
+                                            <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
+                                                <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
+                                                {!isReadOnly && <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-slate-400 text-center mb-4">No notes yet.</p>
+                                )}
+                                {!isReadOnly && (
+                                    <div className="flex flex-col gap-2 mt-2">
+                                        <textarea 
+                                            value={newNote} 
+                                            onChange={e => setNewNote(e.target.value)} 
+                                            placeholder="Add a new note..." 
+                                            rows={3} 
+                                            className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
+                                        />
+                                        <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
+                                            Add Note
+                                        </button>
+                                    </div>
+                                )}
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {!isReadOnly && isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
+            {!isReadOnly && isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
+            {!isReadOnly && isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddCardToVault} onClose={() => setIsAddDomainCardModalOpen(false)} />}
+            {!isReadOnly && isRestModalOpen && <RestModal character={character} onConfirm={handleConfirmRest} onClose={() => setIsRestModalOpen(false)} armorScore={derivedStats.armorScore}/>}
+            
+             {/* Floating Rules Button */}
+             <button
+                onClick={() => setIsRuleSearchOpen(true)}
+                className="fixed bottom-6 right-6 z-40 bg-teal-600 hover:bg-teal-500 text-white p-3 rounded-full shadow-lg shadow-black/50 border border-teal-400 transition-transform hover:scale-110 flex items-center justify-center group"
+                title="Search Rules"
+                aria-label="Search Rules"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-600 pointer-events-none">
+                    Rules Lookup
+                </span>
+            </button>
+            
             {isImageEditorOpen && !isReadOnly && (
                 <ProfileImageEditorModal
                     currentImage={character.profileImage}
@@ -846,445 +1291,6 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
             {isRuleSearchOpen && (
                 <RuleSearchModal onClose={() => setIsRuleSearchOpen(false)} />
             )}
-            
-            {/* Floating Rules Button */}
-            <button
-                onClick={() => setIsRuleSearchOpen(true)}
-                className="fixed bottom-6 right-6 z-40 bg-teal-600 hover:bg-teal-500 text-white p-3 rounded-full shadow-lg shadow-black/50 border border-teal-400 transition-transform hover:scale-110 flex items-center justify-center group"
-                title="Search Rules"
-                aria-label="Search Rules"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span className="absolute right-full mr-3 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-600 pointer-events-none">
-                    Rules Lookup
-                </span>
-            </button>
-
-            <header className="flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4 sm:gap-6">
-                    <div 
-                        className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-700 border-2 border-slate-600 flex-shrink-0 ${!isReadOnly ? "group cursor-pointer" : ""}`}
-                        onClick={() => !isReadOnly && setIsImageEditorOpen(true)}
-                        role={!isReadOnly ? "button" : undefined}
-                        aria-label={!isReadOnly ? "Change profile image" : undefined}
-                    >
-                        <img 
-                            src={character.profileImage || DEFAULT_PROFILE_IMAGE} 
-                            alt={character.name} 
-                            className="w-full h-full rounded-full object-cover" 
-                        />
-                        {!isReadOnly && (
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-opacity">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                            </div>
-                        )}
-                    </div>
-                    <div className="text-center sm:text-left">
-                        <h1 className="text-4xl sm:text-5xl font-bold text-teal-400">{character.name}</h1>
-                        <p className="text-slate-400 text-lg mt-1">{character.ancestry} {character.class} ({character.subclass}) - Level {character.level}</p>
-                    </div>
-                </div>
-                 <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
-                    <button onClick={onReturnToSelection} className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg">
-                        Back
-                    </button>
-                    {!isReadOnly && (
-                        <>
-                            <button onClick={() => setIsRestModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg">
-                                Rest
-                            </button>
-                            <button onClick={() => setIsLevelUpModalOpen(true)} disabled={character.level >= 10} className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-slate-600 disabled:cursor-not-allowed">
-                                Level Up!
-                            </button>
-                        </>
-                    )}
-                </div>
-            </header>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* --- Left Column (33%) --- */}
-                <div className="space-y-6 md:col-span-1">
-                    <Card title="Combat Stats">
-                        <div className="space-y-4">
-                            <ThresholdTracker label="HP" current={character.hp.current} max={derivedStats.maxHP} onSet={(v) => handleStatChange('hp', v)} onReset={() => handleStatChange('hp', derivedStats.maxHP)} color="bg-red-500" showAsMarked readOnly={isReadOnly} />
-                            <ThresholdTracker label="Stress" current={character.stress.current} max={derivedStats.maxStress} onSet={(v) => handleStatChange('stress', v)} onReset={() => handleStatChange('stress', derivedStats.maxStress)} color="bg-purple-500" showAsMarked readOnly={isReadOnly} />
-                            <ThresholdTracker label="Armor" current={character.armor.current} max={derivedStats.armorScore} onSet={(v) => handleStatChange('armor', v)} onReset={() => handleStatChange('armor', derivedStats.armorScore)} color="bg-sky-500" showAsMarked readOnly={isReadOnly} />
-                            <ThresholdTracker label="Hope" current={character.hope} max={6} onSet={handleHopeChange} onReset={() => handleHopeChange(0)} color="bg-yellow-400" readOnly={isReadOnly} />
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-slate-700">
-                            <h4 className="font-semibold text-slate-300 mb-2 text-center">Damage Thresholds</h4>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                                <div className="bg-sky-800/50 border border-sky-700 p-2 rounded-lg">
-                                    <div className="text-xs text-sky-300 font-bold uppercase tracking-wider">Minor</div>
-                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
-                                        1-{derivedStats.damageThresholds.major - 1}
-                                    </div>
-                                </div>
-                                <div className="bg-amber-800/50 border border-amber-700 p-2 rounded-lg">
-                                    <div className="text-xs text-amber-300 font-bold uppercase tracking-wider">Major</div>
-                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
-                                        {derivedStats.damageThresholds.major}
-                                    </div>
-                                </div>
-                                <div className="bg-red-800/50 border border-red-700 p-2 rounded-lg">
-                                    <div className="text-xs text-red-300 font-bold uppercase tracking-wider">Severe</div>
-                                    <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono">
-                                        {derivedStats.damageThresholds.severe}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                            <StatDisplay label="Proficiency" value={character.proficiency} />
-                            <StatDisplay label="Evasion" value={derivedStats.evasion} />
-                        </div>
-                    </Card>
-                    <Card title="Traits">
-                        <div className="grid grid-cols-2 gap-3">
-                            {TRAIT_NAMES_ORDER.map(trait => <StatDisplay key={trait} label={trait} value={derivedStats.traits[trait]} />)}
-                        </div>
-                    </Card>
-                    {character.class === 'Seraph' && character.prayerDice && (
-                        <Card title="Prayer Dice">
-                            <div className="space-y-3">
-                                <p className="text-sm text-slate-400">
-                                    After a long rest, you gain a number of Prayer Dice equal to your Presence ({derivedStats.traits.presence}). Roll that many d4s at the start of a session and track their usage here. Spend them to reduce damage, add to a roll, or gain Hope.
-                                </p>
-                                <StatDisplay
-                                    label="Available Dice"
-                                    value={character.prayerDice.current}
-                                    isEditable={!isReadOnly}
-                                    onUpdate={handlePrayerDiceChange}
-                                />
-                                <p className="text-center text-slate-400 text-xs">Max dice from Presence: {character.prayerDice.max}</p>
-                            </div>
-                        </Card>
-                    )}
-                    {character.class === 'Warlock' && (
-                        <Card title="Patron & Favor">
-                            <div className="space-y-4">
-                                <div>
-                                    <EditableField
-                                        label="Patron Name"
-                                        value={character.patronName || ''}
-                                        onSave={(newName) => onUpdateCharacter({ ...character, patronName: newName })}
-                                        inputClass="text-lg font-bold text-teal-300"
-                                        readOnly={isReadOnly}
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-slate-300 border-b border-slate-700 pb-1">Boons</h4>
-                                    {character.boons?.map((boon, index) => {
-                                        const characterTier = character.level >= 8 ? 4 : character.level >= 5 ? 3 : character.level >= 2 ? 2 : 1;
-                                        const boonValue = 3 + (characterTier - 1);
-
-                                        return (
-                                            <div key={index} className="flex justify-between items-center bg-slate-700/50 p-2 rounded-md">
-                                                <EditableField
-                                                    label={`Boon ${index + 1}`}
-                                                    value={boon.name}
-                                                    onSave={(newName) => {
-                                                        const newBoons = [...(character.boons || [])];
-                                                        newBoons[index] = { ...newBoons[index], name: newName };
-                                                        onUpdateCharacter({ ...character, boons: newBoons });
-                                                    }}
-                                                    inputClass="text-md text-slate-100"
-                                                    readOnly={isReadOnly}
-                                                />
-                                                <span className="text-xl font-bold text-teal-300 font-mono">+{boonValue}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <StatDisplay label="Favor" value={character.favor || 0} isEditable={!isReadOnly} onUpdate={handleFavorChange} />
-
-                                <p className="text-xs text-slate-400 italic pt-2 border-t border-slate-700">
-                                    During a long rest, you may pay one of your downtime actions as a tithe to your patron to gain 1d4 Favor. If you forgo this offering, the GM gains a Fear. Before making an action roll where a Boon is applicable, you can spend a Favor to add its bonus to the roll.
-                                </p>
-                            </div>
-                        </Card>
-                    )}
-                    {character.class === 'Brawler' && character.subclass === 'Martial Artist' && character.focus && (
-                        <Card title="Martial Form & Focus" headerContent={
-                            stancesToLearnCount > 0 && !isReadOnly && (
-                                <button onClick={() => setIsStanceModalOpen(true)} className="text-sm bg-sky-600 hover:bg-sky-500 py-1 px-3 rounded-md">
-                                    Learn Stances ({stancesToLearnCount})
-                                </button>
-                            )
-                        }>
-                            <div className="space-y-4">
-                                <ThresholdTracker 
-                                    label="Focus" 
-                                    current={character.focus.current} 
-                                    max={character.focus.max} 
-                                    onSet={(v) => onUpdateCharacter({...character, focus: {...character.focus!, current: v}})}
-                                    color="bg-indigo-500" 
-                                    readOnly={isReadOnly}
-                                />
-                                {character.activeMartialStance ? (
-                                    <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-indigo-300 font-semibold">Active Stance</p>
-                                                <h4 className="font-bold text-lg text-slate-100">{character.activeMartialStance.name}</h4>
-                                            </div>
-                                            {!isReadOnly && <button onClick={handleDeactivateStance} className="text-xs bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded">Deactivate</button>}
-                                        </div>
-                                        <p className="text-sm text-slate-300 mt-1">{character.activeMartialStance.description}</p>
-                                    </div>
-                                ) : (
-                                    <p className="text-center text-slate-400 text-sm">No active stance.</p>
-                                )}
-                                <div>
-                                    <h4 className="font-semibold text-slate-300 mb-2">Learned Stances</h4>
-                                    <div className="space-y-3">
-                                        {character.martialStances?.map(stance => (
-                                            <div key={stance.name} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <div>
-                                                        <h5 className="font-bold text-slate-100">{stance.name}</h5>
-                                                        <p className="text-xs text-slate-400 font-mono">Tier {stance.tier}</p>
-                                                    </div>
-                                                    {!isReadOnly && (
-                                                        <button
-                                                            onClick={() => handleShiftStance(stance)}
-                                                            disabled={character.focus!.current === 0 || character.activeMartialStance?.name === stance.name}
-                                                            className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-sm disabled:bg-slate-600 disabled:cursor-not-allowed"
-                                                        >
-                                                            Shift
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <p className="text-sm text-slate-300 mt-2 border-t border-slate-600/50 pt-2">{stance.description}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    )}
-                     {character.class === 'Druid' && (
-                        <BeastformDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
-                        // Note: BeastformDisplay internally renders buttons. In a future iteration, pass isReadOnly to it as well.
-                        // For now, GM can see but clicking might trigger update. 
-                        // Since we pass a NO-OP function from GM Panel, they won't persist anyway.
-                    )}
-                    {character.class === 'Blood Hunter' && character.subclass === 'Order of the Lycan' && (
-                        <WolfFormDisplay character={character} onUpdateCharacter={onUpdateCharacter} />
-                    )}
-                    <Card title="Class & Subclass Features">
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Class Features</h3>
-                                <div className="space-y-3">
-                                    {classFeatures.map(feature => (
-                                        <FeatureDisplayItem 
-                                            key={feature.name}
-                                            name={feature.name}
-                                            type={feature.type}
-                                            description={feature.description}
-                                            character={character}
-                                            onUsageChange={handleAbilityUsageChange}
-                                            readOnly={isReadOnly}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                            {character.subclassFeatures && character.subclassFeatures.length > 0 && (
-                                <div>
-                                    <h3 className="text-xl font-semibold text-teal-400 border-b border-slate-700 pb-1 mb-3">Subclass Features</h3>
-                                    <div className="space-y-3">
-                                        {character.subclassFeatures.map(feature => (
-                                            <FeatureDisplayItem 
-                                                key={feature.name}
-                                                name={feature.name}
-                                                type={feature.type}
-                                                description={feature.description}
-                                                character={character}
-                                                onUsageChange={handleAbilityUsageChange}
-                                                readOnly={isReadOnly}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                    <Card title="Combat & Equipment" headerContent={!isReadOnly && <button onClick={() => setIsEquipmentModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">Change</button>}>
-                        <div className="grid grid-cols-1 gap-4">
-                            {character.isWolfFormActive ? (
-                                <EquipmentItem item={WOLF_FORM_DATA.unarmedStrike as any} isBeastformAttack={true} />
-                            ) : character.activeBeastFormName ? (
-                                <EquipmentItem item={ALL_BEASTFORMS.find(b => b.name === character.activeBeastFormName)?.attack} isBeastformAttack={true} />
-                            ) : (
-                                <>
-                                    {character.activeArmor && <EquipmentItem item={character.activeArmor} />}
-                                    {character.primaryWeapon && <EquipmentItem item={character.primaryWeapon} />}
-                                    {character.secondaryWeapon && <EquipmentItem item={character.secondaryWeapon} />}
-                                </>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* --- Right Column (67%) --- */}
-                <div className="space-y-6 md:col-span-2">
-                    <Card 
-                        title={`Loadout (${loadoutCards.length} / ${MAX_LOADOUT})`}
-                        headerContent={
-                            !isReadOnly && (
-                                <button onClick={() => setIsAddDomainCardModalOpen(true)} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">
-                                    + Add Card
-                                </button>
-                            )
-                        }
-                    >
-                        <div className="space-y-3">
-                            {loadoutCards.map(card => (
-                                <DomainCardDisplay 
-                                    key={card.name} 
-                                    card={card}
-                                    button={
-                                        !isReadOnly && (
-                                            <button 
-                                                onClick={() => handleSendToVault(card.name)} 
-                                                className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors"
-                                                title="Send to Vault"
-                                            >
-                                                Vault
-                                            </button>
-                                        )
-                                    }
-                                    character={character}
-                                    onUsageChange={handleAbilityUsageChange}
-                                    readOnly={isReadOnly}
-                                />
-                            ))}
-                            {loadoutCards.length === 0 && <p className="text-center text-slate-400">Recall cards from your vault to build your loadout.</p>}
-                        </div>
-                    </Card>
-                    <Card title="The Vault">
-                        <div className="space-y-3 pr-2">
-                            {vaultCards.map(card => {
-                                const recallCost = card.recallCost ?? 0;
-                                const isDisabled = loadoutCards.length >= MAX_LOADOUT || character.hope < recallCost;
-                                const title = loadoutCards.length >= MAX_LOADOUT ? "Loadout is full" : character.hope < recallCost ? "Not enough Hope" : `Recall for ${recallCost} Hope`;
-                                
-                                return (
-                                    <DomainCardDisplay
-                                        key={card.name}
-                                        card={card}
-                                        button={
-                                            !isReadOnly && (
-                                                <button
-                                                    onClick={() => handleRecallFromVault(card.name)}
-                                                    disabled={isDisabled}
-                                                    className="text-xs bg-sky-600 hover:bg-sky-500 text-white font-semibold py-1 px-2.5 rounded-md transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
-                                                    title={title}
-                                                >
-                                                    Recall
-                                                </button>
-                                            )
-                                        }
-                                        character={character}
-                                        onUsageChange={handleAbilityUsageChange}
-                                        readOnly={isReadOnly}
-                                    />
-                                );
-                            })}
-                            {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
-                        </div>
-                    </Card>
-                    <Card title="Characteristics & Experiences">
-                        {character.ancestryFeatures && (
-                            <div className="mb-4">
-                                <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
-                                {character.ancestryFeatures.map(f => <div key={f.name} className="mt-1"><span className="font-semibold text-slate-300">{f.name}:</span> <span className="text-slate-400">{f.description}</span></div>)}
-                            </div>
-                        )}
-                        {communityFeature && (
-                                <div className="mb-4">
-                                <h4 className="font-bold text-lg text-slate-200">{character.community} Feature</h4>
-                                <div className="mt-1"><span className="font-semibold text-slate-300">{communityFeature.name}:</span> <span className="text-slate-400">{communityFeature.description}</span></div>
-                            </div>
-                        )}
-                            {character.experiences.map((exp, i) => (
-                                isReadOnly ? (
-                                    <div key={i} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 mb-2">
-                                        <h4 className="font-bold text-slate-100">{exp.name} <span className="font-mono text-teal-300 text-sm">+{exp.modifier}</span></h4>
-                                        {exp.description && <p className="text-sm text-slate-400 italic mt-1">{exp.description}</p>}
-                                    </div>
-                                ) : (
-                                    <EditableExperienceDisplay
-                                        key={i}
-                                        experience={exp}
-                                        onSave={(updatedExp) => handleExperienceUpdate(i, updatedExp)}
-                                    />
-                                )
-                            ))}
-                    </Card>
-                    <Card title="Inventory">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <StatDisplay label="Gold" value={character.gold} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('gold', c)} />
-                            <StatDisplay label="Bolsa" value={character.bolsa || 0} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('bolsa', c)} />
-                            <StatDisplay label="Posiones" value={character.potions || 0} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('potions', c)} />
-                        </div>
-                        <ul className="space-y-2 pr-2">
-                            {inventory.map((item, i) => (
-                                <li key={i} className="flex justify-between items-center bg-slate-700 p-2 rounded">
-                                    <span>{item}</span>
-                                    {!isReadOnly && <button onClick={() => handleRemoveItem(i)} className="text-red-400 hover:text-red-300">&times;</button>}
-                                </li>
-                            ))}
-                        </ul>
-                        {!isReadOnly && (
-                            <div className="flex gap-2 mt-4">
-                                <input type="text" value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Add new item" className="flex-grow bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200" />
-                                <button onClick={handleAddItem} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md">Add</button>
-                            </div>
-                        )}
-                    </Card>
-                    <Card title="Notes & Background">
-                        {character.notes && character.notes.length > 0 ? (
-                            <ul className="space-y-2 pr-2 mb-4">
-                                {character.notes.map((note, i) => (
-                                    <li key={i} className="flex justify-between items-start bg-slate-700 p-2 rounded">
-                                        <p className="text-slate-300 whitespace-pre-wrap flex-grow">{note}</p>
-                                        {!isReadOnly && <button onClick={() => handleRemoveNote(i)} className="text-red-400 hover:text-red-300 font-bold text-xl ml-2 flex-shrink-0">&times;</button>}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-slate-400 text-center mb-4">No notes yet.</p>
-                        )}
-                        {!isReadOnly && (
-                            <div className="flex flex-col gap-2 mt-2">
-                                <textarea 
-                                    value={newNote} 
-                                    onChange={e => setNewNote(e.target.value)} 
-                                    placeholder="Add a new note..." 
-                                    rows={3} 
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-slate-200"
-                                />
-                                <button onClick={handleAddNote} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-md self-end">
-                                    Add Note
-                                </button>
-                            </div>
-                        )}
-                    </Card>
-                </div>
-            </div>
-            
-            {!isReadOnly && isLevelUpModalOpen && <LevelUpModal character={character} onLevelUp={handleLevelUp} onClose={() => setIsLevelUpModalOpen(false)} />}
-            {!isReadOnly && isEquipmentModalOpen && <AddEquipmentModal character={character} onUpdateCharacter={handleEquipmentUpdate} onClose={() => setIsEquipmentModalOpen(false)} />}
-            {!isReadOnly && isAddDomainCardModalOpen && <AddDomainCardModal character={character} onCardAdd={handleAddCardToVault} onClose={() => setIsAddDomainCardModalOpen(false)} />}
-            {!isReadOnly && isRestModalOpen && <RestModal character={character} onConfirm={handleConfirmRest} onClose={() => setIsRestModalOpen(false)} armorScore={derivedStats.armorScore}/>}
         </div>
     );
 };
