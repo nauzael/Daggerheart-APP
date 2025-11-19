@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('login');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Auth Listener
   useEffect(() => {
@@ -186,6 +187,27 @@ const App: React.FC = () => {
     // Clean up subscription on unmount
     return () => unsubscribe();
   }, [user]); // Re-subscribe if user state changes (e.g. login/logout)
+
+  // Full Screen Logic
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   // Import via URL logic
   useEffect(() => {
@@ -554,6 +576,23 @@ const App: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-slate-900 text-slate-200 font-sans p-2 sm:p-4 md:p-6 lg:p-8 overflow-hidden">
+       {/* Full Screen Button */}
+      <button
+        onClick={toggleFullScreen}
+        className="fixed top-3 right-3 z-50 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full border border-slate-600 transition-colors backdrop-blur-sm shadow-lg"
+        title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}
+      >
+        {isFullscreen ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 9h4m0 0V5m0 4L4 4m11 5h-4m0 0V5m0 4l5-5M5 15h4m0 0v4m0-4l-5 5m15-5h-4m0 0v4m0-4l5 5" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        )}
+      </button>
+
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80rem] h-[50rem] blur-3xl pointer-events-none"
         style={{
