@@ -518,7 +518,8 @@ const App: React.FC = () => {
         }}
         aria-hidden="true"
       />
-      <header className={`text-center mb-2 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' ? 'hidden' : 'pt-4'}`}>
+      {/* Hide Header in GM Panel explicitly, otherwise add top padding for safe areas */}
+      <header className={`text-center mb-4 flex-shrink-0 relative z-10 ${view === 'login' || view === 'selection' || view === 'gm_panel' ? 'hidden' : 'pt-8'}`}>
         {view !== 'sheet' && view !== 'gm_panel' && (
           <>
             <div className="inline-block mx-auto mb-2">

@@ -40,7 +40,7 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col max-w-5xl mx-auto w-full p-4 sm:p-0 overflow-hidden relative">
+        <div className="h-full flex flex-col max-w-5xl mx-auto w-full px-4 py-6 sm:px-0 sm:py-8 overflow-hidden relative">
             
             {/* FIXED HEADER SECTION */}
             <div className="flex-shrink-0 pb-4">

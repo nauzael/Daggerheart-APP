@@ -193,23 +193,16 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     if (inspectingCharacter) {
         return (
             <div className="bg-slate-900 h-full flex flex-col overflow-hidden">
-                <div className="bg-slate-800 border-b border-slate-700 p-4 flex-shrink-0 shadow-md flex justify-between items-center z-20">
+                <div className="bg-slate-800 border-b border-slate-700 py-5 px-4 flex-shrink-0 shadow-md flex justify-between items-center z-20">
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setInspectingCharacter(null)}
-                            className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-semibold"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            Back to Dashboard
-                        </button>
-                        <span className="text-slate-600 text-xl hidden sm:inline">|</span>
                         <span className="text-teal-400 font-bold text-lg">Inspecting: {inspectingCharacter.name}</span>
                     </div>
-                    <div className="text-xs font-mono text-slate-400 bg-slate-700 px-3 py-1 rounded border border-slate-600">
-                        VIEW ONLY MODE
-                    </div>
+                    <button 
+                        onClick={() => setInspectingCharacter(null)}
+                        className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                    >
+                        Back
+                    </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 w-full">
                     <div className="max-w-7xl mx-auto">
@@ -230,43 +223,38 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         return (
             <div className="flex flex-col h-full bg-slate-900 text-slate-200 overflow-hidden">
                 {/* Dashboard Header */}
-                <header className="bg-slate-800 border-b border-slate-700 p-4 shrink-0 z-10 shadow-md">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4 w-full md:w-auto">
-                            <button 
-                                onClick={() => setSelectedCampaignId(null)}
-                                className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-colors"
-                                title="Back to Campaign List"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-                            <div>
-                                <h1 className="text-2xl font-bold text-white leading-none">{selectedCampaign.name}</h1>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-xs text-slate-400 uppercase font-bold">Invite Code:</span>
-                                    <span className="text-teal-300 font-mono font-bold text-sm bg-slate-900/50 px-2 rounded select-all">
-                                        {selectedCampaign.inviteCode}
-                                    </span>
-                                    <button 
-                                        onClick={() => handleCopyCode(selectedCampaign.inviteCode)}
-                                        className="bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white p-1 rounded transition-colors"
-                                        title="Copy to Clipboard"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                        </svg>
-                                    </button>
-                                </div>
+                <header className="bg-slate-800 border-b border-slate-700 py-3 px-4 shrink-0 z-10 shadow-md">
+                    <div className="max-w-7xl mx-auto flex justify-between items-center">
+                        <div>
+                            <h1 className="text-lg sm:text-xl font-bold text-white leading-none truncate max-w-[200px] sm:max-w-md">{selectedCampaign.name}</h1>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">Code:</span>
+                                <span className="text-teal-300 font-mono font-bold text-xs bg-slate-900/50 px-1.5 rounded select-all">
+                                    {selectedCampaign.inviteCode}
+                                </span>
+                                <button 
+                                    onClick={() => handleCopyCode(selectedCampaign.inviteCode)}
+                                    className="text-slate-400 hover:text-white"
+                                    title="Copy"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                         
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
-                                <span className="block text-2xl font-bold text-white leading-none">{players.length}</span>
-                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Heroes Connected</span>
+                                <span className="block text-xl font-bold text-white leading-none">{players.length}</span>
+                                <span className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Heroes</span>
                             </div>
+                             <button 
+                                onClick={() => setSelectedCampaignId(null)}
+                                className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                            >
+                                Back
+                            </button>
                         </div>
                     </div>
                 </header>
@@ -655,12 +643,12 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         <div className="h-full bg-slate-900 text-slate-200 flex flex-col overflow-hidden">
              {/* Main Scroll Area */}
             <div className="flex-1 overflow-y-auto w-full">
-                <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col min-h-full">
+                <div className="max-w-4xl w-full mx-auto px-4 py-8 sm:px-6 sm:py-10 flex flex-col min-h-full">
                     
-                    <div className="flex justify-between items-center mb-8 flex-shrink-0">
-                        <h1 className="text-3xl font-bold text-teal-400">Game Master Nexus</h1>
+                    <div className="flex justify-between items-center mb-2 flex-shrink-0">
+                        <h1 className="text-2xl font-bold text-teal-400">Game Master Nexus</h1>
                         <button onClick={onExit} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                            Exit Panel
+                            Exit
                         </button>
                     </div>
 
