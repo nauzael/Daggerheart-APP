@@ -1,3 +1,4 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -8,7 +9,9 @@ const config: CapacitorConfig = {
     androidScheme: 'https'
   },
   plugins: {
-    // Optional: Configuration for plugins if added later
+    CapacitorCookies: {
+      enabled: true,
+    },
   }
 };
 

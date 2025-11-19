@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { auth, googleProvider } from '../firebaseConfig';
 import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { DaggerheartLogo } from './DaggerheartLogo';
+// @ts-ignore
+import { Capacitor } from '@capacitor/core';
 
 interface LoginScreenProps {
     onLoginSuccess: () => void;
@@ -14,8 +16,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showBypass, setShowBypass] = useState(false);
+    const [isNative, setIsNative] = useState(false);
+
+    useEffect(() => {
+        // Check if running on native platform (Android/iOS)
+        const nativeCheck = Capacitor.isNativePlatform();
+        setIsNative(nativeCheck);
+    }, []);
 
     const handleGoogleLogin = async () => {
+        if (isNative) {
+            const proceed = window.confirm(
+                "Google Sign-In may not work in this APK without specific advanced configuration (SHA-1 keys). If you see a blank screen, please restart and use Email/Password. Try anyway?"
+            );
+            if (!proceed) return;
+        }
+
         if (!auth || !googleProvider) {
             setError("Firebase Auth not configured properly.");
             return;
@@ -31,6 +47,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 setShowBypass(true);
             } else if (err.code === 'auth/popup-closed-by-user') {
                 setError("Sign-in cancelled.");
+            } else if (err.code === 'auth/popup-blocked') {
+                setError("Popup blocked. Please allow popups for this site.");
             } else {
                 setError(err.message || "Failed to sign in with Google.");
             }
@@ -132,6 +150,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                     </svg>
                     Continue with Google
                 </button>
+                
+                {isNative && (
+                    <div className="mt-4 p-3 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-200 text-center">
+                        <strong>APK Note:</strong> If Google Login shows a blank screen, it is due to Google security restrictions in standard APKs. Please use <strong>Email/Password</strong> for guaranteed access.
+                    </div>
+                )}
 
                 <p className="mt-6 text-center text-slate-400 text-sm">
                     {isRegistering ? "Already have an account?" : "Don't have an account?"} 
