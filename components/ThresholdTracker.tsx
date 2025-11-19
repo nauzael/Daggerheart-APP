@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface ThresholdTrackerProps {
@@ -9,11 +10,14 @@ interface ThresholdTrackerProps {
   color: string;
   showAsMarked?: boolean;
   size?: 'normal' | 'small';
+  readOnly?: boolean;
 }
 
-const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max, onSet, onReset, color, showAsMarked = false, size = 'normal' }) => {
+const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max, onSet, onReset, color, showAsMarked = false, size = 'normal', readOnly = false }) => {
     
     const handleClick = (index: number) => {
+        if (readOnly) return;
+
         if (showAsMarked) {
             const currentlyMarked = max - current;
             // If clicking the last marked pip, unmark it. Otherwise, mark up to the clicked pip.
@@ -44,16 +48,16 @@ const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max
                                 aria-label={`${label} point ${i + 1}`}
                                 role="checkbox"
                                 aria-checked={isFilled}
-                                className={`${circleSize} rounded-full cursor-pointer border-2 transition-colors ${
+                                className={`${circleSize} rounded-full border-2 transition-colors ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
                                     isFilled
                                         ? `${color} border-slate-400`
-                                        : 'bg-slate-700 border-slate-600 hover:bg-slate-600'
+                                        : 'bg-slate-700 border-slate-600' + (readOnly ? '' : ' hover:bg-slate-600')
                                 }`}
                             />
                         );
                     })}
                 </div>
-                {onReset && (
+                {onReset && !readOnly && (
                     <button onClick={onReset} title={`Reset ${label}`} className="text-slate-400 hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-3.181-4.991l-3.182-3.182a8.25 8.25 0 00-11.664 0l-3.182 3.182" />
@@ -82,15 +86,15 @@ const ThresholdTracker: React.FC<ThresholdTrackerProps> = ({ label, current, max
                             aria-label={`${label} point ${i + 1}`}
                             role="checkbox"
                             aria-checked={isFilled}
-                            className={`${circleSize} rounded-full cursor-pointer border-2 transition-colors ${
+                            className={`${circleSize} rounded-full border-2 transition-colors ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
                                 isFilled
                                     ? `${color} border-slate-400`
-                                    : 'bg-slate-700 border-slate-600 hover:bg-slate-600'
+                                    : 'bg-slate-700 border-slate-600' + (readOnly ? '' : ' hover:bg-slate-600')
                             }`}
                         />
                     );
                 })}
-                {onReset && (
+                {onReset && !readOnly && (
                     <button onClick={onReset} title={`Reset ${label}`} className="text-slate-400 hover:text-white transition-colors ml-2">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-3.181-4.991l-3.182-3.182a8.25 8.25 0 00-11.664 0l-3.182 3.182" />

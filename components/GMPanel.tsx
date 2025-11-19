@@ -80,11 +80,9 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         }
     };
 
+    // No-op function for Read Only view, ensuring no data is saved accidentally
     const handleGMUpdateCharacter = async (updatedChar: Character) => {
-        // Optimistic update for the inspector
-        setInspectingCharacter(updatedChar);
-        // Save to DB
-        await characterService.save(updatedChar);
+        console.log("GM View is Read Only. Changes not saved.");
     };
     
     const toggleCardExpansion = (e: React.MouseEvent, charId: string) => {
@@ -152,17 +150,18 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                             Back to Dashboard
                         </button>
                         <span className="text-slate-600 text-xl hidden sm:inline">|</span>
-                        <span className="text-teal-400 font-bold text-lg">Editing: {inspectingCharacter.name}</span>
+                        <span className="text-teal-400 font-bold text-lg">Inspecting: {inspectingCharacter.name}</span>
                     </div>
-                    <div className="text-xs font-mono text-amber-400 bg-amber-900/30 px-3 py-1 rounded border border-amber-700/50">
-                        GM OVERRIDE ENABLED
+                    <div className="text-xs font-mono text-slate-400 bg-slate-700 px-3 py-1 rounded border border-slate-600">
+                        VIEW ONLY MODE
                     </div>
                 </div>
-                <div className="p-4 max-w-7xl mx-auto">
+                <div className="p-4 max-w-7xl mx-auto pointer-events-auto">
                     <CharacterSheet 
                         character={inspectingCharacter} 
                         onUpdateCharacter={handleGMUpdateCharacter} 
                         onReturnToSelection={() => setInspectingCharacter(null)}
+                        isReadOnly={true}
                     />
                 </div>
             </div>
