@@ -129,24 +129,36 @@ const App: React.FC = () => {
       return char as Character;
   };
 
-  // Initial Load
+  // Real-time Subscription Load
   useEffect(() => {
-    const loadCharacters = async () => {
-        setIsLoading(true);
+    setIsLoading(true);
+    
+    // Subscribe to real-time updates
+    const unsubscribe = characterService.subscribe((updatedCharacters) => {
         try {
-            const loadedChars = await characterService.fetchAll();
-            const migratedChars = loadedChars.map(migrateCharacter);
+            const migratedChars = updatedCharacters.map(migrateCharacter);
             setCharacters(migratedChars);
+            
+            // Also update selected character if they are currently open and were updated remotely
+            setSelectedCharacter(currentChar => {
+                if (!currentChar) return null;
+                const updatedCurrent = migratedChars.find(c => c.id === currentChar.id);
+                return updatedCurrent || currentChar;
+            });
+
         } catch (e) {
-            console.error("Failed to load characters", e);
+            console.error("Failed to process character updates", e);
         } finally {
             setIsLoading(false);
         }
-    };
-
-    loadCharacters();
+    });
     
-    // Check for character data in URL (Import Logic)
+    // Clean up subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  // Import via URL logic
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const characterData = urlParams.get('character');
 
@@ -170,7 +182,6 @@ const App: React.FC = () => {
 
                 // Save immediately
                 characterService.save(newChar).then(() => {
-                     setCharacters(prevChars => [...prevChars, newChar]);
                      alert(`Character snapshot for "${newChar.name}" imported successfully!`);
                 });
 
@@ -216,7 +227,7 @@ const App: React.FC = () => {
   }, [view, selectedCharacter]);
 
   const handleCharacterCreate = async (newCharacter: Character) => {
-    // Optimistic UI update
+    // Optimistic UI update (subscription will double confirm this shortly)
     setCharacters(prev => [...prev, newCharacter]);
     setSelectedCharacter(newCharacter);
     setView('sheet');
@@ -305,7 +316,7 @@ const App: React.FC = () => {
                 }
               }
               
-              setCharacters(prev => [...prev, ...validImportedCharacters]);
+              // No need to setCharacters manually here as subscribe will catch the updates
               alert(`${validImportedCharacters.length} character(s) imported successfully.`);
             } else {
               alert("Error: JSON file is not a valid character array.");
@@ -328,8 +339,7 @@ const App: React.FC = () => {
           try {
               await characterService.syncLocalToCloud();
               alert("Migration complete! Your characters are now in the cloud.");
-              // Reload to fetch freshly from cloud
-              window.location.reload();
+              // Subscription will auto-update the list
           } catch (e) {
               console.error(e);
               alert("Migration failed. See console for details.");

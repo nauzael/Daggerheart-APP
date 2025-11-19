@@ -1,6 +1,6 @@
 
 import { db } from '../firebaseConfig';
-import { collection, getDocs, setDoc, doc, deleteDoc, query } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, deleteDoc, query, onSnapshot } from 'firebase/firestore';
 import { Character } from '../types';
 
 const COLLECTION_NAME = 'characters';
@@ -18,7 +18,7 @@ const sanitizeForFirestore = (data: any) => {
 
 export const characterService = {
     
-    // --- GET ALL CHARACTERS ---
+    // --- GET ALL CHARACTERS (One-time fetch) ---
     fetchAll: async (): Promise<Character[]> => {
         if (useFirebase()) {
             try {
@@ -37,6 +37,29 @@ export const characterService = {
             // Fallback to LocalStorage
             const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
             return saved ? JSON.parse(saved) : [];
+        }
+    },
+
+    // --- SUBSCRIBE TO CHARACTERS (Real-time) ---
+    subscribe: (onUpdate: (characters: Character[]) => void): (() => void) => {
+        if (useFirebase()) {
+            const q = query(collection(db, COLLECTION_NAME));
+            // Returns the unsubscribe function
+            return onSnapshot(q, (querySnapshot) => {
+                const chars: Character[] = [];
+                querySnapshot.forEach((doc) => {
+                    chars.push(doc.data() as Character);
+                });
+                onUpdate(chars);
+            }, (error) => {
+                console.error("Error in realtime subscription:", error);
+            });
+        } else {
+            // Fallback for LocalStorage: Just load once, no real subscription possible easily without storage events
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+            const chars = saved ? JSON.parse(saved) : [];
+            onUpdate(chars);
+            return () => {}; // Return empty cleanup function
         }
     },
 
