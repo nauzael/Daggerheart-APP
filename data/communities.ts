@@ -1,3 +1,4 @@
+
 export interface Community {
   name: string;
   feature: {
@@ -28,7 +29,7 @@ export const COMMUNITIES: Community[] = [
     name: "Orderborne",
     feature: {
       name: "Dedicated",
-      description: "Record three sayings or values. Once per rest, when embodying one of these principles, you can roll a d20 as your Hope Die."
+      description: "Record three sayings or values your upbringing instilled in you. Once per rest, when you describe how you're embodying one of these principles through your current action, you can roll a d20 as your Hope Die."
     },
     adjectives: ["ambitious", "benevolent", "pensive", "prudent", "sardonic", "stoic"]
   },
@@ -44,7 +45,7 @@ export const COMMUNITIES: Community[] = [
     name: "Seaborne",
     feature: {
       name: "Know the Tide",
-      description: "When you roll with Fear, place a token on your community card (max equal to your level). You can spend tokens for a +1 bonus per token on action rolls."
+      description: "You can sense the ebb and flow of life. When you roll with Fear, place a token on your community card. You can hold a number of tokens equal to your level. Before you make an action roll, you can spend any number of these tokens to gain a +1 bonus to the roll for each token spent. At the end of each session, clear all unspent tokens."
     },
     adjectives: ["candid", "cooperative", "exuberant", "fierce", "resolute", "weathered"]
   },
@@ -68,7 +69,7 @@ export const COMMUNITIES: Community[] = [
     name: "Wanderborne",
     feature: {
       name: "Nomadic Pack",
-      description: "Once per session, you can spend a Hope to reach into your pack and pull out a mundane item that's useful to your situation."
+      description: "Add a Nomadic Pack to your inventory. Once per session, you can spend a Hope to reach into this pack and pull out a mundane item that's useful to your situation. Work with the GM to figure out what item you take out."
     },
     adjectives: ["inscrutable", "magnanimous", "mirthful", "reliable", "savvy", "unorthodox"]
   },
@@ -80,6 +81,7 @@ export const COMMUNITIES: Community[] = [
     },
     adjectives: ["hardy", "loyal", "nurturing", "reclusive", "sagacious", "vibrant"]
   },
+  // Legacy/Homebrew Communities
   {
     name: "Duneborne",
     feature: {

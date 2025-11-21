@@ -80,6 +80,19 @@ export interface MartialStance {
     description: string;
 }
 
+export interface CharacterAppearance {
+    clothes: string;
+    eyes: string;
+    body: string;
+    skin: string;
+    attitude: string;
+}
+
+export interface Connection {
+    name: string;
+    description: string;
+}
+
 export interface Character {
     id: string;
     userId?: string; // Owner ID
@@ -117,6 +130,11 @@ export interface Character {
     activeBeastFormName?: string;
     activeBeastformTraitBonus?: { trait: TraitName; value: number };
     isWolfFormActive?: boolean;
+    
+    // New Narrative Fields
+    appearance: CharacterAppearance;
+    connections: Connection[];
+
     // Warlock specific
     patronName?: string;
     boons?: { name: string; value: number }[];

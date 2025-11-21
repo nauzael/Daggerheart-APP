@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance } from '../types';
+import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance, Connection } from '../types';
 import Card from './Card';
 import ThresholdTracker from './ThresholdTracker';
 import StatDisplay from './StatDisplay';
@@ -581,6 +581,31 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
         if (isReadOnly) return;
         const newNotes = character.notes.filter((_, i) => i !== index);
         onUpdateCharacter({ ...character, notes: newNotes });
+    };
+
+    const handleAppearanceChange = (field: keyof typeof character.appearance, value: string) => {
+        if (isReadOnly) return;
+        const newAppearance = { ...character.appearance, [field]: value };
+        onUpdateCharacter({ ...character, appearance: newAppearance });
+    };
+
+    const handleAddConnection = () => {
+        if (isReadOnly) return;
+        const newConnections = [...(character.connections || []), { name: '', description: '' }];
+        onUpdateCharacter({ ...character, connections: newConnections });
+    };
+
+    const handleUpdateConnection = (index: number, field: keyof Connection, value: string) => {
+        if (isReadOnly) return;
+        const newConnections = [...(character.connections || [])];
+        newConnections[index] = { ...newConnections[index], [field]: value };
+        onUpdateCharacter({ ...character, connections: newConnections });
+    };
+
+    const handleRemoveConnection = (index: number) => {
+        if (isReadOnly) return;
+        const newConnections = (character.connections || []).filter((_, i) => i !== index);
+        onUpdateCharacter({ ...character, connections: newConnections });
     };
     
     const handleAddItem = () => {
@@ -1170,7 +1195,65 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                     {vaultCards.length === 0 && <p className="text-center text-slate-400">Your vault is empty. Gain new cards by leveling up.</p>}
                                 </div>
                             </Card>
-                            <Card title="Characteristics & Experiences">
+                            
+                            <Card title="Appearance & Details">
+                                {character.appearance ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                                        <div>
+                                            <label className="block text-xs font-bold mb-1 text-slate-400">Clothes</label>
+                                            <EditableField 
+                                                label="Clothes" 
+                                                value={character.appearance.clothes} 
+                                                onSave={(val) => handleAppearanceChange('clothes', val)}
+                                                inputClass="text-slate-200 text-sm"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold mb-1 text-slate-400">Eyes</label>
+                                            <EditableField 
+                                                label="Eyes" 
+                                                value={character.appearance.eyes} 
+                                                onSave={(val) => handleAppearanceChange('eyes', val)}
+                                                inputClass="text-slate-200 text-sm"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold mb-1 text-slate-400">Body</label>
+                                            <EditableField 
+                                                label="Body" 
+                                                value={character.appearance.body} 
+                                                onSave={(val) => handleAppearanceChange('body', val)}
+                                                inputClass="text-slate-200 text-sm"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold mb-1 text-slate-400">Skin</label>
+                                            <EditableField 
+                                                label="Skin" 
+                                                value={character.appearance.skin} 
+                                                onSave={(val) => handleAppearanceChange('skin', val)}
+                                                inputClass="text-slate-200 text-sm"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs font-bold mb-1 text-slate-400">Attitude</label>
+                                            <EditableField 
+                                                label="Attitude" 
+                                                value={character.appearance.attitude} 
+                                                onSave={(val) => handleAppearanceChange('attitude', val)}
+                                                inputClass="text-slate-200 text-sm"
+                                                readOnly={isReadOnly}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-500 italic mb-4">No appearance details set.</p>
+                                )}
+
                                 {character.ancestryFeatures && (
                                     <div className="mb-4">
                                         <h4 className="font-bold text-lg text-slate-200">{character.ancestry} Features</h4>
@@ -1198,6 +1281,47 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                         )
                                     ))}
                             </Card>
+
+                            <Card title="Connections" headerContent={!isReadOnly && <button onClick={handleAddConnection} className="text-sm bg-slate-600 hover:bg-slate-500 py-1 px-3 rounded-md">+ Add</button>}>
+                                <div className="space-y-3">
+                                    {character.connections && character.connections.length > 0 ? (
+                                        character.connections.map((conn, i) => (
+                                            <div key={i} className="p-3 bg-slate-700/50 rounded-lg border border-slate-700 relative group">
+                                                <div className="mb-1">
+                                                    <EditableField 
+                                                        label="Ally Name" 
+                                                        value={conn.name} 
+                                                        onSave={(val) => handleUpdateConnection(i, 'name', val)}
+                                                        inputClass="font-bold text-slate-100"
+                                                        readOnly={isReadOnly}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <EditableField 
+                                                        label="Bond Description" 
+                                                        value={conn.description} 
+                                                        onSave={(val) => handleUpdateConnection(i, 'description', val)}
+                                                        inputClass="text-sm text-slate-400 italic w-full block"
+                                                        readOnly={isReadOnly}
+                                                    />
+                                                </div>
+                                                {!isReadOnly && (
+                                                    <button 
+                                                        onClick={() => handleRemoveConnection(i)} 
+                                                        className="absolute top-2 right-2 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Remove Connection"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-slate-500 italic text-center">No connections recorded.</p>
+                                    )}
+                                </div>
+                            </Card>
+
                             <Card title="Inventory">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                     <StatDisplay label="Gold" value={character.gold} isEditable={!isReadOnly} onUpdate={(c) => handleSimpleValueChange('gold', c)} />
@@ -1219,7 +1343,7 @@ const CharacterSheet: React.FC<CharacterSheetProps> = ({ character, onUpdateChar
                                     </div>
                                 )}
                             </Card>
-                            <Card title="Notes & Background">
+                            <Card title="Notes">
                                 {character.notes && character.notes.length > 0 ? (
                                     <ul className="space-y-2 pr-2 mb-4">
                                         {character.notes.map((note, i) => (

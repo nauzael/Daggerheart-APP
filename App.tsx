@@ -16,12 +16,12 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel'>('selection');
+  const [view, setView] = useState<'login' | 'selection' | 'creator' | 'sheet' | 'gm_panel'>('login');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -71,6 +71,9 @@ const App: React.FC = () => {
       setUser(currentUser);
       if (currentUser) {
         if (view === 'login') setView('selection');
+      } else {
+        // Force login if not authenticated
+        setView('login');
       }
     });
     return () => unsubscribe();
@@ -242,13 +245,7 @@ const App: React.FC = () => {
             onExport={handleExport}
             user={user}
             onJoinCampaign={handleJoinCampaign}
-            onSignOut={() => {
-                if (user) {
-                    auth.signOut();
-                } else {
-                    setView('login');
-                }
-            }}
+            onSignOut={() => auth.signOut()}
             onGMPanel={() => setView('gm_panel')}
             onMigrateToCloud={characterService.syncLocalToCloud}
             onLeaveCampaign={(id) => characterService.leaveCampaign(id)}

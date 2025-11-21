@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat, TraitName } from '../types';
+import { Character, Experience, Weapon, Armor, AncestryFeature, BeastForm, MartialStance, Stat, TraitName, CharacterAppearance, Connection } from '../types';
 import Card from './Card';
 import DomainSelector from './DomainSelector';
 import AbilitySelector from './AbilitySelector';
@@ -27,7 +27,7 @@ interface CharacterCreatorProps {
 const TRAIT_MODIFIERS = [+2, +1, +1, +0, +0, -1];
 const TRAIT_NAMES: (keyof Character['traits'])[] = ['strength', 'agility', 'finesse', 'instinct', 'presence', 'knowledge'];
 
-const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage' | 'beastForms' | 'activeBeastFormName'> = {
+const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp' | 'stress' | 'armor' | 'subclassFeatures' | 'notes' | 'ancestryFeatures' | 'inventory' | 'vault' | 'abilityUsage' | 'beastForms' | 'activeBeastFormName' | 'appearance' | 'connections'> = {
     name: '',
     level: 1,
     class: CLASSES[0].name,
@@ -42,6 +42,14 @@ const initialCharacterState: Omit<Character, 'id' | 'domains' | 'evasion' | 'hp'
     bolsa: 0,
     potions: 0,
     domainCards: ['', ''],
+};
+
+const initialAppearance: CharacterAppearance = {
+    clothes: '',
+    eyes: '',
+    body: '',
+    skin: '',
+    attitude: ''
 };
 
 // Helper to determine the primary spellcasting trait for a class
@@ -79,6 +87,8 @@ const SelectionDisplay: React.FC<{label: string, value: string, onClick: () => v
 
 const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, onCancel }) => {
   const [charData, setCharData] = useState<Partial<Character>>(initialCharacterState);
+  const [appearance, setAppearance] = useState<CharacterAppearance>(initialAppearance);
+  const [connections, setConnections] = useState<Connection[]>([{ name: '', description: '' }]);
   const [notes, setNotes] = useState('');
   const [assignedTraits, setAssignedTraits] = useState<Partial<Record<keyof Character['traits'], string>>>({});
   const [isMixedAncestry, setIsMixedAncestry] = useState(false);
@@ -164,6 +174,21 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
       newExperiences[index] = {...newExperiences[index], [field]: e.target.value};
       setCharData(prev => ({...prev, experiences: newExperiences}));
   }
+
+  const handleConnectionChange = (index: number, field: 'name' | 'description', value: string) => {
+      const newConnections = [...connections];
+      newConnections[index] = { ...newConnections[index], [field]: value };
+      setConnections(newConnections);
+  };
+
+  const addConnection = () => {
+      setConnections([...connections, { name: '', description: '' }]);
+  };
+
+  const removeConnection = (index: number) => {
+      const newConnections = connections.filter((_, i) => i !== index);
+      setConnections(newConnections);
+  };
 
  const handleTraitAssignment = useCallback((traitName: keyof Character['traits'], value: string) => {
     setAssignedTraits(prev => {
@@ -319,6 +344,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
         abilityUsage: finalAbilityUsage,
         subclassFeatures: foundationFeature ? [foundationFeature] : [],
         beastForms: finalBeastForms,
+        appearance: appearance,
+        connections: connections.filter(c => c.name.trim() !== ''),
     } as Character;
     
     if (selectedClass.name === 'Warlock') {
@@ -769,6 +796,32 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                 </div>
             )}
 
+            {/* Appearance & Connections */}
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+                <h3 className="text-xl font-semibold text-slate-200 mb-2">Appearance</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-slate-300">
+                     <p><span className="text-slate-400 font-bold">Clothes:</span> {appearance.clothes}</p>
+                     <p><span className="text-slate-400 font-bold">Eyes:</span> {appearance.eyes}</p>
+                     <p><span className="text-slate-400 font-bold">Body:</span> {appearance.body}</p>
+                     <p><span className="text-slate-400 font-bold">Skin:</span> {appearance.skin}</p>
+                     <p><span className="text-slate-400 font-bold">Attitude:</span> {appearance.attitude}</p>
+                </div>
+            </div>
+
+            {connections.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Connections</h3>
+                    <div className="space-y-2">
+                        {connections.map((conn, i) => (
+                             <div key={i} className="bg-slate-700/50 p-3 rounded-lg">
+                                <p className="font-bold text-slate-100">{conn.name}</p>
+                                <p className="text-sm text-slate-400 mt-1 italic">{conn.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
 
             {notes.trim() && (
                  <div>
@@ -998,7 +1051,30 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                     </div>
                 </Card>
 
-                <Card title="Step 6 & 7: Background & Experiences">
+                <Card title="Step 6 & 7: Description & Background">
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label className="block text-xs font-bold mb-1 text-slate-400">Clothes</label>
+                            <input type="text" placeholder="e.g. Extravagant, ragged..." value={appearance.clothes} onChange={e => setAppearance(prev => ({...prev, clothes: e.target.value}))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-200" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold mb-1 text-slate-400">Eyes</label>
+                            <input type="text" placeholder="e.g. Fire, endless ocean..." value={appearance.eyes} onChange={e => setAppearance(prev => ({...prev, eyes: e.target.value}))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-200" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold mb-1 text-slate-400">Body</label>
+                            <input type="text" placeholder="e.g. Broad, lanky, tiny..." value={appearance.body} onChange={e => setAppearance(prev => ({...prev, body: e.target.value}))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-200" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold mb-1 text-slate-400">Skin</label>
+                            <input type="text" placeholder="e.g. Obsidian, clover..." value={appearance.skin} onChange={e => setAppearance(prev => ({...prev, skin: e.target.value}))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-200" />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold mb-1 text-slate-400">Attitude</label>
+                            <input type="text" placeholder="e.g. A commander, a prankster..." value={appearance.attitude} onChange={e => setAppearance(prev => ({...prev, attitude: e.target.value}))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-1 px-2 text-slate-200" />
+                        </div>
+                     </div>
+
                     <p className="text-slate-400 mb-4 text-sm">Each of your experiences provides a <span className="font-mono">+2</span> modifier when you spend a Hope on a relevant roll.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -1009,7 +1085,37 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onCharacterCreate, 
                             <input type="text" placeholder="Experience 2 (Title)*" value={charData.experiences?.[1].name || ''} onChange={handleExperienceChange(1, 'name')} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                             <textarea placeholder="Detail (optional)" value={charData.experiences?.[1].description || ''} onChange={handleExperienceChange(1, 'description')} rows={2} className="mt-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                          </div>
-                         <textarea placeholder="Background, Notes, Connections..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={5} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                         <textarea placeholder="Background questions, History, Notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="md:col-span-2 w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    </div>
+                </Card>
+                
+                 <Card title="Step 9: Connections">
+                    <p className="text-slate-400 mb-4 text-sm">Ask your fellow players questions to establish bonds (e.g. "What did I do that makes you cautious around me?").</p>
+                    <div className="space-y-4">
+                        {connections.map((conn, index) => (
+                            <div key={index} className="flex flex-col gap-2 bg-slate-700/30 p-3 rounded border border-slate-700">
+                                <div className="flex justify-between items-start">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ally Name" 
+                                        value={conn.name} 
+                                        onChange={(e) => handleConnectionChange(index, 'name', e.target.value)}
+                                        className="w-1/3 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-slate-200 text-sm"
+                                    />
+                                    <button type="button" onClick={() => removeConnection(index)} className="text-red-400 hover:text-red-300 text-xs">Remove</button>
+                                </div>
+                                <textarea 
+                                    placeholder="Description of bond..." 
+                                    value={conn.description} 
+                                    onChange={(e) => handleConnectionChange(index, 'description', e.target.value)}
+                                    rows={2}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-slate-200 text-sm"
+                                />
+                            </div>
+                        ))}
+                        <button type="button" onClick={addConnection} className="text-teal-400 hover:text-teal-300 text-sm font-bold flex items-center gap-1">
+                            + Add Connection
+                        </button>
                     </div>
                 </Card>
                 

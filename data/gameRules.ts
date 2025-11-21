@@ -1,7 +1,7 @@
 
 export interface GameRule {
     name: string;
-    category: 'Condition' | 'Mechanic' | 'Combat' | 'Downtime' | 'Character';
+    category: 'Condition' | 'Mechanic' | 'Combat' | 'Downtime' | 'Character' | 'Equipment' | 'Magic' | 'GM Mechanics';
     description: string;
 }
 
@@ -15,224 +15,210 @@ export const GAME_RULES: GameRule[] = [
     {
         name: "Restrained",
         category: "Condition",
-        description: "You cannot move, but you can still take actions from your current position."
+        description: "You cannot move, but you can still take actions from your current position. Breaking free usually requires a Strength or Agility roll against the difficulty."
     },
     {
         name: "Vulnerable",
         category: "Condition",
-        description: "All rolls targeting you have advantage."
+        description: "All rolls targeting you have advantage. You are in a difficult position, knocked over, or off guard."
     },
     {
         name: "Temporary Condition",
         category: "Condition",
-        description: "A condition that can be cleared by making a move against it (usually an action roll). Special conditions require specific actions to clear."
+        description: "Can be cleared by making an action roll (Difficulty set by GM) or by the GM describing how an adversary clears it."
+    },
+    {
+        name: "Dazed",
+        category: "Condition",
+        description: "You have disadvantage on your next action roll. Often caused by disorienting effects or magic."
     },
 
     // --- CORE MECHANICS ---
     {
+        name: "The Spotlight",
+        category: "Mechanic",
+        description: "The focus of the scene. It moves organically between PCs. The GM takes the spotlight when a PC rolls with Fear or fails. If playing tactically, GM may use action tokens."
+    },
+    {
         name: "Duality Dice",
         category: "Mechanic",
-        description: "Two d12s (one Hope, one Fear) rolled for action rolls. The total + modifiers is compared to Difficulty. The die with the higher value determines the outcome (With Hope or With Fear)."
-    },
-    {
-        name: "Success with Hope",
-        category: "Mechanic",
-        description: "Total ≥ Difficulty AND Hope Die > Fear Die. You succeed and gain 1 Hope."
-    },
-    {
-        name: "Success with Fear",
-        category: "Mechanic",
-        description: "Total ≥ Difficulty AND Fear Die > Hope Die. You succeed, but with a cost or complication. The GM gains 1 Fear."
-    },
-    {
-        name: "Failure with Hope",
-        category: "Mechanic",
-        description: "Total < Difficulty AND Hope Die > Fear Die. You fail with a minor consequence, but gain 1 Hope."
-    },
-    {
-        name: "Failure with Fear",
-        category: "Mechanic",
-        description: "Total < Difficulty AND Fear Die > Hope Die. You fail with a major consequence. The GM gains 1 Fear."
+        description: "Two d12s (Hope & Fear). Success if Total (Stat + Mods + Dice) ≥ Difficulty. Hope > Fear = Success with Hope (Gain 1 Hope). Fear > Hope = Success with Fear (GM gains 1 Fear)."
     },
     {
         name: "Critical Success",
         category: "Mechanic",
-        description: "Duality Dice show matching numbers (e.g., 5 and 5). Automatic success with a bonus, gain 1 Hope, and clear 1 Stress. Counts as a roll 'With Hope'."
+        description: "Matching Duality Dice (e.g., 5-5). Counts as Success with Hope regardless of total. Gain 1 Hope, Clear 1 Stress. On attacks: Deal max potential damage + roll result."
     },
     {
-        name: "Advantage",
+        name: "Advantage / Disadvantage",
         category: "Mechanic",
-        description: "Roll a d6 with your Duality Dice and ADD the result to your total. Cancels out Disadvantage."
-    },
-    {
-        name: "Disadvantage",
-        category: "Mechanic",
-        description: "Roll a d6 with your Duality Dice and SUBTRACT the result from your total. Cancels out Advantage."
+        description: "Roll a d6 with your Duality Dice. Add (Advantage) or Subtract (Disadvantage) the result. They cancel each other out. If multiple sources, take highest d6."
     },
     {
         name: "Hope",
         category: "Mechanic",
-        description: "A resource to fuel abilities, Help an Ally (give advantage), Utilize an Experience (add modifier), or initiate a Tag Team Roll. Max 6."
+        description: "Max 6. Spend to: Help an Ally (+1d6), Utilize Experience (+Modifier), Tag Team (3 Hope), or use Class/Domain features. Generated on rolls with Hope."
     },
     {
         name: "Fear",
         category: "Mechanic",
-        description: "A GM resource used to activate adversary abilities, interrupt players, or make hard moves. Max 12."
+        description: "GM resource. Gained on rolls with Fear. Spent to activate adversary moves, environment effects, interrupt players, or use Fear Moves."
     },
     {
         name: "Help an Ally",
         category: "Mechanic",
-        description: "Spend 1 Hope to give an ally Advantage (roll a d6 and add it) on their action roll. Multiple players can help, but only the highest d6 applies."
+        description: "Spend 1 Hope. Roll a d6 (Advantage Die). The ally adds the result to their roll. Multiple helpers don't stack advantage dice (take highest)."
     },
     {
         name: "Tag Team Roll",
         category: "Mechanic",
-        description: "Spend 3 Hope to combine actions with another PC. Both roll; pick the best result to apply to the combined action. On success, both deal damage combined."
+        description: "Once per session per player. Spend 3 Hope. You and an ally both act. Pick the best Duality Roll result. On attack success, sum both damage rolls."
     },
     {
         name: "Group Action Roll",
         category: "Mechanic",
-        description: "One PC leads. Others make reaction rolls. Leader gets +1 to their roll for every success, -1 for every failure."
-    },
-    
-    // --- CHARACTER TRAITS ---
-    {
-        name: "Agility",
-        category: "Character",
-        description: "Sprint, Leap, Maneuver. Speed, nimbleness, and reaction time."
-    },
-    {
-        name: "Strength",
-        category: "Character",
-        description: "Lift, Smash, Grapple. Physical power, stamina, and force."
-    },
-    {
-        name: "Finesse",
-        category: "Character",
-        description: "Control, Hide, Tinker. Accuracy, stealth, and dexterity."
-    },
-    {
-        name: "Instinct",
-        category: "Character",
-        description: "Perceive, Sense, Navigate. Awareness, intuition, and survival."
-    },
-    {
-        name: "Presence",
-        category: "Character",
-        description: "Charm, Perform, Deceive. Personality, social influence, and aura."
-    },
-    {
-        name: "Knowledge",
-        category: "Character",
-        description: "Recall, Analyze, Comprehend. Intelligence, deduction, and memory."
-    },
-    {
-        name: "Evasion",
-        category: "Character",
-        description: "The Difficulty rating for enemies to hit you. Base determined by class + modifiers."
-    },
-    {
-        name: "Proficiency",
-        category: "Character",
-        description: "Determines the number of damage dice you roll for weapons and spells."
+        description: "Leader makes Action Roll. Others make Reaction Rolls. Leader gets +1 to total per success, -1 per failure."
     },
 
-    // --- COMBAT ---
+    // --- MAGIC ---
     {
-        name: "Hit Points (HP)",
-        category: "Combat",
-        description: "Physical health. Marking last HP causes you to fall and make a Death Move."
+        name: "Spellcast Roll",
+        category: "Magic",
+        description: "A roll using your class's Spellcast Trait. Used to attack with magic, maintain spells, or overcome magical resistance."
     },
     {
-        name: "Stress",
+        name: "Grimoires",
+        category: "Magic",
+        description: "Domain cards that contain multiple spells. You usually can only have one active effect from a Grimoire at a time unless specified otherwise."
+    },
+    {
+        name: "Marking Stress for Magic",
+        category: "Magic",
+        description: "Many spells require marking Stress to activate. If you have no Stress slots left, you must mark HP instead."
+    },
+
+    // --- COMBAT & MOVEMENT ---
+    {
+        name: "Action Move",
         category: "Combat",
-        description: "Mental/physical strain. If you must mark Stress but are full, mark 1 HP instead. Full Stress makes you Vulnerable."
+        description: "When making an action roll, you can move to anywhere within Close range as part of that action."
+    },
+    {
+        name: "Agility Roll (Move)",
+        category: "Combat",
+        description: "Required to move Far or Very Far, or to move effectively when not taking another action (e.g., dashing). Failure may mean you stop short or face consequences."
+    },
+    {
+        name: "Ranges",
+        category: "Combat",
+        description: "Melee (Touch), Very Close (5-10ft / Card length), Close (10-30ft / Pencil length), Far (30-100ft / Paper length), Very Far (100-300ft)."
     },
     {
         name: "Damage Thresholds",
         category: "Combat",
-        description: "Determines HP loss. < Minor: 0 HP. ≥ Minor: 1 HP. ≥ Major: 2 HP. ≥ Severe: 3 HP. (Massive Rule: 2x Severe = 4 HP)."
+        description: "Damage < Major: Minor (Mark 1 HP). Damage < Severe: Major (Mark 2 HP). Damage ≥ Severe: Severe (Mark 3 HP). (Optional Massive: ≥ 2x Severe: Mark 4 HP)."
     },
     {
         name: "Armor Slots",
         category: "Combat",
-        description: "Mark 1 Armor Slot to reduce incoming damage amount (e.g. by your Armor Score) before comparing to thresholds."
+        description: "Mark 1 Armor Slot to reduce damage severity by one step (Severe -> Major -> Minor -> None). Can usually only mark 1 slot per instance of damage."
     },
     {
-        name: "Attack Roll",
+        name: "Stress",
         category: "Combat",
-        description: "An action roll against a target's Difficulty (or Evasion). On success, roll damage."
+        description: "Represents strain. If you must mark Stress but have no slots, mark 1 HP instead. When Stress is full, you are Vulnerable."
     },
     {
-        name: "Damage Roll",
+        name: "Death Moves",
         category: "Combat",
-        description: "Roll damage dice (based on Proficiency). Add flat modifiers. Compare total to target's Thresholds."
+        description: "On marking last HP: 1. Blaze of Glory (Crit action then die). 2. Avoid Death (Unconscious, roll Hope Die vs Level for Scar). 3. Risk It All (Roll Duality: Hope > Fear = Live & Heal; Fear > Hope = Die)."
     },
     {
-        name: "Critical Damage",
+        name: "Scars",
         category: "Combat",
-        description: "On a Crit Attack: Roll damage normally, then add the maximum possible result of the dice to the total."
+        description: "Permanent consequence of Avoiding Death. Cross out a Hope slot permanently. Lose last Hope slot = Retire/Die."
     },
     {
-        name: "Reaction Roll",
+        name: "Improvised Weapons",
         category: "Combat",
-        description: "A roll made to avoid/withstand an effect. Does not generate Hope/Fear. Critical Success ignores the effect entirely."
+        description: "Usually deal d6 damage (Physical). Burden and Range determined by GM based on object size."
     },
     {
-        name: "Range: Melee",
+        name: "Falling Damage",
         category: "Combat",
-        description: "Arm's reach (approx 5ft)."
+        description: "Short Fall: Minor Dmg. Medium Fall: Major Dmg. Long Fall: Severe Dmg. Extreme Fall: Fatal or Massive Dmg."
+    },
+
+    // --- EQUIPMENT ---
+    {
+        name: "Switching Weapons",
+        category: "Equipment",
+        description: "In danger: Mark 1 Stress to swap active weapon with inventory. In calm: Swap freely."
     },
     {
-        name: "Range: Very Close",
-        category: "Combat",
-        description: "5-10 ft. Can move to Melee as part of action."
+        name: "Gold",
+        category: "Equipment",
+        description: "Abstracted wealth. 10 Handfuls = 1 Bag. 10 Bags = 1 Chest. (Optional: 10 Coins = 1 Handful)."
     },
     {
-        name: "Range: Close",
-        category: "Combat",
-        description: "10-30 ft. Can move to Melee as part of action."
+        name: "Burden",
+        category: "Equipment",
+        description: "You have two hands. Two-handed weapons use both. Cannot equip more than hands allow."
+    },
+    
+    // --- PROGRESSION & CHARACTER ---
+    {
+        name: "Tiers of Play",
+        category: "Character",
+        description: "Tier 1 (Lvl 1), Tier 2 (Lvl 2-4), Tier 3 (Lvl 5-7), Tier 4 (Lvl 8-10). Add your Level to base Armor Thresholds."
     },
     {
-        name: "Range: Far",
-        category: "Combat",
-        description: "30-100 ft. Need Agility roll to move to Melee safely."
+        name: "Multiclassing",
+        category: "Character",
+        description: "Available at Lvl 5. Pick 2nd class. Gain domain + subclass feature (foundation). Select domain cards from 2nd class at half level (rounded up)."
     },
     {
-        name: "Range: Very Far",
-        category: "Combat",
-        description: "100-300 ft. Need Agility roll to move to Melee safely."
-    },
-    {
-        name: "Resistance",
-        category: "Combat",
-        description: "Reduce incoming damage of that type by half (round up) before thresholds."
-    },
-    {
-        name: "Immunity",
-        category: "Combat",
-        description: "Ignore all damage of that type."
-    },
-    {
-        name: "Death Move",
-        category: "Combat",
-        description: "Triggered when marking last HP. Choose: Blaze of Glory (One crit action, then die), Avoid Death (Unconscious, risk scars), or Risk It All (Roll Duality)."
+        name: "Experiences",
+        category: "Character",
+        description: "Narrative traits (e.g. 'Ex-Soldier'). Spend 1 Hope to add its modifier (+2 usually) to a relevant roll."
     },
 
     // --- DOWNTIME ---
     {
         name: "Short Rest",
         category: "Downtime",
-        description: "Approx 1 hour. Choose 2: Tend Wounds (1d4+Tier HP), Clear Stress (1d4+Tier), Repair Armor (1d4+Tier slots), Prepare (Gain Hope)."
+        description: "Approx 1 hour. Swap cards. Choose 2: Tend Wounds (1d4+Tier HP), Clear Stress (1d4+Tier), Repair Armor (1d4+Tier slots), Prepare (Gain Hope)."
     },
     {
         name: "Long Rest",
         category: "Downtime",
-        description: "Sleep/Camp. Choose 2: Tend All Wounds (Full HP), Clear All Stress, Repair All Armor, Prepare (Gain Hope), Work on Project. Reset abilities."
+        description: "Full night/sleep. Swap cards. Choose 2: Tend All Wounds, Clear All Stress, Repair All Armor, Prepare (Gain Hope, party gains 2), Work on Project."
     },
     {
-        name: "Domain Cards",
+        name: "Projects",
         category: "Downtime",
-        description: "Swap cards between Loadout (active) and Vault (inactive) freely during rest. Swapping otherwise costs Stress equal to Recall Cost."
+        description: "Long-term goals progressed during Long Rests (uses Countdowns). GM determines progress/roll."
+    },
+
+    // --- GM MECHANICS ---
+    {
+        name: "Countdowns",
+        category: "GM Mechanics",
+        description: "Dice (d4 to d12) tracking impending events. Tick down (reduce value by 1) on failures or time passing. Trigger at 0. Reset or remove after trigger."
+    },
+    {
+        name: "Environmental Damage",
+        category: "GM Mechanics",
+        description: "Hazards deal direct damage tiers. Minor (e.g., burning coals), Major (e.g., falling rock), Severe (e.g., lava, crushing trap)."
+    },
+    {
+        name: "Fear Moves",
+        category: "GM Mechanics",
+        description: "GM spends Fear tokens to: Activate Adversary special abilities, Interrupt PC turn, Add reinforcements, Alter environment, or trigger a Countdown."
+    },
+    {
+        name: "Action Tokens (Optional)",
+        category: "GM Mechanics",
+        description: "For tactical play: Each PC gets a token. Adversaries get tokens based on type/count. Spend to act. Refresh when all spent."
     }
 ];

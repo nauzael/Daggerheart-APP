@@ -1,3 +1,4 @@
+
 import { Traits } from '../types';
 
 export interface Class {
@@ -19,7 +20,7 @@ export interface Class {
 export const CLASSES: Class[] = [
     {
         name: 'Bard',
-        description: 'A charismatic performer who weaves magic through music, stories, and speeches. Bards inspire allies, captivate audiences, and manipulate the emotions of others to turn the tide of any situation.',
+        description: 'Bards are the most charismatic people in all the realms. Masters of captivation, they specialize in performance to bolster allies and influence social situations.',
         startingHP: 5,
         startingEvasion: 10,
         domains: ['Grace', 'Codex'],
@@ -63,18 +64,18 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Druid',
-        description: "A warden of the natural world, deeply connected to the earth and its creatures. Druids command nature's raw power, shapeshift into powerful beasts, and protect the balance of the wild.",
+        description: "A force of nature, preserving the balance of life and death by channeling the wilds themselves through you. Druids can transform into beasts and shape nature itself.",
         startingHP: 6,
         startingEvasion: 10,
         domains: ['Sage', 'Arcana'],
         subclasses: ['Warden of the Elements', 'Warden of Renewal'],
-        items: 'A small bag of rocks and bones or a strange pendant',
+        items: 'A small bag of rocks and bones or a strange pendant found in the dirt',
         suggestedTraits: { agility: 1, strength: 0, finesse: 1, instinct: 2, presence: -1, knowledge: 0 },
         suggestedEquipment: { armor: 'Leather Armor', primary: 'Shortstaff', secondary: 'Round Shield' }
     },
     {
         name: 'Guardian',
-        description: 'An unwavering protector who stands as a bulwark between their allies and danger. Guardians are masters of defense, using their formidable strength and resilience to shield others from harm.',
+        description: 'You run into danger to protect your party, keeping watch over those who might not survive without you there. Guardians fight with remarkable ferocity and defend their cohort above all else.',
         startingHP: 7,
         startingEvasion: 9,
         domains: ['Valor', 'Blade'],
@@ -85,7 +86,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Ranger',
-        description: 'A skilled hunter and tracker, at home in the wilderness. Rangers are masters of survival and ranged combat, often forming deep bonds with animal companions and relentlessly pursuing their chosen quarry.',
+        description: 'Your keen eyes and graceful haste make you indispensable when tracking down enemies and navigating the wilds. Rangers are sly tacticians and expert trackers.',
         startingHP: 6,
         startingEvasion: 12,
         domains: ['Bone', 'Sage'],
@@ -96,7 +97,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Rogue',
-        description: 'A master of stealth, deception, and precision strikes. Rogues thrive in the shadows, exploiting weaknesses with cunning tactics and disappearing before their enemies know what hit them.',
+        description: 'You have experience fighting with your blade as well as your wit, preferring to move quickly and fight quietly. Rogues trick their foes through social manipulation as easily as breaking locks.',
         startingHP: 6,
         startingEvasion: 12,
         domains: ['Midnight', 'Grace'],
@@ -107,7 +108,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Seraph',
-        description: 'A divine agent, channeling celestial power to heal the wounded and smite the wicked. Seraphs are beacons of hope, wielding sacred energy to protect the innocent and uphold their sacred vows.',
+        description: 'You have taken a vow to a god who helps you channel sacred arcane power to keep your party on their feet. Seraphs are divine fighters and healers imbued with sacred purpose.',
         startingHP: 7,
         startingEvasion: 9,
         domains: ['Splendor', 'Valor'],
@@ -118,7 +119,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Sorcerer',
-        description: 'A wielder of innate, untamed magic that flows from their very being. Sorcerers command raw arcane forces, shaping reality with instinct and power that others can only dream of.',
+        description: 'You were born with innate magical power, and you’ve learned how to wield that power to get what you want. Sorcerers channel untamed forces, shaping reality with instinct.',
         startingHP: 6,
         startingEvasion: 10,
         domains: ['Arcana', 'Midnight'],
@@ -129,7 +130,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Warrior',
-        description: 'A master of martial combat, relying on skill, strength, and tactical prowess. Warriors are versatile fighters, adept with a variety of weapons and techniques to overcome any challenge on the battlefield.',
+        description: 'You run into battle without hesitation or caution, knowing you can strike down whatever enemy stands in your path. Warriors master weapons and violence through years of training.',
         startingHP: 6,
         startingEvasion: 11,
         domains: ['Blade', 'Bone'],
@@ -162,7 +163,7 @@ export const CLASSES: Class[] = [
     },
     {
         name: 'Wizard',
-        description: 'A dedicated scholar of the arcane arts, whose power comes from rigorous study and intellectual mastery. Wizards manipulate the fabric of magic through spells learned from ancient tomes and scrolls.',
+        description: 'You have become familiar with the arcane through the relentless study of grimoires and other tools of magic. Wizards acquire and hone immense magical power over years of learning.',
         startingHP: 5,
         startingEvasion: 11,
         domains: ['Codex', 'Splendor'],

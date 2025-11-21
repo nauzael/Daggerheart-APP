@@ -55,18 +55,14 @@ const CharacterSelection: React.FC<CharacterSelectionProps> = ({
 
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                     <div className="text-slate-400 text-sm text-center sm:text-left">
-                        {user ? (
-                            <span>Logged in as: <span className="text-teal-300 font-bold block sm:inline">{user.email}</span></span>
-                        ) : (
-                            <span className="text-amber-400 font-bold">Guest Mode (Offline)</span>
-                        )}
+                        <span>Logged in as: <span className="text-teal-300 font-bold block sm:inline">{user?.email || 'User'}</span></span>
                     </div>
                     <div className="flex gap-2">
                             <button onClick={onGMPanel} className="text-xs bg-indigo-800 hover:bg-indigo-700 text-indigo-200 py-1.5 px-3 rounded transition-colors border border-indigo-600 font-semibold">
                             GM Panel
                         </button>
                         <button onClick={onSignOut} className="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1.5 px-3 rounded transition-colors font-semibold">
-                            {user ? 'Sign Out' : 'Log In'}
+                            Sign Out
                         </button>
                     </div>
                 </div>
