@@ -3,12 +3,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { campaignService } from '../services/campaignService';
 import { characterService } from '../services/characterService';
 import { auth } from '../firebaseConfig';
-import { Campaign, Character, TraitName, Adversary } from '../types';
+import { Campaign, Character, TraitName, Adversary, Environment } from '../types';
 import CharacterSheet from './CharacterSheet';
 import { DOMAIN_CARDS } from '../data/domainCards';
 import RuleSearchModal from './RuleSearchModal';
 import { ADVERSARY_TEMPLATES } from '../data/adversaries';
+import { ENVIRONMENTS } from '../data/environments';
 import AdversaryCard from './AdversaryCard';
+import EnvironmentCard from './EnvironmentCard';
 
 interface GMPanelProps {
     onExit: () => void;
@@ -29,7 +31,9 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     
     // Battle Tracker State
     const [activeAdversaries, setActiveAdversaries] = useState<Adversary[]>([]);
+    const [activeEnvironment, setActiveEnvironment] = useState<Environment | null>(null);
     const [isAdversaryModalOpen, setIsAdversaryModalOpen] = useState(false);
+    const [isEnvironmentModalOpen, setIsEnvironmentModalOpen] = useState(false);
     const [adversarySearch, setAdversarySearch] = useState('');
 
     // Load GM's campaigns
@@ -141,6 +145,11 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const handleRemoveAdversary = (id: string) => {
         setActiveAdversaries(prev => prev.filter(adv => adv.id !== id));
     };
+
+    const handleSetEnvironment = (env: Environment) => {
+        setActiveEnvironment(env);
+        setIsEnvironmentModalOpen(false);
+    }
     
     const filteredAdversaryTemplates = useMemo(() => {
         if (!adversarySearch) return ADVERSARY_TEMPLATES;
@@ -263,42 +272,63 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                 <main className="flex-1 overflow-y-auto bg-slate-900 p-4">
                     <div className="max-w-7xl mx-auto space-y-6">
                         
-                        {/* ADVERSARY SECTION */}
+                        {/* ADVERSARY & ENVIRONMENT SECTION */}
                         <section>
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex flex-wrap justify-between items-center mb-4 gap-4">
                                 <h2 className="text-xl font-bold text-red-400 flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    Battle Tracker
+                                    Battle & Environment
                                 </h2>
-                                <button 
-                                    onClick={() => setIsAdversaryModalOpen(true)}
-                                    className="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Add Adversary
-                                </button>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setIsEnvironmentModalOpen(true)}
+                                        className="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2 border border-emerald-700"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 4.4A1 1 0 0116 14H6a1 1 0 01-1-1V6zm5.5 9v2a1 1 0 002 0v-2h-2z" clipRule="evenodd" />
+                                        </svg>
+                                        {activeEnvironment ? "Change Env" : "Set Env"}
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsAdversaryModalOpen(true)}
+                                        className="bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                        </svg>
+                                        Add Adversary
+                                    </button>
+                                </div>
                             </div>
                             
-                            {activeAdversaries.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                    {activeAdversaries.map(adv => (
-                                        <AdversaryCard 
-                                            key={adv.id} 
-                                            adversary={adv} 
-                                            onUpdate={handleUpdateAdversary}
-                                            onRemove={handleRemoveAdversary}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {activeEnvironment && (
+                                    <div className="md:col-span-1 xl:col-span-1">
+                                        <EnvironmentCard 
+                                            environment={activeEnvironment}
+                                            onRemove={() => setActiveEnvironment(null)}
                                         />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-4 text-center text-slate-500">
-                                    <p>No active adversaries. The path is clear... for now.</p>
-                                </div>
-                            )}
+                                    </div>
+                                )}
+                                
+                                {activeAdversaries.map(adv => (
+                                    <AdversaryCard 
+                                        key={adv.id} 
+                                        adversary={adv} 
+                                        onUpdate={handleUpdateAdversary}
+                                        onRemove={handleRemoveAdversary}
+                                    />
+                                ))}
+                                
+                                {activeAdversaries.length === 0 && !activeEnvironment && (
+                                    <div className="col-span-full bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-lg p-8 text-center text-slate-500">
+                                        <p className="text-lg mb-2">The stage is empty.</p>
+                                        <p className="text-sm">Add adversaries or set an environment to begin.</p>
+                                    </div>
+                                )}
+                            </div>
                         </section>
 
                         {/* PLAYERS SECTION */}
@@ -614,6 +644,47 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                         No adversaries found matching "{adversarySearch}"
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Set Environment Modal */}
+                {isEnvironmentModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsEnvironmentModalOpen(false)}>
+                        <div className="bg-slate-800 p-6 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-emerald-400">Set Environment</h3>
+                                <button onClick={() => setIsEnvironmentModalOpen(false)} className="text-slate-400 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-2">
+                                {ENVIRONMENTS.map(env => (
+                                    <div key={env.name} className="bg-slate-700 border border-slate-600 p-3 rounded-lg hover:border-emerald-500/50 transition-colors cursor-pointer group" onClick={() => handleSetEnvironment(env)}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="font-bold text-slate-100 group-hover:text-emerald-300 transition-colors">{env.name}</h4>
+                                            <span className="bg-slate-800 text-xs px-1.5 py-0.5 rounded border border-slate-600">T{env.tier}</span>
+                                        </div>
+                                        <div className="text-xs text-slate-400 mb-2 flex gap-2">
+                                            <span>{env.type}</span>
+                                            <span>•</span>
+                                            <span>Diff {env.difficulty}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {env.impulses.slice(0, 2).map((imp, i) => (
+                                                <span key={i} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 rounded italic truncate max-w-full">
+                                                    {imp}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <button className="w-full bg-slate-600 hover:bg-emerald-700 text-white text-xs font-bold py-1 rounded transition-colors mt-3">
+                                            Set Environment
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

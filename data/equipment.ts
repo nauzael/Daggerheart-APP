@@ -120,11 +120,89 @@ const SECONDARY_WEAPONS_T2: Weapon[] = [
     { name: 'Improved Hand Crossbow', trait: 'Finesse', range: 'Far', damage: 'd6+4 phy', burden: 'One-Handed', tier: 2, type: 'Secondary' },
 ];
 
-// Placeholder Arrays for T3 and T4 to allow concatenation
-const ARMORS_T3: Armor[] = [];
-const PRIMARY_WEAPONS_T3: Weapon[] = [];
-const SECONDARY_WEAPONS_T3: Weapon[] = [];
+// TIER 3
+const ARMORS_T3: Armor[] = [
+    { name: 'Advanced Gambeson Armor', baseThresholds: '9/23', baseScore: 5, tier: 3, feature: 'Flexible: +1 to Evasion' },
+    { name: 'Advanced Leather Armor', baseThresholds: '11/27', baseScore: 5, tier: 3 },
+    { name: 'Advanced Chainmail Armor', baseThresholds: '13/31', baseScore: 6, tier: 3, feature: 'Heavy: -1 to Evasion' },
+    { name: 'Advanced Full Plate Armor', baseThresholds: '15/35', baseScore: 6, tier: 3, feature: 'Very Heavy: -2 to Evasion; -1 to Agility' },
+    { name: 'Bellamoi Fine Armor', baseThresholds: '11/27', baseScore: 5, tier: 3, feature: 'Gilded: +1 to Presence' },
+    { name: 'Dragonscale Armor', baseThresholds: '11/27', baseScore: 5, tier: 3, feature: 'Impenetrable: Once per short rest, when you would mark your last Hit Point, you can instead mark a Stress.' },
+    { name: 'Spiked Plate Armor', baseThresholds: '10/25', baseScore: 5, tier: 3, feature: 'Sharp: On a successful attack against a target within Melee range, add a d4 to the damage roll.' },
+    { name: 'Bladefare Armor', baseThresholds: '16/39', baseScore: 6, tier: 3, feature: 'Physical: You can\'t mark an Armor Slot to reduce magic damage.' },
+    { name: 'Monett\'s Cloak', baseThresholds: '16/39', baseScore: 6, tier: 3, feature: 'Magic: You can\'t mark an Armor Slot to reduce physical damage.' },
+    { name: 'Runes of Fortification', baseThresholds: '17/43', baseScore: 6, tier: 3, feature: 'Painful: Each time you mark an Armor Slot, you must mark a Stress.' },
+];
 
+const PRIMARY_WEAPONS_T3: Weapon[] = [
+    // Physical
+    { name: 'Advanced Broadsword', trait: 'Agility', range: 'Melee', damage: 'd8+6 phy', burden: 'One-Handed', tier: 3, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+    { name: 'Advanced Longsword', trait: 'Agility', range: 'Melee', damage: 'd8+9 phy', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Battleaxe', trait: 'Strength', range: 'Melee', damage: 'd10+9 phy', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Greatsword', trait: 'Strength', range: 'Melee', damage: 'd10+9 phy', burden: 'Two-Handed', tier: 3, feature: 'Massive: -1 to Evasion; on a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    { name: 'Advanced Mace', trait: 'Strength', range: 'Melee', damage: 'd8+7 phy', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Warhammer', trait: 'Strength', range: 'Melee', damage: 'd12+9 phy', burden: 'Two-Handed', tier: 3, feature: 'Heavy: -1 to Evasion', type: 'Primary' },
+    { name: 'Advanced Dagger', trait: 'Finesse', range: 'Melee', damage: 'd8+7 phy', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Quarterstaff', trait: 'Instinct', range: 'Melee', damage: 'd10+9 phy', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Cutlass', trait: 'Presence', range: 'Melee', damage: 'd8+7 phy', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Rapier', trait: 'Presence', range: 'Melee', damage: 'd8+6 phy', burden: 'One-Handed', tier: 3, feature: 'Quick: When you make an attack, you can mark a Stress to target another creature within range.', type: 'Primary' },
+    { name: 'Advanced Halberd', trait: 'Strength', range: 'Very Close', damage: 'd10+8 phy', burden: 'Two-Handed', tier: 3, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    { name: 'Advanced Spear', trait: 'Finesse', range: 'Very Close', damage: 'd10+8 phy', burden: 'Two-Handed', tier: 3, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    { name: 'Advanced Shortbow', trait: 'Agility', range: 'Far', damage: 'd6+9 phy', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Crossbow', trait: 'Finesse', range: 'Far', damage: 'd6+7 phy', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Longbow', trait: 'Agility', range: 'Very Far', damage: 'd8+9 phy', burden: 'Two-Handed', tier: 3, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    // Unique T3 Physical
+    { name: 'Flickerfly Blade', trait: 'Agility', range: 'Melee', damage: 'd8+5 phy', burden: 'One-Handed', tier: 3, feature: 'Sharpwing: Gain a bonus to your damage rolls equal to your Agility.', type: 'Primary' },
+    { name: 'Bravesword', trait: 'Strength', range: 'Melee', damage: 'd12+7 phy', burden: 'Two-Handed', tier: 3, feature: 'Brave: -1 to Evasion; +3 to Severe damage threshold', type: 'Primary' },
+    { name: 'Hammer of Wrath', trait: 'Strength', range: 'Melee', damage: 'd10+7 phy', burden: 'Two-Handed', tier: 3, feature: 'Devastating: Before you make an attack roll, you can mark a Stress to use a d20 as your damage die.', type: 'Primary' },
+    { name: 'Labrys Axe', trait: 'Strength', range: 'Melee', damage: 'd10+7 phy', burden: 'Two-Handed', tier: 3, feature: 'Protective: +1 to Armor Score', type: 'Primary' },
+    { name: 'Meridian Cutlass', trait: 'Presence', range: 'Melee', damage: 'd10+5 phy', burden: 'One-Handed', tier: 3, feature: 'Dueling: When there are no other creatures within Close range of the target, gain advantage on your attack roll against them.', type: 'Primary' },
+    { name: 'Retractable Saber', trait: 'Presence', range: 'Melee', damage: 'd10+7 phy', burden: 'One-Handed', tier: 3, feature: 'Retractable: The blade can be hidden in the hilt to avoid detection.', type: 'Primary' },
+    { name: 'Double Flail', trait: 'Agility', range: 'Very Close', damage: 'd10+8 phy', burden: 'Two-Handed', tier: 3, feature: 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    { name: 'Talon Blades', trait: 'Finesse', range: 'Close', damage: 'd10+7 phy', burden: 'Two-Handed', tier: 3, feature: 'Brutal: When you roll the maximum value on a damage die, roll an additional damage die.', type: 'Primary' },
+    { name: 'Black Powder Revolver', trait: 'Finesse', range: 'Far', damage: 'd6+8 phy', burden: 'One-Handed', tier: 3, feature: 'Reloading: After you make an attack, roll a d6. On a result of 1, you must mark a Stress to reload this weapon before you can fire it again.', type: 'Primary' },
+    { name: 'Spiked Bow', trait: 'Agility', range: 'Very Far', damage: 'd6+7 phy', burden: 'Two-Handed', tier: 3, feature: 'Versatile: This weapon can also be used with these statistics—Agility, Melee, d10+5.', type: 'Primary' },
+    // Magic
+    { name: 'Advanced Arcane Gauntlets', trait: 'Strength', range: 'Melee', damage: 'd10+9 mag', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Hallowed Axe', trait: 'Strength', range: 'Melee', damage: 'd8+7 mag', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Glowing Rings', trait: 'Agility', range: 'Very Close', damage: 'd10+8 mag', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Hand Runes', trait: 'Instinct', range: 'Very Close', damage: 'd10+6 mag', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Returning Blade', trait: 'Finesse', range: 'Close', damage: 'd8+6 mag', burden: 'One-Handed', tier: 3, feature: 'Returning: When this weapon is thrown within its range, it appears in your hand immediately after the attack.', type: 'Primary' },
+    { name: 'Advanced Shortstaff', trait: 'Instinct', range: 'Close', damage: 'd8+7 mag', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Dualstaff', trait: 'Instinct', range: 'Far', damage: 'd6+9 mag', burden: 'Two-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Scepter', trait: 'Presence', range: 'Far', damage: 'd6+6 mag', burden: 'Two-Handed', tier: 3, feature: 'Versatile: This weapon can also be used with these statistics—Presence, Melee, d8+4.', type: 'Primary' },
+    { name: 'Advanced Wand', trait: 'Knowledge', range: 'Far', damage: 'd6+7 mag', burden: 'One-Handed', tier: 3, type: 'Primary' },
+    { name: 'Advanced Greatstaff', trait: 'Knowledge', range: 'Very Far', damage: 'd6+6 mag', burden: 'Two-Handed', tier: 3, feature: 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    // Unique T3 Magic
+    { name: 'Axe of Fortunis', trait: 'Strength', range: 'Melee', damage: 'd10+8 mag', burden: 'Two-Handed', tier: 3, feature: 'Lucky: On a failed attack, you can mark a Stress to reroll your attack.', type: 'Primary' },
+    { name: 'Blessed Anlace', trait: 'Instinct', range: 'Melee', damage: 'd10+6 mag', burden: 'One-Handed', tier: 3, feature: 'Healing: During downtime, automatically clear a Hit Point.', type: 'Primary' },
+    { name: 'Ghostblade', trait: 'Presence', range: 'Melee', damage: 'd10+7 phy/mag', burden: 'One-Handed', tier: 3, feature: 'Otherworldly: On a successful attack, you can deal physical or magic damage.', type: 'Primary' },
+    { name: 'Runes of Ruination', trait: 'Knowledge', range: 'Very Close', damage: 'd20+4 mag', burden: 'One-Handed', tier: 3, feature: 'Painful: Each time you make a successful attack, you must mark a Stress.', type: 'Primary' },
+    { name: 'Widogast Pendant', trait: 'Knowledge', range: 'Close', damage: 'd10+5 mag', burden: 'One-Handed', tier: 3, feature: 'Timebending: You choose the target of your attack after making your attack roll.', type: 'Primary' },
+    { name: 'Gilded Bow', trait: 'Finesse', range: 'Far', damage: 'd6+7 mag', burden: 'Two-Handed', tier: 3, feature: 'Self-Correcting: When you roll a 1 on a damage die, it deals 6 damage instead.', type: 'Primary' },
+    { name: 'Firestaff', trait: 'Instinct', range: 'Far', damage: 'd6+7 mag', burden: 'Two-Handed', tier: 3, feature: 'Burning: When you roll a 6 on a damage die, the target must mark a Stress.', type: 'Primary' },
+    { name: 'Mage Orb', trait: 'Knowledge', range: 'Far', damage: 'd6+7 mag', burden: 'One-Handed', tier: 3, feature: 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    { name: 'Ilmari\'s Rifle', trait: 'Finesse', range: 'Very Far', damage: 'd6+6 mag', burden: 'One-Handed', tier: 3, feature: 'Reloading: After you make an attack, roll a d6. On a result of 1, you must mark a Stress to reload this weapon before you can fire it again.', type: 'Primary' },
+    // Wheelchairs
+    { name: 'Advanced Light-Frame Wheelchair', trait: 'Agility', range: 'Melee', damage: 'd8+6 phy', burden: 'One-Handed', tier: 3, feature: 'Quick: When you make an attack, you can mark a Stress to target another creature within range.', type: 'Primary' },
+    { name: 'Advanced Heavy-Frame Wheelchair', trait: 'Strength', range: 'Melee', damage: 'd12+9 phy', burden: 'Two-Handed', tier: 3, feature: 'Heavy: -1 to Evasion', type: 'Primary' },
+    { name: 'Advanced Arcane-Frame Wheelchair', trait: 'Spellcast', range: 'Far', damage: 'd6+6 mag', burden: 'One-Handed', tier: 3, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+];
+
+const SECONDARY_WEAPONS_T3: Weapon[] = [
+    { name: 'Advanced Shortsword', trait: 'Agility', range: 'Melee', damage: 'd8+4 phy', burden: 'One-Handed', tier: 3, feature: 'Paired: +4 to primary weapon damage to targets within Melee range', type: 'Secondary' },
+    { name: 'Advanced Round Shield', trait: 'Strength', range: 'Melee', damage: 'd4+4 phy', burden: 'One-Handed', tier: 3, feature: 'Protective: +3 to Armor Score', type: 'Secondary' },
+    { name: 'Advanced Tower Shield', trait: 'Strength', range: 'Melee', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Barrier: +4 to Armor Score; -1 to Evasion', type: 'Secondary' },
+    { name: 'Advanced Small Dagger', trait: 'Finesse', range: 'Melee', damage: 'd8+4 phy', burden: 'One-Handed', tier: 3, feature: 'Paired: +4 to primary weapon damage to targets within Melee range', type: 'Secondary' },
+    { name: 'Advanced Whip', trait: 'Presence', range: 'Very Close', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Startling: Mark a Stress to crack the whip and force all adversaries within Melee range back to Close range.', type: 'Secondary' },
+    { name: 'Advanced Grappler', trait: 'Finesse', range: 'Close', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Hooked: On a successful attack, you can pull the target into Melee range.', type: 'Secondary' },
+    { name: 'Advanced Hand Crossbow', trait: 'Finesse', range: 'Far', damage: 'd6+5 phy', burden: 'One-Handed', tier: 3, type: 'Secondary' },
+    { name: 'Buckler', trait: 'Agility', range: 'Melee', damage: 'd4+4 phy', burden: 'One-Handed', tier: 3, feature: 'Deflecting: When you are attacked, you can mark an Armor Slot to gain a bonus to your Evasion equal to your Armor Score against the attack.', type: 'Secondary' },
+    { name: 'Powered Gauntlet', trait: 'Knowledge', range: 'Close', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Charged: Mark a Stress to gain a +1 bonus to your Proficiency on a primary weapon attack.', type: 'Secondary' },
+    { name: 'Hand Sling', trait: 'Finesse', range: 'Very Far', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Versatile: This weapon can also be used with these statistics—Finesse, Close, d8+4.', type: 'Secondary' },
+];
+
+// TODO: Add Tier 4 when needed
 const ARMORS_T4: Armor[] = [];
 const PRIMARY_WEAPONS_T4: Weapon[] = [];
 const SECONDARY_WEAPONS_T4: Weapon[] = [];

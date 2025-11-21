@@ -183,3 +183,20 @@ export interface Adversary {
     features: AdversaryFeature[];
     motives?: string;
 }
+
+export interface EnvironmentFeature {
+    name: string;
+    type: 'Action' | 'Reaction' | 'Passive';
+    description: string;
+    questions?: string; // Narrative prompts for the GM
+}
+
+export interface Environment {
+    name: string;
+    tier: number;
+    type: 'Traversal' | 'Social' | 'Exploration' | 'Event';
+    difficulty: number | string; // Some are special like "Relative Strength"
+    impulses: string[];
+    features: EnvironmentFeature[];
+    potentialAdversaries?: string[];
+}
