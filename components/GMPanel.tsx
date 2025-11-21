@@ -34,8 +34,12 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const [activeEnvironment, setActiveEnvironment] = useState<Environment | null>(null);
     const [isAdversaryModalOpen, setIsAdversaryModalOpen] = useState(false);
     const [isEnvironmentModalOpen, setIsEnvironmentModalOpen] = useState(false);
+    
+    // Filters
     const [adversarySearch, setAdversarySearch] = useState('');
     const [adversaryTierFilter, setAdversaryTierFilter] = useState<number | 'All'>('All');
+    const [environmentSearch, setEnvironmentSearch] = useState('');
+    const [environmentTierFilter, setEnvironmentTierFilter] = useState<number | 'All'>('All');
 
     // Load GM's campaigns
     useEffect(() => {
@@ -150,6 +154,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const handleSetEnvironment = (env: Environment) => {
         setActiveEnvironment(env);
         setIsEnvironmentModalOpen(false);
+        setEnvironmentSearch('');
     }
     
     const filteredAdversaryTemplates = useMemo(() => {
@@ -173,6 +178,24 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
         // Always Sort by Tier then Name for organization
         return result.sort((a, b) => a.tier - b.tier || a.originalName.localeCompare(b.originalName));
     }, [adversarySearch, adversaryTierFilter]);
+
+    const filteredEnvironments = useMemo(() => {
+        let result = ENVIRONMENTS;
+
+        if (environmentTierFilter !== 'All') {
+            result = result.filter(env => env.tier === environmentTierFilter);
+        }
+
+        if (environmentSearch) {
+            const lowerQuery = environmentSearch.toLowerCase();
+            result = result.filter(env => 
+                env.name.toLowerCase().includes(lowerQuery) || 
+                env.type.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        return result.sort((a, b) => a.tier - b.tier || a.name.localeCompare(b.name));
+    }, [environmentSearch, environmentTierFilter]);
 
     const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
 
@@ -605,48 +628,52 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                 {isAdversaryModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsAdversaryModalOpen(false)}>
                         <div className="bg-slate-800 p-6 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-red-400">Select Adversary</h3>
-                                <button onClick={() => setIsAdversaryModalOpen(false)} className="text-slate-400 hover:text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Tier Filters */}
-                            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                                {['All', 1, 2, 3, 4].map(tier => (
-                                    <button
-                                        key={tier}
-                                        onClick={() => setAdversaryTierFilter(tier as any)}
-                                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
-                                            adversaryTierFilter === tier 
-                                            ? 'bg-red-600 text-white border-red-500' 
-                                            : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
-                                        }`}
-                                    >
-                                        {tier === 'All' ? 'All Tiers' : `Tier ${tier}`}
+                            {/* Header Section wrapped to prevent shrinking */}
+                            <div className="flex-shrink-0 flex flex-col gap-4 mb-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-xl font-bold text-red-400">Select Adversary</h3>
+                                    <button onClick={() => setIsAdversaryModalOpen(false)} className="text-slate-400 hover:text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
                                     </button>
-                                ))}
-                            </div>
-                            
-                            {/* Search Bar */}
-                            <div className="mb-4 relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                    </svg>
                                 </div>
-                                <input 
-                                    type="text" 
-                                    placeholder="Search by name, type, motive..." 
-                                    value={adversarySearch}
-                                    onChange={(e) => setAdversarySearch(e.target.value)}
-                                    className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
-                                />
+
+                                {/* Tier Filters */}
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                    {['All', 1, 2, 3, 4].map(tier => (
+                                        <button
+                                            key={tier}
+                                            onClick={() => setAdversaryTierFilter(tier as any)}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                                                adversaryTierFilter === tier 
+                                                ? 'bg-red-600 text-white border-red-500' 
+                                                : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+                                            }`}
+                                        >
+                                            {tier === 'All' ? 'All Tiers' : `Tier ${tier}`}
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                {/* Search Bar */}
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search by name, type, motive..." 
+                                        value={adversarySearch}
+                                        onChange={(e) => setAdversarySearch(e.target.value)}
+                                        className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
+                                    />
+                                </div>
                             </div>
                             
+                            {/* Scrollable List */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-2">
                                 {filteredAdversaryTemplates.length > 0 ? (
                                     filteredAdversaryTemplates.map(template => (
@@ -682,38 +709,83 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                 {isEnvironmentModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsEnvironmentModalOpen(false)}>
                         <div className="bg-slate-800 p-6 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-emerald-400">Set Environment</h3>
-                                <button onClick={() => setIsEnvironmentModalOpen(false)} className="text-slate-400 hover:text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-2">
-                                {ENVIRONMENTS.map(env => (
-                                    <div key={env.name} className="bg-slate-700 border border-slate-600 p-3 rounded-lg hover:border-emerald-500/50 transition-colors cursor-pointer group" onClick={() => handleSetEnvironment(env)}>
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h4 className="font-bold text-slate-100 group-hover:text-emerald-300 transition-colors">{env.name}</h4>
-                                            <span className="bg-slate-800 text-xs px-1.5 py-0.5 rounded border border-slate-600">T{env.tier}</span>
-                                        </div>
-                                        <div className="text-xs text-slate-400 mb-2 flex gap-2">
-                                            <span>{env.type}</span>
-                                            <span>•</span>
-                                            <span>Diff {env.difficulty}</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {env.impulses.slice(0, 2).map((imp, i) => (
-                                                <span key={i} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 rounded italic truncate max-w-full">
-                                                    {imp}
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <button className="w-full bg-slate-600 hover:bg-emerald-700 text-white text-xs font-bold py-1 rounded transition-colors mt-3">
-                                            Set Environment
+                            
+                            {/* Header Section wrapped to prevent shrinking */}
+                            <div className="flex-shrink-0 flex flex-col gap-4 mb-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-xl font-bold text-emerald-400">Set Environment</h3>
+                                    <button onClick={() => setIsEnvironmentModalOpen(false)} className="text-slate-400 hover:text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Tier Filters */}
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                    {['All', 1, 2, 3, 4].map(tier => (
+                                        <button
+                                            key={tier}
+                                            onClick={() => setEnvironmentTierFilter(tier as any)}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                                                environmentTierFilter === tier 
+                                                ? 'bg-emerald-600 text-white border-emerald-500' 
+                                                : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+                                            }`}
+                                        >
+                                            {tier === 'All' ? 'All Tiers' : `Tier ${tier}`}
                                         </button>
+                                    ))}
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                        </svg>
                                     </div>
-                                ))}
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search by name, type..." 
+                                        value={environmentSearch}
+                                        onChange={(e) => setEnvironmentSearch(e.target.value)}
+                                        className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Scrollable List */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-2">
+                                {filteredEnvironments.length > 0 ? (
+                                    filteredEnvironments.map(env => (
+                                        <div key={env.name} className="bg-slate-700 border border-slate-600 p-3 rounded-lg hover:border-emerald-500/50 transition-colors cursor-pointer group" onClick={() => handleSetEnvironment(env)}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-slate-100 group-hover:text-emerald-300 transition-colors">{env.name}</h4>
+                                                <span className="bg-slate-800 text-xs px-1.5 py-0.5 rounded border border-slate-600">T{env.tier}</span>
+                                            </div>
+                                            <div className="text-xs text-slate-400 mb-2 flex gap-2">
+                                                <span>{env.type}</span>
+                                                <span>•</span>
+                                                <span>Diff {env.difficulty}</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {env.impulses.slice(0, 2).map((imp, i) => (
+                                                    <span key={i} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 rounded italic truncate max-w-full">
+                                                        {imp}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <button className="w-full bg-slate-600 hover:bg-emerald-700 text-white text-xs font-bold py-1 rounded transition-colors mt-3">
+                                                Set Environment
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full text-center py-8 text-slate-500">
+                                        No environments found matching "{environmentSearch}"
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
