@@ -27,17 +27,12 @@ export const GAME_RULES: GameRule[] = [
         category: "Condition",
         description: "Can be cleared by making an action roll (Difficulty set by GM) or by the GM describing how an adversary clears it."
     },
-    {
-        name: "Dazed",
-        category: "Condition",
-        description: "You have disadvantage on your next action roll. Often caused by disorienting effects or magic."
-    },
 
     // --- CORE MECHANICS ---
     {
         name: "The Spotlight",
         category: "Mechanic",
-        description: "The focus of the scene. It moves organically between PCs. The GM takes the spotlight when a PC rolls with Fear or fails. If playing tactically, GM may use action tokens."
+        description: "The focus of the scene. It moves organically between PCs. The GM takes the spotlight when a PC rolls with Fear or fails."
     },
     {
         name: "Duality Dice",
@@ -77,7 +72,7 @@ export const GAME_RULES: GameRule[] = [
     {
         name: "Group Action Roll",
         category: "Mechanic",
-        description: "Leader makes Action Roll. Others make Reaction Rolls. Leader gets +1 to total per success, -1 per failure."
+        description: "Leader makes Action Roll. Others make Reaction Rolls using relevant traits. Leader gets +1 to total per success, -1 per failure."
     },
 
     // --- MAGIC ---
@@ -90,11 +85,6 @@ export const GAME_RULES: GameRule[] = [
         name: "Grimoires",
         category: "Magic",
         description: "Domain cards that contain multiple spells. You usually can only have one active effect from a Grimoire at a time unless specified otherwise."
-    },
-    {
-        name: "Marking Stress for Magic",
-        category: "Magic",
-        description: "Many spells require marking Stress to activate. If you have no Stress slots left, you must mark HP instead."
     },
 
     // --- COMBAT & MOVEMENT ---
@@ -116,7 +106,7 @@ export const GAME_RULES: GameRule[] = [
     {
         name: "Damage Thresholds",
         category: "Combat",
-        description: "Damage < Major: Minor (Mark 1 HP). Damage < Severe: Major (Mark 2 HP). Damage ≥ Severe: Severe (Mark 3 HP). (Optional Massive: ≥ 2x Severe: Mark 4 HP)."
+        description: "Damage < Major: Minor (Mark 1 HP). Damage < Severe: Major (Mark 2 HP). Damage ≥ Severe: Severe (Mark 3 HP)."
     },
     {
         name: "Armor Slots",
@@ -139,14 +129,19 @@ export const GAME_RULES: GameRule[] = [
         description: "Permanent consequence of Avoiding Death. Cross out a Hope slot permanently. Lose last Hope slot = Retire/Die."
     },
     {
-        name: "Improvised Weapons",
-        category: "Combat",
-        description: "Usually deal d6 damage (Physical). Burden and Range determined by GM based on object size."
-    },
-    {
         name: "Falling Damage",
         category: "Combat",
-        description: "Short Fall: Minor Dmg. Medium Fall: Major Dmg. Long Fall: Severe Dmg. Extreme Fall: Fatal or Massive Dmg."
+        description: "Very Close Fall: 1d10+3 phy. Close Fall: 1d20+5 phy. Far/Very Far Fall: 1d100+15 phy (or death)."
+    },
+    {
+        name: "Collision Damage",
+        category: "Combat",
+        description: "If a character collides with an object or character at dangerous speed, they take 1d20+5 direct physical damage."
+    },
+    {
+        name: "Improvised Weapons",
+        category: "Combat",
+        description: "Usually deal d6 physical damage. Burden and Range determined by GM based on object size."
     },
 
     // --- EQUIPMENT ---
@@ -158,7 +153,7 @@ export const GAME_RULES: GameRule[] = [
     {
         name: "Gold",
         category: "Equipment",
-        description: "Abstracted wealth. 10 Handfuls = 1 Bag. 10 Bags = 1 Chest. (Optional: 10 Coins = 1 Handful)."
+        description: "Abstracted wealth. 10 Handfuls = 1 Bag. 10 Bags = 1 Chest."
     },
     {
         name: "Burden",
@@ -197,28 +192,28 @@ export const GAME_RULES: GameRule[] = [
     {
         name: "Projects",
         category: "Downtime",
-        description: "Long-term goals progressed during Long Rests (uses Countdowns). GM determines progress/roll."
+        description: "Long-term goals progressed during Long Rests using Countdowns. GM determines progress/roll."
     },
 
     // --- GM MECHANICS ---
     {
-        name: "Countdowns",
+        name: "Fate Roll",
         category: "GM Mechanics",
-        description: "Dice (d4 to d12) tracking impending events. Tick down (reduce value by 1) on failures or time passing. Trigger at 0. Reset or remove after trigger."
+        description: "A roll using only the Hope or Fear die to determine chance outcomes (Luck/Fortune). Does not generate Hope/Fear currency."
     },
     {
-        name: "Environmental Damage",
+        name: "Countdowns",
         category: "GM Mechanics",
-        description: "Hazards deal direct damage tiers. Minor (e.g., burning coals), Major (e.g., falling rock), Severe (e.g., lava, crushing trap)."
+        description: "Dice (d4 to d12) tracking impending events. Tick down (reduce value by 1) on failures or time passing. Trigger at 0."
+    },
+    {
+        name: "Adversary Rolls",
+        category: "GM Mechanics",
+        description: "Uses d20 + Modifier vs PC Evasion. Crit Success on Natural 20 (deals max damage + roll). GM can spend Fear to add Adversary Experience to the roll."
     },
     {
         name: "Fear Moves",
         category: "GM Mechanics",
         description: "GM spends Fear tokens to: Activate Adversary special abilities, Interrupt PC turn, Add reinforcements, Alter environment, or trigger a Countdown."
-    },
-    {
-        name: "Action Tokens (Optional)",
-        category: "GM Mechanics",
-        description: "For tactical play: Each PC gets a token. Adversaries get tokens based on type/count. Spend to act. Refresh when all spent."
     }
 ];

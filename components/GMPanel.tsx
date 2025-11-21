@@ -35,6 +35,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const [isAdversaryModalOpen, setIsAdversaryModalOpen] = useState(false);
     const [isEnvironmentModalOpen, setIsEnvironmentModalOpen] = useState(false);
     const [adversarySearch, setAdversarySearch] = useState('');
+    const [adversaryTierFilter, setAdversaryTierFilter] = useState<number | 'All'>('All');
 
     // Load GM's campaigns
     useEffect(() => {
@@ -152,15 +153,26 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     }
     
     const filteredAdversaryTemplates = useMemo(() => {
-        if (!adversarySearch) return ADVERSARY_TEMPLATES;
-        const lowerQuery = adversarySearch.toLowerCase();
-        return ADVERSARY_TEMPLATES.filter(adv => 
-            adv.originalName.toLowerCase().includes(lowerQuery) || 
-            adv.type.toLowerCase().includes(lowerQuery) ||
-            adv.motives?.toLowerCase().includes(lowerQuery) ||
-            String(adv.tier) === lowerQuery
-        );
-    }, [adversarySearch]);
+        let result = ADVERSARY_TEMPLATES;
+
+        // Filter by Tier Button
+        if (adversaryTierFilter !== 'All') {
+            result = result.filter(adv => adv.tier === adversaryTierFilter);
+        }
+
+        // Filter by Search Text
+        if (adversarySearch) {
+            const lowerQuery = adversarySearch.toLowerCase();
+            result = result.filter(adv => 
+                adv.originalName.toLowerCase().includes(lowerQuery) || 
+                adv.type.toLowerCase().includes(lowerQuery) ||
+                adv.motives?.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        // Always Sort by Tier then Name for organization
+        return result.sort((a, b) => a.tier - b.tier || a.originalName.localeCompare(b.originalName));
+    }, [adversarySearch, adversaryTierFilter]);
 
     const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
 
@@ -601,6 +613,23 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                     </svg>
                                 </button>
                             </div>
+
+                            {/* Tier Filters */}
+                            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                                {['All', 1, 2, 3, 4].map(tier => (
+                                    <button
+                                        key={tier}
+                                        onClick={() => setAdversaryTierFilter(tier as any)}
+                                        className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                                            adversaryTierFilter === tier 
+                                            ? 'bg-red-600 text-white border-red-500' 
+                                            : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+                                        }`}
+                                    >
+                                        {tier === 'All' ? 'All Tiers' : `Tier ${tier}`}
+                                    </button>
+                                ))}
+                            </div>
                             
                             {/* Search Bar */}
                             <div className="mb-4 relative">
@@ -611,7 +640,7 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
                                 </div>
                                 <input 
                                     type="text" 
-                                    placeholder="Search by name, type, motive or tier..." 
+                                    placeholder="Search by name, type, motive..." 
                                     value={adversarySearch}
                                     onChange={(e) => setAdversarySearch(e.target.value)}
                                     className="block w-full pl-10 bg-slate-700 border border-slate-600 rounded-lg py-2 text-slate-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
