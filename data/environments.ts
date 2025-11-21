@@ -51,6 +51,19 @@ export const ENVIRONMENTS: Environment[] = [
             { name: "Fall", type: "Action", description: "Spend a Fear. A PC's handhold fails. If not saved, they fall (tick up countdown by 2) and take damage based on countdown progress (1d12 to 3d12).", questions: "How can you tell others have fallen here?" }
         ]
     },
+    {
+        name: "Grand Feast",
+        tier: 1,
+        type: "Social",
+        difficulty: 11,
+        impulses: ["Bring everyone together", "Celebrate a momentous occasion", "Encourage revelrous abandon"],
+        features: [
+            { name: "Loose Lips and Fast Friends", type: "Passive", description: "PCs have advantage on Presence rolls to socialize with other revelers.", questions: "What is everyone celebrating? Where's the party? Who's footing the bill?" },
+            { name: "Are You Not Entertained?", type: "Action", description: "Spend spotlight. PCs make action roll to perform/compete. Success becomes Honored Guest (claim one boon).", questions: "What does the host want to see or hear? What can they offer?" },
+            { name: "There's Always That One...", type: "Action", description: "Spend Fear to Trap a PC in conversation with an unpleasant person. Must succeed action roll to extricate.", questions: "What makes this dud so unpleasant?" },
+            { name: "Last Call", type: "Reaction", description: "Feast concludes. Clear Stress, gain Hope. Honored Guests clear HP + extra Hope. Overindulged must Strength Reaction or become Hungover (-1 penalty).", questions: "What crazy stories do the PCs share?" }
+        ]
+    },
     // TIER 2
     {
         name: "Haunted City",
@@ -75,6 +88,20 @@ export const ENVIRONMENTS: Environment[] = [
             { name: "Engraved Sigils", type: "Passive", description: "Knowledge Roll reveals these increase icy winds. Critical Success allows advantage to dispel.", questions: "Who laid this enchantment?" },
             { name: "Avalanche", type: "Action", description: "Spend a Fear. Agility/Strength Reaction. Fail: Knocked to Far, 2d20 phy damage, mark Stress. Success: Mark Stress.", questions: "How do PCs weather the avalanche?" },
             { name: "Icy Winds", type: "Reaction", description: "Countdown (Loop 4). Triggers: Strength Reaction or mark Stress. Cold weather gear gives advantage.", questions: "What body parts go numb first?" }
+        ]
+    },
+    {
+        name: "Heist",
+        tier: 2,
+        type: "Event",
+        difficulty: 14,
+        impulses: ["Make the party prepare", "Split them up", "Throw up obstacles", "Trap them inside"],
+        features: [
+            { name: "Prep Work", type: "Passive", description: "Prior to Heist, each PC makes action roll to gather info/assets. Success gains advantage/asset.", questions: "How does the PC gain this advantage?" },
+            { name: "Infiltration", type: "Passive", description: "Progress Countdown (12) vs Consequence Countdown (10). Advance on rolls.", questions: "What is the party going after?" },
+            { name: "Saw This Coming", type: "Passive", description: "1/session PC spends Hope to flashback/reveal prep work.", questions: "What did the PC prepare?" },
+            { name: "Exfiltration", type: "Reaction", description: "When Progress triggers, group action to escape. Fail: Mark Stress + 2d12 direct damage.", questions: "What makes getting out harder than getting in?" },
+            { name: "Sound the Alarm", type: "Reaction", description: "When Consequence triggers, summon Tier 2 adversaries equal to PCs. High Alert (+1 Diff).", questions: "What makes these adversaries suited to guard this?" }
         ]
     },
     // TIER 3
@@ -104,6 +131,20 @@ export const ENVIRONMENTS: Environment[] = [
             { name: "Choking Ash", type: "Reaction", description: "Countdown (Loop 6). Triggers: Strength/Instinct Reaction or 4d6+5 direct phy damage.", questions: "What hallucinations does the ash induce?" }
         ]
     },
+    {
+        name: "Crystal Wasteland",
+        tier: 3,
+        type: "Traversal",
+        difficulty: 16,
+        impulses: ["Cut them to their core", "Fracture their psyches", "Show true reflection"],
+        features: [
+            { name: "Harmonic Resonance", type: "Passive", description: "PC can Attune (Spellcast Roll) for advantage on spells inside wasteland.", questions: "How does attunement alter sensory experience?" },
+            { name: "Gravitational Anomalies", type: "Action", description: "Spend Fear. Alter gravity. Knowledge Reaction or 3d8+4 phy dmg + thrown.", questions: "What does it feel like as body fights to re-establish equilibrium?" },
+            { name: "Arcane Reflection", type: "Action", description: "Spend Fear. PCs glimpse reflection. Fate Roll. Success: Replace Experience. Fail: Mark Stress + GM Fear.", questions: "Who do PCs see on the other side?" },
+            { name: "Razor-Sharp Terrain", type: "Reaction", description: "On fail navigate, Finesse Reaction. Fail: Crystallizing Countdown (1) (-1 Evasion/tick).", questions: "What does the crystal look like as it grows?" },
+            { name: "Psychic Shuffle", type: "Reaction", description: "Long Rest: Spend Fear to swap character sheets. Regain with Knowledge Roll.", questions: "How does it feel being in someone else's skin?" }
+        ]
+    },
     // TIER 4
     {
         name: "Imperial Court",
@@ -127,6 +168,20 @@ export const ENVIRONMENTS: Environment[] = [
             { name: "Impossible Architecture", type: "Passive", description: "Movement requires Progress Countdown (8). Failure costs Stress.", questions: "What does it feel like to move here?" },
             { name: "Unmaking", type: "Action", description: "Spend Fear. Strength Reaction: Fail takes 4d10 direct magic damage.", questions: "What glimpse of other worlds do you see?" },
             { name: "Outer Realms Predators", type: "Action", description: "Spend Fear to summon Abomination/Corruptor/Thralls.", questions: "What remnants of the world do they cast aside?" }
+        ]
+    },
+    {
+        name: "Convergence, The City of Portals",
+        tier: 4,
+        type: "Social",
+        difficulty: 20,
+        impulses: ["Confront with alien customs", "Dazzle with infinite variety", "Tempt with impossible"],
+        features: [
+            { name: "Impossibilities Abound", type: "Passive", description: "Disadvantage on rolls to influence beings unless PC has leverage/knowledge.", questions: "What strange customs do they practice?" },
+            { name: "Into the Multiverse", type: "Passive", description: "Has portals to every plane.", questions: "Where does the party want to go?" },
+            { name: "Everything Everywhere All at Once", type: "Passive", description: "Find item with Instinct/Presence. Crit: Perfect item, weird price. Success/Hope: Perfect item, fair price. Success/Fear: Perfect item, can't afford. Fail: Mark Stress (goose chase).", questions: "Who has the item?" },
+            { name: "Don't Make Waves", type: "Passive", description: "Countdown (6). Ticks on upsetting equilibrium. Triggers: Wanted. Roll Fear = Summon 1d4 Enforcers.", questions: "What has the party done to draw attention?" },
+            { name: "An Offer You Can't Refuse", type: "Action", description: "Spend Fear. Faction offers solution for allegiance. Refuse: Mark Stress, banned from faction.", questions: "Which faction offers support?" }
         ]
     }
 ];
