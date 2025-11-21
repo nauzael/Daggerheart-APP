@@ -196,69 +196,6 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         ]
     },
     {
-        originalName: "Mountain Troll",
-        tier: 1,
-        type: "Solo",
-        difficulty: 14,
-        thresholds: { major: 8, severe: 15 },
-        hp: { max: 8, current: 8 },
-        stress: { max: 3, current: 0 },
-        attack: { modifier: 2, name: "Skull Flail", range: "Very Close", damage: "1d10+3 phy" },
-        motives: "Ambush from behind, attack from above, bellow, smash enemies against the rocks, throw large boulders",
-        features: [
-            { name: "Relentless (3)", type: "Passive", description: "The Troll can be spotlighted up to three times per GM turn. Spend Fear as usual to spotlight them." },
-            { name: "Stolen Armor", type: "Passive", description: "When combat begins, active a Countdown equal to the number of PCs. Whenever the Troll takes damage, tick down the countdown and reduce the HP the Troll marks by 1. When it triggers, the Troll evolves into an Enraged Mountain Troll." },
-            { name: "Flail Swipe", type: "Action", description: "Mark a Stress to make an attack against all targets in front of the Troll within Very Close range. On a success, the Troll deals 2d10+3 instead of its normal damage. Cannot be used while evolved." },
-            { name: "Enraged Evolution", type: "Passive", description: "Gains +1 Difficulty. Attack becomes Claw Swipe (1d8+1 phy). Can use Double Swipe Action (Spend Fear to move to Close and attack target in Melee twice. Combine damage and target loses Hope)." }
-        ]
-    },
-    {
-        originalName: "Rabble Mawb",
-        tier: 1,
-        type: "Horde (3/HP)",
-        difficulty: 8,
-        thresholds: { major: 4, severe: 8 },
-        hp: { max: 4, current: 4 },
-        stress: { max: 2, current: 0 },
-        attack: { modifier: -2, name: "Chomp", range: "Melee", damage: "1d6+3 phy" },
-        motives: "Chitter and chew, clump together, roll around",
-        features: [
-            { name: "Horde (1d4)", type: "Passive", description: "When the Rabble Mawb has marked half or more of their HP, their standard attack deals 1d4 physical damage instead." },
-            { name: "Come Back Worse", type: "Reaction", description: "When defeated, spend a Fear to bring this Rabble Mawb back to life. Gains +X bonus to rolls, where X is number of times used." }
-        ]
-    },
-    {
-        originalName: "Redcap Candlemaker",
-        tier: 1,
-        type: "Leader",
-        difficulty: 13,
-        thresholds: { major: 7, severe: 13 },
-        hp: { max: 6, current: 6 },
-        stress: { max: 3, current: 0 },
-        attack: { modifier: 3, name: "Burning Candlestick", range: "Very Close", damage: "1d10+2 mag" },
-        motives: "Cast long shadows, keep out of the fray, show them the light",
-        features: [
-            { name: "Hand of Glory", type: "Passive", description: "When appears, put 5 tokens on card. Remove one when marking HP. While has tokens, Candlemaker is Hidden." },
-            { name: "Torchbearer", type: "Passive", description: "While has tokens, any Redcap within Close range gains +1 to damage rolls." },
-            { name: "Dance in the Flames", type: "Action", description: "Spend a token. Fireball at Far point. Very Close radius Agility Reaction. Fail: 2d10 mag dmg. Success: Half damage." }
-        ]
-    },
-    {
-        originalName: "Redcap Butcher",
-        tier: 1,
-        type: "Standard",
-        difficulty: 12,
-        thresholds: { major: 5, severe: 10 },
-        hp: { max: 4, current: 4 },
-        stress: { max: 3, current: 0 },
-        attack: { modifier: 1, name: "Meat Cleaver", range: "Melee", damage: "1d8+1 phy" },
-        motives: "Give them the runaround, grin disconcertingly, hack and slash, scramble",
-        features: [
-            { name: "Chop Happy", type: "Action", description: "Mark a Stress to attack up to three targets within range. For each target who marks a HP, you gain a Fear." },
-            { name: "Knife Thrower", type: "Action", description: "Mark a Stress to attack target in Far. Advantage if Hidden." }
-        ]
-    },
-    {
         originalName: "Archer Guard",
         tier: 1,
         type: "Ranged",
@@ -865,7 +802,7 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         motives: "Consume flesh, hunger, maul",
         features: [
             { name: "Horde (1d4+2)", type: "Passive", description: "At half HP, attack deals 1d4+2 damage." },
-            { name: "Overwhelm", type: "Reaction", description: "When marking HP from melee attack, mark Stress to attack back." }
+            { name: "Overwhelm", type: "Reaction", description: "When marking HP from Melee attack, mark Stress to attack back." }
         ]
     },
 
@@ -882,8 +819,8 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         motives: "Stick together, survive, volley fire",
         features: [
             { name: "Horde (1d6+3)", type: "Passive", description: "At half HP, attack deals 1d6+3 damage." },
-            { name: "Focused Volley", type: "Action", description: "Spend Fear. Attack point in Far with advantage against all in Close. 1d10+4 phy dmg." },
-            { name: "Suppressing Fire", type: "Action", description: "Mark Stress. Target area in Far. Movement there triggers Agility Reaction (Failure: 2d6+3 phy dmg)." }
+            { name: "Focused Volley", type: "Action", description: "Spend Fear to attack area in Far. Advantage vs targets in Close of point. Success: 1d10+4 phy." },
+            { name: "Suppressing Fire", type: "Action", description: "Mark Stress. Point in Far becomes hazard. Agility Reaction or 2d6+3 phy." }
         ]
     },
     {
@@ -895,10 +832,10 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         hp: { max: 1, current: 1 },
         stress: { max: 1, current: 0 },
         attack: { modifier: -1, name: "Thrown Dagger", range: "Very Close", damage: "4 phy" },
-        motives: "Act reckless, kill, prove worth",
+        motives: "Act reckless, kill, prove their worth, show off",
         features: [
-             { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 dmg defeats an additional minion." },
-             { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 4 phy dmg each. Combine damage." }
+            { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 4 phy dmg each." }
         ]
     },
     {
@@ -912,9 +849,9 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         attack: { modifier: 3, name: "Poisoned Throwing Dagger", range: "Close", damage: "2d8+1 phy" },
         motives: "Anticipate, get paid, kill, taint food and water",
         features: [
-            { name: "Grindletooth Venom", type: "Passive", description: "Targets marking HP are Vulnerable until clear 1 HP." },
-            { name: "Out of Nowhere", type: "Passive", description: "Advantage on attacks if Hidden." },
-            { name: "Fumigation", type: "Action", description: "Drop smoke bomb. Close area Dizzied (Disadvantage on next roll)." }
+            { name: "Grindletooth Venom", type: "Passive", description: "Targets marking HP become Vulnerable until clearing HP." },
+            { name: "Out of Nowhere", type: "Passive", description: "Advantage on attacks while Hidden." },
+            { name: "Fumigation", type: "Action", description: "Smoke bomb in Close. Dizzies targets (disadvantage on next roll)." }
         ]
     },
     {
@@ -929,9 +866,9 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         motives: "Ambush, get out alive, kill, prepare for all scenarios",
         features: [
             { name: "Won't See It Coming", type: "Passive", description: "Deals direct damage while Hidden." },
-            { name: "Strike as One", type: "Action", description: "Mark Stress to spotlight other Assassins equal to unmarked Stress." },
-            { name: "The Subtle Blade", type: "Reaction", description: "On hit against Vulnerable, Spend Fear to deal Severe damage." },
-            { name: "Momentum", type: "Reaction", description: "On successful attack against PC, gain Fear." }
+            { name: "Strike as One", type: "Action", description: "Mark Stress to spotlight number of other Assassins equal to unmarked Stress." },
+            { name: "The Subtle Blade", type: "Reaction", description: "Success vs Vulnerable target: Spend Fear to deal Severe damage instead of standard." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
         ]
     },
     {
@@ -945,10 +882,10 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         attack: { modifier: 2, name: "Slam", range: "Melee", damage: "2d6+3 phy" },
         motives: "Change tactics, trample foes, wait in disguise",
         features: [
-            { name: "Relentless (2)", type: "Passive", description: "Can be spotlighted 2 times per GM turn." },
-            { name: "Randomized Tactics", type: "Action", description: "Mark Stress and roll d6 for move (Beam, Fire Jets, Trample, Gas, Clap, Whine)." },
-            { name: "Overcharge", type: "Reaction", description: "Mark Stress to add d6 to damage and gain Fear." },
-            { name: "Death Quake", type: "Reaction", description: "On death, all in Close make Instinct Reaction or take 2d8+1 mag dmg." }
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Randomized Tactics", type: "Action", description: "Mark Stress & Roll d6 for effect: 1.Beam (2d10+2 mag), 2.Fire Jets (2d8 phy all in Close), 3.Trample (1d6+5 phy+Vuln), 4.Gas (3 Stress), 5.Clap (Str React or Vuln), 6.Psionic (2d4+9 direct mag)." },
+            { name: "Overcharge", type: "Reaction", description: "Mark Stress before dmg roll to add d6. Gain Fear. Spotlight again." },
+            { name: "Death Quake", type: "Reaction", description: "On death, explode. Instinct React or 2d8+1 mag." }
         ]
     },
     {
@@ -962,10 +899,10 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         attack: { modifier: 2, name: "Energy Blast", range: "Close", damage: "2d8+3 mag" },
         motives: "Cackle, consume magic, serve creator",
         features: [
-            { name: "Levitation", type: "Passive", description: "Levitates, can't be Restrained." },
+            { name: "Levitation", type: "Passive", description: "Cannot be Restrained." },
             { name: "Wards", type: "Passive", description: "Resistant to magic damage." },
-            { name: "Magic Burst", type: "Action", description: "Mark Stress to attack all in Close. Success: 2d6+4 mag dmg." },
-            { name: "Siphon Magic", type: "Action", description: "Spend Fear to attack Spellcaster in Very Close. Success: Target marks 1d4 Stress, Skull clears that many." }
+            { name: "Magic Burst", type: "Action", description: "Mark Stress. Attack all in Close. Success: 2d6+4 mag dmg." },
+            { name: "Siphon Magic", type: "Action", description: "Spend Fear. Attack Spellcaster in Very Close. Success: Target marks 1d4 Stress, Skull clears same. Spotlight again." }
         ]
     },
     {
@@ -979,211 +916,1159 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         attack: { modifier: 0, name: "Spears", range: "Very Close", damage: "6 phy" },
         motives: "Follow orders, gang up, survive",
         features: [
-             { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 dmg defeats an additional minion." },
-             { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 6 phy dmg each. Combine damage." }
+            { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 6 phy dmg each." }
         ]
     },
     {
-        originalName: "Doppelhünd",
+        originalName: "Courtesan",
+        tier: 2,
+        type: "Social",
+        difficulty: 13,
+        thresholds: { major: 7, severe: 13 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: -3, name: "Dagger", range: "Melee", damage: "1d4+3 phy" },
+        motives: "Entice, maneuver, secure patrons",
+        features: [
+            { name: "Searing Glance", type: "Reaction", description: "When PC in Close makes Presence Roll, Mark Stress. Target fail: Mark 2 Stress + Vulnerable. Target success: Mark Stress." }
+        ]
+    },
+    {
+        originalName: "Cult Adept",
+        tier: 2,
+        type: "Support",
+        difficulty: 14,
+        thresholds: { major: 9, severe: 18 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 2, name: "Rune-Covered Rod", range: "Far", damage: "2d4+3 mag" },
+        motives: "Curry favor, hinder foes, uncover knowledge",
+        features: [
+            { name: "Enervating Blast", type: "Action", description: "Spend Fear. Attack target. Success: Mark Stress." },
+            { name: "Shroud of the Fallen", type: "Action", description: "Mark Stress. Ally in Close has Resistance to all dmg until Adept marks last HP." },
+            { name: "Shadow Shackles", type: "Action", description: "Spend Fear. Point in Far. Targets in Close of point Restrained (Str/Instinct break or spend Hope)." },
+            { name: "Fear Is Fuel", type: "Reaction", description: "2/scene: PC rolls Failure with Fear -> Clear Stress." }
+        ]
+    },
+    {
+        originalName: "Cult Fang",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 15,
+        thresholds: { major: 9, severe: 17 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 2, name: "Long Knife", range: "Melee", damage: "2d8+4 phy" },
+        motives: "Capture sacrifices, isolate prey, rise in the ranks",
+        features: [
+            { name: "Shadow's Embrace", type: "Passive", description: "Climb walls. Mark Stress to teleport shadow-to-shadow in Far." },
+            { name: "Pick Off the Straggler", type: "Action", description: "Mark Stress. Target in Melee makes Instinct React. Fail: Mark 2 Stress, teleport with Fang to Far, Vulnerable." }
+        ]
+    },
+    {
+        originalName: "Cult Initiate",
+        tier: 2,
+        type: "Minion",
+        difficulty: 13,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 1, current: 0 },
+        attack: { modifier: 0, name: "Ritual Dagger", range: "Melee", damage: "5 phy" },
+        motives: "Follow orders, gain power, seek forbidden knowledge",
+        features: [
+            { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 5 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "Demonic Hound Pack",
+        tier: 2,
+        type: "Horde (1/HP)",
+        difficulty: 15,
+        thresholds: { major: 11, severe: 23 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 0, name: "Claws and Fangs", range: "Melee", damage: "2d8+2 phy" },
+        motives: "Cause fear, consume flesh, please masters",
+        features: [
+            { name: "Horde (2d4+1)", type: "Passive", description: "At half HP, attack deals 2d4+1 damage." },
+            { name: "Dreadhowl", type: "Action", description: "Mark Stress. All in Very Close lose Hope (or mark 2 Stress)." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Electric Eels",
+        tier: 2,
+        type: "Horde (2/HP)",
+        difficulty: 14,
+        thresholds: { major: 10, severe: 20 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 0, name: "Shocking Bite", range: "Melee", damage: "2d6+4 phy" },
+        motives: "Avoid larger predators, shock prey, tear apart",
+        features: [
+            { name: "Horde (2d4+1)", type: "Passive", description: "At half HP, attack deals 2d4+1 damage." },
+            { name: "Paralyzing Shock", type: "Action", description: "Mark Stress. Attack all in Very Close. Gain Fear for each target marking HP." }
+        ]
+    },
+    {
+        originalName: "Elite Soldier",
+        tier: 2,
+        type: "Standard",
+        difficulty: 15,
+        thresholds: { major: 9, severe: 18 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 1, name: "Spear", range: "Very Close", damage: "2d8+4 phy" },
+        motives: "Gain glory, keep order, make alliances",
+        features: [
+            { name: "Reinforce", type: "Action", description: "Mark Stress. Move to ally. Attack target in Very Close. Success: 2d10+2 phy dmg + ally clears Stress." },
+            { name: "Vassal's Loyalty", type: "Reaction", description: "Mark Stress to take damage for noble ally in Very Close." }
+        ]
+    },
+    {
+        originalName: "Failed Experiment",
+        tier: 2,
+        type: "Standard",
+        difficulty: 13,
+        thresholds: { major: 12, severe: 23 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 1, name: "Bite and Claw", range: "Melee", damage: "2d6+5 phy" },
+        motives: "Devour, hunt, track",
+        features: [
+            { name: "Warped Fortitude", type: "Passive", description: "Resistant to physical damage." },
+            { name: "Overwhelm", type: "Passive", description: "Deals double damage if target has other adversaries in Very Close." },
+            { name: "Lurching Lunge", type: "Action", description: "Mark Stress to spotlight as additional GM move instead of spending Fear." }
+        ]
+    },
+    {
+        originalName: "Giant Beastmaster",
+        tier: 2,
+        type: "Leader",
+        difficulty: 16,
+        thresholds: { major: 12, severe: 24 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 2, name: "Longbow", range: "Far", damage: "2d8+4 phy" },
+        motives: "Command, make a living, maneuver, pin down, protect companion animals",
+        features: [
+            { name: "Two as One", type: "Passive", description: "When spotlighted, also spotlight Tier 1 animal ally." },
+            { name: "Pinning Strike", type: "Action", description: "Attack. Success: Mark Stress to pin to surface (Restrained until Finesse/Strength roll)." },
+            { name: "Deadly Companion", type: "Action", description: "2/scene: Summon Tier 1 animal (Bear/Wolf) in Close. Spotlight immediately." }
+        ]
+    },
+    {
+        originalName: "Giant Brawler",
+        tier: 2,
+        type: "Bruiser",
+        difficulty: 15,
+        thresholds: { major: 14, severe: 28 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 2, name: "Warhammer", range: "Very Close", damage: "2d12+3 phy" },
+        motives: "Make a living, overwhelm, slam, topple",
+        features: [
+            { name: "Battering Ram", type: "Action", description: "Mark Stress to charge/smash object. Shrapnel hits Very Close targets (Agility React or 2d4+3 phy)." },
+            { name: "Bloody Reprisal", type: "Reaction", description: "When marking 2+ HP from Very Close attack, attack back dealing 2d6+15 phy." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Giant Recruit",
+        tier: 2,
+        type: "Minion",
+        difficulty: 13,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 2, current: 0 },
+        attack: { modifier: 1, name: "Warhammer", range: "Very Close", damage: "5 phy" },
+        motives: "Batter, make a living, overwhelm, terrify",
+        features: [
+            { name: "Minion (7)", type: "Passive", description: "Defeated on any damage. Every 7 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 5 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "Giant Eagle",
         tier: 2,
         type: "Skulk",
         difficulty: 14,
-        thresholds: { major: 9, severe: 17 },
+        thresholds: { major: 8, severe: 19 },
         hp: { max: 4, current: 4 },
-        stress: { max: 5, current: 0 },
-        attack: { modifier: 3, name: "Toothy Arms", range: "Very Close", damage: "2d8+2 phy" },
-        motives: "Ambush prey, kill for sport, play with food, trick and deceive",
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 1, name: "Claws and Beak", range: "Very Close", damage: "2d6+3 phy" },
+        motives: "Hunt prey, stay mobile, strike decisively",
         features: [
-            { name: "Blink Beast", type: "Passive", description: "Creates a duplicate. Attackers roll d6 to target real (even) or fake (odd). Fake attacks fail. Real hit dispels fake until Fear spent." },
-            { name: "Double Lash", type: "Reaction", description: "When attacking, mark Stress to make additional attack. Combine damage if same target." }
+            { name: "Flight", type: "Passive", description: "Flying adds +3 Difficulty." },
+            { name: "Deadly Dive", type: "Action", description: "Mark Stress. Attack Far target. Success: 2d10+2 phy + Knockdown/Vulnerable." },
+            { name: "Take Off", type: "Action", description: "Attack Very Close target. Success: 2d4+3 phy. Agility React or Restrained and lifted to Very Far up." },
+            { name: "Deadly Drop", type: "Action", description: "Drop Restrained target. Fall takes 2d20 phy unless saved." }
         ]
     },
     {
-        originalName: "Dragon Knight",
-        tier: 2,
-        type: "Bruiser",
-        difficulty: 15,
-        thresholds: { major: 15, severe: 30 },
-        hp: { max: 5, current: 5 },
-        stress: { max: 3, current: 0 },
-        attack: { modifier: 2, name: "Lance", range: "Very Close", damage: "2d12+3 phy" },
-        motives: "Exploit an opening, get some distance, knock off-balance, strike from above",
-        features: [
-            { name: "High Ground", type: "Passive", description: "+2 to attacks when attacking from above." },
-            { name: "Enhanced Critical", type: "Passive", description: "Crits on 19-20." },
-            { name: "Leaping Strike", type: "Action", description: "Mark Stress. Move Far to Melee. Attack with +1d12 dmg. Hit: Target marks Armor Slot without benefit." }
-        ]
-    },
-    {
-        originalName: "Gargoyle",
-        tier: 2,
-        type: "Bruiser",
-        difficulty: 13,
-        thresholds: { major: 14, severe: 28 },
-        hp: { max: 8, current: 8 },
-        stress: { max: 2, current: 0 },
-        attack: { modifier: 2, name: "Stone Claws", range: "Melee", damage: "2d10+3 phy" },
-        motives: "Hide in plain sight, overwatch, swoop down",
-        features: [
-            { name: "Stone Body", type: "Passive", description: "Resistant to physical damage." },
-            { name: "Just a Statue", type: "Passive", description: "Indistinguishable from statue until acts or Instinct Roll." },
-            { name: "Swooping Strike", type: "Action", description: "Move straight line in Far. Attack one target along path." }
-        ]
-    },
-    {
-        originalName: "Gobstalker",
+        originalName: "Gorgon",
         tier: 2,
         type: "Solo",
         difficulty: 15,
-        thresholds: { major: 10, severe: 20 },
-        hp: { max: 8, current: 8 },
-        stress: { max: 6, current: 0 },
-        attack: { modifier: 2, name: "Bite", range: "Melee", damage: "2d6+3 phy" },
-        motives: "Ambush, dispose of rivals, seek riches, use magic at long range",
+        thresholds: { major: 13, severe: 25 },
+        hp: { max: 9, current: 9 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 4, name: "Sunsear Shortbow", range: "Far", damage: "2d20+3 mag" },
+        motives: "Corner, hit-and-run, petrify, seek vengeance",
         features: [
-            { name: "Relentless (3)", type: "Passive", description: "Can be spotlighted 3 times per GM turn." },
-            { name: "Anti-mystica-halitosis", type: "Passive", description: "Negates magical effects in front within Close range." },
-            { name: "Eyestalks", type: "Action", description: "Mark Stress to attack Far. Hit: Spend Fear for random ray effect (Beguile, Corrode, Doom, Hypnosis, Paralyze, Petrify, Push, Sear, Slow, Terrify)." }
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Sunsear Arrows", type: "Passive", description: "Successful attack makes target Glowing (No Hidden, adv on attacks against)." },
+            { name: "Crown of Serpents", type: "Action", description: "Attack in Melee. Success: Mark Stress to deal 2d10+4 phy + target marks Stress." },
+            { name: "Petrifying Gaze", type: "Reaction", description: "Spend Fear when damaged in Close. Attacker Instinct React. Fail: Mark HP + Petrify Countdown (4). Triggers: Death Move." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Juvenile Flickerfly",
+        tier: 2,
+        type: "Solo",
+        difficulty: 14,
+        thresholds: { major: 13, severe: 26 },
+        hp: { max: 10, current: 10 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Wing Slash", range: "Very Close", damage: "2d10+4 phy" },
+        motives: "Collect shiny things, hunt, swoop",
+        features: [
+            { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
+            { name: "Peerless Accuracy", type: "Passive", description: "Roll d6 before attack. 4+: Target's Evasion halved." },
+            { name: "Mind Dance", type: "Action", description: "Mark Stress. Targets in Close make Instinct React. Fail: Gain Fear + Learn one fear." },
+            { name: "Hallucinatory Breath", type: "Reaction", description: "Countdown (Loop 1d6). Ticks on dmg. Trigger: Gas in Far. Instinct React or Hallucinations (Disadvantage + Mark Stress/Lose Hope)." }
+        ]
+    },
+    {
+        originalName: "Knight of the Realm",
+        tier: 2,
+        type: "Leader",
+        difficulty: 15,
+        thresholds: { major: 13, severe: 26 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 4, name: "Longsword", range: "Melee", damage: "2d10+4 phy" },
+        motives: "Run down, seek glory, show dominance",
+        features: [
+            { name: "Chevalier", type: "Passive", description: "+2 Difficulty while mounted. Severe dmg dismounts." },
+            { name: "Heavily Armored", type: "Passive", description: "Reduce physical damage by 3." },
+            { name: "Cavalry Charge", type: "Action", description: "Mounted only. Move Far + Attack. Success: 2d8+4 phy + Target marks Stress." },
+            { name: "For the Realm!", type: "Action", description: "Mark Stress. Spotlight 1d4+1 allies. Their attacks deal half dmg." }
+        ]
+    },
+    {
+        originalName: "Masked Thief",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 14,
+        thresholds: { major: 8, severe: 17 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Backsword", range: "Melee", damage: "2d8+3 phy" },
+        motives: "Evade, hide, pilfer, profit",
+        features: [
+            { name: "Quick Hands", type: "Action", description: "Attack target in Melee. Success: 1d8+2 phy + Steal item." },
+            { name: "Escape Plan", type: "Action", description: "Mark Stress. Reveal snare trap. Agility React (13) or hung upside down (Restrained/Vulnerable)." }
+        ]
+    },
+    {
+        originalName: "Merchant Baron",
+        tier: 2,
+        type: "Social",
+        difficulty: 15,
+        thresholds: { major: 9, severe: 19 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: -2, name: "Rapier", range: "Melee", damage: "1d6+2 phy" },
+        motives: "Abuse power, gather resources, mobilize minions",
+        features: [
+            { name: "Everyone Has a Price", type: "Action", description: "Spend Fear. Offer bargain. Presence React (17) or mark 2 Stress/take deal." },
+            { name: "The Best Muscle Money Can Buy", type: "Action", description: "1/scene: Mark Stress to summon 1d4+1 Tier 1 adversaries in Far." }
+        ]
+    },
+    {
+        originalName: "Minotaur Wrecker",
+        tier: 2,
+        type: "Bruiser",
+        difficulty: 16,
+        thresholds: { major: 14, severe: 27 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 2, name: "Battleaxe", range: "Very Close", damage: "2d8+5 phy" },
+        motives: "Consume, gore, navigate, overpower, pursue",
+        features: [
+            { name: "Ramp Up", type: "Passive", description: "Must spend Fear to spotlight. Attacks all targets within range." },
+            { name: "Charging Bull", type: "Action", description: "Mark Stress. Charge through group in Close. Attack all in path. Success: 2d6+8 phy + Knockback Very Far + extra dmg on collision." },
+            { name: "Gore", type: "Action", description: "Attack target in Very Close. Move to Melee. Success: 2d8 direct phy dmg." }
+        ]
+    },
+    {
+        originalName: "Mortal Hunter",
+        tier: 2,
+        type: "Leader",
+        difficulty: 16,
+        thresholds: { major: 15, severe: 27 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 5, name: "Tear at Flesh", range: "Very Close", damage: "2d12+1 phy" },
+        motives: "Devour, hunt, track",
+        features: [
+            { name: "Terrifying", type: "Passive", description: "On successful attack, all PCs in Far lose Hope + GM gains Fear." },
+            { name: "Deathlock", type: "Action", description: "Spend Fear. Curse target in Very Close. Attacks against them deal Direct Dmg. 1 at a time." },
+            { name: "Inevitable Death", type: "Action", description: "Mark Stress. Spotlight 1d4 allies. Their attacks deal half dmg." },
+            { name: "Rampage", type: "Reaction", description: "Countdown (Loop 1d6). Triggers: Move Far straight line. Attack all in path. Success: 2d8+2 phy." }
+        ]
+    },
+    {
+        originalName: "Royal Advisor",
+        tier: 2,
+        type: "Social",
+        difficulty: 14,
+        thresholds: { major: 8, severe: 15 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: -3, name: "Wand", range: "Far", damage: "1d4+3 phy" },
+        motives: "Curry favor, manufacture evidence, scheme",
+        features: [
+            { name: "Devastating Retort", type: "Passive", description: "PC rolling <17 on targeting action marks Stress." },
+            { name: "Bend Ears", type: "Action", description: "Mark Stress. Influence NPC in Melee." },
+            { name: "Scapegoat", type: "Action", description: "Spend Fear. Convince crowd target is responsible for problem. Hostile until Presence Roll (17)." }
+        ]
+    },
+    {
+        originalName: "Secret-Keeper",
+        tier: 2,
+        type: "Leader",
+        difficulty: 16,
+        thresholds: { major: 13, severe: 26 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Sigil-laden Staff", range: "Far", damage: "2d12 mag" },
+        motives: "Amass great power, plot, take command",
+        features: [
+            { name: "Seize Your Moment", type: "Action", description: "Spend 2 Fear. Spotlight 1d4 allies. Half damage." },
+            { name: "Our Master's Will", type: "Reaction", description: "Spotlight ally in Far -> Mark Stress to gain Fear." },
+            { name: "Summoning Ritual", type: "Reaction", description: "Countdown (6). Ticks down by HP marked. Trigger: Summon Minor Demon in Close." },
+            { name: "Fallen Hounds", type: "Reaction", description: "1/scene: Mark 2+ HP -> Mark Stress to summon Demonic Hound Pack in Close." }
+        ]
+    },
+    {
+        originalName: "Shark",
+        tier: 2,
+        type: "Bruiser",
+        difficulty: 14,
+        thresholds: { major: 14, severe: 28 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 2, name: "Toothy Maw", range: "Very Close", damage: "2d12+1 phy" },
+        motives: "Find the blood, isolate prey, target the weak",
+        features: [
+            { name: "Terrifying", type: "Passive", description: "On successful attack, all PCs in Far lose Hope + GM gains Fear." },
+            { name: "Rending Bite", type: "Passive", description: "Successful attack forces mark Armor Slot without benefit, or extra HP." },
+            { name: "Blood in the Water", type: "Reaction", description: "When creature in Close marks HP, mark Stress to spotlight Shark (Move Melee + Attack)." }
+        ]
+    },
+    {
+        originalName: "Siren",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 14,
+        thresholds: { major: 9, severe: 18 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 2, name: "Distended Jaw Bite", range: "Melee", damage: "2d6+3 phy" },
+        motives: "Consume, lure prey, subdue with song",
+        features: [
+            { name: "Captive Audience", type: "Passive", description: "Deals 2d10+1 dmg vs Entranced targets." },
+            { name: "Enchanting Song", type: "Action", description: "Spend Fear. All in Close Instinct React. Fail: Entranced (Vulnerable, No Act) until 2 Stress marked." }
+        ]
+    },
+    {
+        originalName: "Spectral Archer",
+        tier: 2,
+        type: "Ranged",
+        difficulty: 13,
+        thresholds: { major: 6, severe: 14 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 3, name: "Longbow", range: "Far", damage: "2d10+2 phy" },
+        motives: "Move through solid objects, stay out of the fray, rehash old battles",
+        features: [
+            { name: "Ghost", type: "Passive", description: "Resistant to physical. Mark Stress to move through objects." },
+            { name: "Pick Your Target", type: "Action", description: "Spend Fear. Attack PC clustered with 2 others. Success: 2d8+12 phy." }
+        ]
+    },
+    {
+        originalName: "Spectral Captain",
+        tier: 2,
+        type: "Leader",
+        difficulty: 16,
+        thresholds: { major: 13, severe: 26 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Longbow", range: "Far", damage: "2d10+3 phy" },
+        motives: "Move through solid objects, rally troops, rehash old battles",
+        features: [
+            { name: "Ghost", type: "Passive", description: "Resistant to physical. Mark Stress to move through objects." },
+            { name: "Unending Battle", type: "Action", description: "Spend 2 Fear to respawn 1d4+1 Spectral allies." },
+            { name: "Hold Fast", type: "Reaction", description: "Mark Stress to give allies +2 on Reaction Rolls." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Spectral Guardian",
+        tier: 2,
+        type: "Standard",
+        difficulty: 15,
+        thresholds: { major: 7, severe: 15 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 1, name: "Spear", range: "Very Close", damage: "2d8+1 phy" },
+        motives: "Move through solid objects, protect treasure, rehash old battles",
+        features: [
+            { name: "Ghost", type: "Passive", description: "Resistant to physical. Mark Stress to move through objects." },
+            { name: "Grave Blade", type: "Action", description: "Spend Fear. Attack Very Close. Success: 2d10+6 phy + Target marks Stress." }
+        ]
+    },
+    {
+        originalName: "Spy",
+        tier: 2,
+        type: "Social",
+        difficulty: 15,
+        thresholds: { major: 8, severe: 17 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: -2, name: "Dagger", range: "Melee", damage: "2d6+3 phy" },
+        motives: "Cut and run, disguise appearance, eavesdrop",
+        features: [
+            { name: "Gathering Secrets", type: "Action", description: "Spend Fear to reveal Spy knows a PC secret." },
+            { name: "Fly on the Wall", type: "Reaction", description: "Mark Stress to reveal Spy was listening. Gain 1d4 Fear if they escape." }
+        ]
+    },
+    {
+        originalName: "Stonewraith",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 13,
+        thresholds: { major: 11, severe: 22 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 3, name: "Bite and Claws", range: "Melee", damage: "2d8+6 phy" },
+        motives: "Defend territory, isolate prey, stalk",
+        features: [
+            { name: "Stonestrider", type: "Passive", description: "Move through stone/earth. Hidden/Immune while inside." },
+            { name: "Rocky Ambush", type: "Action", description: "Hidden -> Mark Stress to leap to Very Close target. Agility/Instinct React (15) or 2d8 phy + Restrained." },
+            { name: "Avalanche Roar", type: "Action", description: "Spend Fear. Cave-in (Close). Agility React (14) or 2d10 phy." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "War Wizard",
+        tier: 2,
+        type: "Ranged",
+        difficulty: 16,
+        thresholds: { major: 11, severe: 23 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 4, name: "Staff", range: "Far", damage: "2d10+4 mag" },
+        motives: "Develop new spells, seek power, shatter formations",
+        features: [
+            { name: "Battle Teleport", type: "Passive", description: "Mark Stress to teleport to Far before/after attack." },
+            { name: "Refresh Warding Sphere", type: "Action", description: "Mark Stress to refresh reaction." },
+            { name: "Eruption", type: "Action", description: "Spend Fear. Area in Far becomes hazard. Agility React (14) or 2d10 phy + thrown." },
+            { name: "Arcane Artillery", type: "Action", description: "Spend Fear. All targets Agility React. Fail: 2d12 mag. Success: Half." },
+            { name: "Warding Sphere", type: "Reaction", description: "When taking damage from Close, deal 2d6 mag to attacker. Must refresh to use again." }
         ]
     },
 
     // --- TIER 3 (LEVELS 5-7) ---
     {
-        originalName: "Chimera",
+        originalName: "Adult Flickerfly",
+        tier: 3,
+        type: "Solo",
+        difficulty: 17,
+        thresholds: { major: 20, severe: 35 },
+        hp: { max: 12, current: 12 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 3, name: "Wing Slash", range: "Very Close", damage: "3d20 phy" },
+        motives: "Collect shiny things, hunt, nest, swoop",
+        features: [
+            { name: "Relentless (4)", type: "Passive", description: "Spotlight 4 times/turn." },
+            { name: "Never Misses", type: "Passive", description: "Target Evasion halved." },
+            { name: "Deadly Flight", type: "Passive", description: "Moves Far." },
+            { name: "Whirlwind", type: "Action", description: "Spend Fear. Attack all in Very Close. Success: 3d8 direct phy." },
+            { name: "Mind Dance", type: "Action", description: "Mark Stress. Targets in Close Instinct React. Fail: Gain Fear + Learn fear." },
+            { name: "Hallucinatory Breath", type: "Action", description: "Countdown (Loop 1d6). Trigger: Gas in Far. Instinct React or Hallucination (3d8+3 direct mag + Lose 2 Hope)." },
+            { name: "Uncanny Reflexes", type: "Reaction", description: "Mark Stress to halve damage from Close attack." }
+        ]
+    },
+    {
+        originalName: "Demon of Avarice",
+        tier: 3,
+        type: "Support",
+        difficulty: 17,
+        thresholds: { major: 15, severe: 29 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 2, name: "Hungry Maw", range: "Melee", damage: "3d6+5 mag" },
+        motives: "Consume, fuel greed, sow dissent",
+        features: [
+            { name: "Money Talks", type: "Passive", description: "Attacks disadvantaged unless PC spends Gold. Gold heals Demon instead of HP damage." },
+            { name: "Numbers Must Go Up", type: "Passive", description: "Bonus to attack equal to gold held." },
+            { name: "Money Is Time", type: "Action", description: "Spend 3 Gold (or Fear) to spotlight 1d4+1 allies." }
+        ]
+    },
+    {
+        originalName: "Demon of Despair",
+        tier: 3,
+        type: "Skulk",
+        difficulty: 17,
+        thresholds: { major: 18, severe: 35 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Miasma Bolt", range: "Far", damage: "3d6+1 mag" },
+        motives: "Make fear contagious, stick to the shadows, undermine resolve",
+        features: [
+            { name: "Depths of Despair", type: "Passive", description: "Double damage to PCs with 0 Hope." },
+            { name: "Your Struggle Is Pointless", type: "Action", description: "Spend Fear. PCs in Far use d8 Hope Die until success/rest." },
+            { name: "Your Friends Will Fail You", type: "Reaction", description: "When PC fails with Fear, mark Stress to make other PCs in Close lose Hope." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Demon of Hubris",
+        tier: 3,
+        type: "Leader",
+        difficulty: 18,
+        thresholds: { major: 18, severe: 36 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 4, name: "Perfect Spear", range: "Very Close", damage: "3d10 phy" },
+        motives: "Condescend, declare premature victory, prove superiority",
+        features: [
+            { name: "Terrifying", type: "Passive", description: "On successful attack, PCs in Far lose Hope + GM gains Fear." },
+            { name: "Double or Nothing", type: "Passive", description: "PCs in Far can reroll Fear Die on failure. Fail again: Mark 2 Stress + Demon clears Stress." },
+            { name: "Unparalleled Skill", type: "Action", description: "Mark Stress to deal standard damage to target in Close." },
+            { name: "The Root of Villainy", type: "Action", description: "Spend Fear to spotlight 2 other Demons." },
+            { name: "You Pale in Comparison", type: "Reaction", description: "When PC fails roll in Close, they mark Stress." }
+        ]
+    },
+    {
+        originalName: "Demon of Jealousy",
+        tier: 3,
+        type: "Ranged",
+        difficulty: 17,
+        thresholds: { major: 17, severe: 30 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 4, name: "Psychic Assault", range: "Far", damage: "3d8+3 mag" },
+        motives: "Join in on others' success, take what belongs to others, hold grudges",
+        features: [
+            { name: "Unprotected Mind", type: "Passive", description: "Standard attack deals direct damage." },
+            { name: "My Turn", type: "Reaction", description: "When marking HP, spend Fear equal to HP to damage attacker equally." },
+            { name: "Rivalry", type: "Reaction", description: "When creature in Close takes damage from other, mark Stress to add d4." },
+            { name: "What's Yours Is Mine", type: "Reaction", description: "When PC takes Severe dmg in Very Close, Spend Fear. Finesse React or steal item." }
+        ]
+    },
+    {
+        originalName: "Demon of Wrath",
         tier: 3,
         type: "Bruiser",
         difficulty: 17,
         thresholds: { major: 22, severe: 40 },
-        hp: { max: 9, current: 9 },
+        hp: { max: 7, current: 7 },
         stress: { max: 5, current: 0 },
-        attack: { modifier: 5, name: "Claws", range: "Melee", damage: "3d12 phy" },
-        motives: "Play with their food, prowl their territory, reveal their bestial nature, slay cattle",
+        attack: { modifier: 3, name: "Fists", range: "Very Close", damage: "3d8+1 mag" },
+        motives: "Fuel anger, impress rivals, wreak havoc",
         features: [
-            { name: "Rending Jaws", type: "Passive", description: "Successful attack requires marking 2 Armor Slots to reduce damage." },
-            { name: "Breath of Fire", type: "Action", description: "Spend Fear. Up to 3 PCs in Close make Agility Reaction (20). Fail: 3d12 mag dmg." },
-            { name: "Serpent Strike", type: "Reaction", description: "When attacked in Very Close, mark Stress to attack back. Hit: 4d4+10 phy dmg + Poison (3 or lower on d6 marks Stress)." },
-            { name: "Double Claw", type: "Reaction", description: "After standard attack, mark Stress to attack again. Combine damage." }
+            { name: "Anger Unrelenting", type: "Passive", description: "Attacks deal direct damage." },
+            { name: "Battle Lust", type: "Action", description: "Spend Fear. PCs in Far use d20 as Fear Die." },
+            { name: "Retaliation", type: "Reaction", description: "When taking damage from Close, mark Stress to attack back." },
+            { name: "Blood and Souls", type: "Reaction", description: "Countdown (Loop 6). Ticks on PC violent action. Trigger: Summon 1d4 Minor Demons." }
         ]
     },
     {
-        originalName: "Fellmounted Shadow King",
+        originalName: "Dire Bat",
         tier: 3,
-        type: "Support",
+        type: "Skulk",
+        difficulty: 14,
+        thresholds: { major: 16, severe: 30 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 2, name: "Claws and Teeth", range: "Melee", damage: "2d6+7 phy" },
+        motives: "Dive-bomb, hide, protect leader",
+        features: [
+            { name: "Flying", type: "Passive", description: "+3 Difficulty while flying." },
+            { name: "Screech", type: "Action", description: "Mark Stress. Targets in front (Far) mark 1d4 Stress." },
+            { name: "Guardian", type: "Reaction", description: "When Vampire marks HP, mark Stress to move to attacker + Attack with Advantage (2d6+2 phy)." }
+        ]
+    },
+    {
+        originalName: "Dryad",
+        tier: 3,
+        type: "Leader",
         difficulty: 16,
         thresholds: { major: 24, severe: 38 },
         hp: { max: 8, current: 8 },
         stress: { max: 5, current: 0 },
-        attack: { modifier: 4, name: "Cursed Lance", range: "Close", damage: "3d10+6 phy/mag" },
-        motives: "Acquire magical items for master, inspire fear, patrol the skies",
+        attack: { modifier: 4, name: "Deadfall Shortbow", range: "Far", damage: "3d10+1 phy" },
+        motives: "Command, cultivate, drive out, preserve the forest",
         features: [
-            { name: "Light and Shadow", type: "Passive", description: "+1 to rolls in shadow/darkness, -1 in bright light." },
-            { name: "Relic Hunter", type: "Passive", description: "Advantage against PCs with magical gear." },
-            { name: "Hellsong", type: "Action", description: "Spend 2 Fear. PCs in Far make Presence Reaction (18). Fail: Mark Stress + lose Hope (or GM gains 2 Fear)." },
-            { name: "Air Support", type: "Reaction", description: "3/scene: Spend Fear to let ally in Far reroll missed attack with advantage." }
+            { name: "Bramble Patch", type: "Action", description: "Mark Stress. Create hazard area in Far. Dmg on act + Restrained (Finesse escape)." },
+            { name: "Grow Saplings", type: "Action", description: "Spend Fear to grow 3 Treant Saplings in Close. Spotlight." },
+            { name: "We Are All One", type: "Reaction", description: "Spend Fear when ally dies to clear 2 HP and 2 Stress." }
         ]
     },
     {
-        originalName: "Lamplight Beguiler",
+        originalName: "Elemental Spark",
+        tier: 3,
+        type: "Minion",
+        difficulty: 15,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 1, current: 0 },
+        attack: { modifier: 0, name: "Bursts of Fire", range: "Close", damage: "5 mag" },
+        motives: "Blast, consume, gain mass",
+        features: [
+            { name: "Minion (9)", type: "Passive", description: "Defeated on any damage. Every 9 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 5 mag dmg each." }
+        ]
+    },
+    {
+        originalName: "Greater Earth Elemental",
+        tier: 3,
+        type: "Bruiser",
+        difficulty: 17,
+        thresholds: { major: 22, severe: 40 },
+        hp: { max: 10, current: 10 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 7, name: "Boulder Fist", range: "Very Close", damage: "3d10+1 phy" },
+        motives: "Avalanche, knock over, pummel",
+        features: [
+            { name: "Slow", type: "Passive", description: "Needs token to act." },
+            { name: "Crushing Blows", type: "Passive", description: "Target marks Armor Slot without benefit, or extra HP." },
+            { name: "Immovable Object", type: "Passive", description: "Reduces forced movement. Reduce physical damage by 7." },
+            { name: "Rockslide", type: "Action", description: "Mark Stress. Hazard in Close. Agility React (19) or 2d12+5 phy + Vulnerable." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Greater Water Elemental",
+        tier: 3,
+        type: "Support",
+        difficulty: 17,
+        thresholds: { major: 17, severe: 34 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Crashing Wave", range: "Very Close", damage: "3d4+1 mag" },
+        motives: "Deluge, disperse, drown",
+        features: [
+            { name: "Water Jet", type: "Action", description: "Mark Stress. Attack Very Close. Success: 2d4+7 phy + Disadvantage on next action. Fail: Mark Stress." },
+            { name: "Drowning Embrace", type: "Action", description: "Spend Fear. Attack all in Very Close. Success: Restrained + Vulnerable (Str/Instinct break)." },
+            { name: "High Tide", type: "Reaction", description: "On successful attack, mark Stress to knock target back." }
+        ]
+    },
+    {
+        originalName: "Huge Green Ooze",
         tier: 3,
         type: "Skulk",
+        difficulty: 15,
+        thresholds: { major: 15, severe: 30 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Ooze Appendage", range: "Melee", damage: "3d8+1 mag" },
+        motives: "Camouflage, creep up, envelop, multiply",
+        features: [
+            { name: "Slow", type: "Passive", description: "Needs token to act." },
+            { name: "Acidic Form", type: "Passive", description: "Target marks Armor Slot without benefit, or extra HP." },
+            { name: "Envelop", type: "Action", description: "Attack in Melee. Success: Enveloped (2 Stress + 1/action). Freed on Severe dmg." },
+            { name: "Split", type: "Reaction", description: "At 4+ HP marked, Spend Fear to split into two Green Oozes." }
+        ]
+    },
+    {
+        originalName: "Hydra",
+        tier: 3,
+        type: "Solo",
+        difficulty: 18,
+        thresholds: { major: 19, severe: 35 },
+        hp: { max: 10, current: 10 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Bite", range: "Close", damage: "2d12+2 phy" },
+        motives: "Devour, regenerate, terrify",
+        features: [
+            { name: "Many-Headed Menace", type: "Passive", description: "Starts with 3 heads. Lose head on Major+ dmg." },
+            { name: "Relentless (Heads)", type: "Passive", description: "Spotlight X times/turn (X=heads)." },
+            { name: "Regeneration", type: "Action", description: "Spend Fear to clear HP and grow 2 heads." },
+            { name: "Terrifying Chorus", type: "Action", description: "PCs in Far lose 2 Hope." },
+            { name: "Magical Weakness", type: "Reaction", description: "Magic dmg Dazes (no Regen, immune to magic)." }
+        ]
+    },
+    {
+        originalName: "Monarch",
+        tier: 3,
+        type: "Social",
         difficulty: 16,
         thresholds: { major: 16, severe: 32 },
         hp: { max: 6, current: 6 },
         stress: { max: 5, current: 0 },
-        attack: { modifier: 0, name: "Jaws", range: "Melee", damage: "3d8+2 phy" },
-        motives: "Entice with secret knowledge, snap the trap shut, speak through shapeshifted head stalk",
+        attack: { modifier: 0, name: "Warhammer", range: "Melee", damage: "3d6+3 phy" },
+        motives: "Control vassals, destroy rivals, forge a legacy",
         features: [
-            { name: "Doppel-Dangler", type: "Action", description: "Mark Stress. Head stalk shapeshifts into trusted figure." },
-            { name: "Entice", type: "Action", description: "Spend Fear. Target in Close makes Presence Reaction (18) or moves to Melee. Disadvantage if trusting stalk." },
-            { name: "Entangle", type: "Reaction", description: "When PC moves into Melee, Spend Fear to attack. Hit: Swallowed (Restrained, can only attack Beguiler). Disgorged on Major damage." },
-            { name: "Rest and Digest", type: "Reaction", description: "When spotlighted with Swallowed creature, move to Far away from PCs." }
+            { name: "Execute Them!", type: "Action", description: "Spend Fear/PC. Condemned (Presence Roll to demand trial)." },
+            { name: "Crownsguard", type: "Action", description: "1/scene: Mark Stress to summon 6 Tier 3 Minions in Close." },
+            { name: "Casus Belli", type: "Reaction", description: "Spend Fear to activate Long-Term Countdown (8). Trigger: War + 1d4 Fear." }
         ]
     },
     {
-        originalName: "Whisper Wraith",
+        originalName: "Stag Knight",
         tier: 3,
-        type: "Ranged",
-        difficulty: 18,
-        thresholds: { major: 20, severe: 36 },
+        type: "Standard",
+        difficulty: 17,
+        thresholds: { major: 19, severe: 36 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 3, name: "Bramble Sword", range: "Melee", damage: "3d8+3 phy" },
+        motives: "Isolate, maneuver, protect the forest, weed the unwelcome",
+        features: [
+            { name: "From Above", type: "Passive", description: "Attack from above deals 3d12+3 phy." },
+            { name: "Blade of the Forest", type: "Action", description: "Spend Fear. Attack all in Very Close. Success: 3d4 + Target's Major Threshold dmg." },
+            { name: "Thorny Armor", type: "Reaction", description: "Mark Stress to deal 1d10+5 phy to melee attacker." }
+        ]
+    },
+    {
+        originalName: "Oak Treant",
+        tier: 3,
+        type: "Bruiser",
+        difficulty: 17,
+        thresholds: { major: 22, severe: 40 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 2, name: "Branch", range: "Very Close", damage: "3d8+2 phy" },
+        motives: "Hide in plain sight, preserve the forest, root down, swing branches",
+        features: [
+            { name: "Just a Tree", type: "Passive", description: "Indistinguishable from tree until acting." },
+            { name: "Seed Barrage", type: "Action", description: "Mark Stress. Attack 3 targets in Close. Success: 2d10+5 phy." },
+            { name: "Take Root", type: "Action", description: "Mark Stress to Root. Restrained/Resistant to Physical." }
+        ]
+    },
+    {
+        originalName: "Treant Sapling",
+        tier: 3,
+        type: "Minion",
+        difficulty: 14,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 1, current: 0 },
+        attack: { modifier: 0, name: "Branches", range: "Melee", damage: "8 phy" },
+        motives: "Blend in, preserve the forest, pummel, surround",
+        features: [
+            { name: "Minion (6)", type: "Passive", description: "Defeated on any damage. Every 6 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 8 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "Head Vampire",
+        tier: 3,
+        type: "Leader",
+        difficulty: 17,
+        thresholds: { major: 22, severe: 42 },
         hp: { max: 6, current: 6 },
         stress: { max: 6, current: 0 },
-        attack: { modifier: 4, name: "Shadow Touch", range: "Melee", damage: "3d8+5 mag" },
-        motives: "Bind limbs, drop from a great height, lift off the ground, swirl through the air, wrap around heads",
+        attack: { modifier: 5, name: "Rapier", range: "Melee", damage: "2d20+4 phy" },
+        motives: "Create thralls, charm, command, fly, intimidate",
         features: [
-            { name: "Spectral", type: "Passive", description: "Immune to physical, weak to magic. Moves through solid objects." },
-            { name: "Spooky", type: "Passive", description: "On successful attack, PCs in Close mark Stress, GM gains Fear." },
-            { name: "Nightmare Shroud", type: "Action", description: "Spend Fear to Shroud PC in Melee (disadvantage on attacks, mark Stress on Fear rolls). Remove with Strength/Attack Roll (20)." }
+            { name: "Terrifying", type: "Passive", description: "On successful attack, PCs in Far lose Hope + GM gains Fear." },
+            { name: "Look into My Eyes", type: "Passive", description: "Move to Melee -> Instinct React. Fail: Gain 1d4 Fear." },
+            { name: "Feed on Followers", type: "Action", description: "Drain ally HP to heal self." },
+            { name: "The Hunt Is On", type: "Action", description: "Spend 2 Fear to summon 1d4 Vampires in Far." },
+            { name: "Lifesuck", type: "Reaction", description: "Spotlight -> d8. 6+: All in Very Close mark HP." }
+        ]
+    },
+    {
+        originalName: "Vampire",
+        tier: 3,
+        type: "Standard",
+        difficulty: 16,
+        thresholds: { major: 18, severe: 35 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Rapier", range: "Melee", damage: "3d8 phy" },
+        motives: "Bite, charm, deceive, feed, intimidate",
+        features: [
+            { name: "Draining Bite", type: "Action", description: "Attack in Melee. Success: 5d4 phy. Target marks Stress/Loses Hope. Vampire heals HP." },
+            { name: "Mistform", type: "Reaction", description: "Spend Fear to halve physical damage." }
+        ]
+    },
+    {
+        originalName: "Vault Guardian Gaoler",
+        tier: 3,
+        type: "Support",
+        difficulty: 16,
+        thresholds: { major: 19, severe: 33 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 2, name: "Body Bash", range: "Very Close", damage: "3d6+2 phy" },
+        motives: "Carry away, entrap, protect, pummel",
+        features: [
+            { name: "Blocking Shield", type: "Passive", description: "Disadvantage on attacks within Melee range." },
+            { name: "Lock Up", type: "Action", description: "Mark Stress. Attack Very Close. Success: Restrained inside (Str 18 escape)." }
+        ]
+    },
+    {
+        originalName: "Vault Guardian Sentinel",
+        tier: 3,
+        type: "Bruiser",
+        difficulty: 17,
+        thresholds: { major: 21, severe: 40 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 3, name: "Charged Mace", range: "Very Close", damage: "2d12+1 phy" },
+        motives: "Destroy at any cost, expunge, protect",
+        features: [
+            { name: "Kinetic Slam", type: "Passive", description: "Knockback to Very Close on damage." },
+            { name: "Box In", type: "Action", description: "Mark Stress. Focus on target. Target disadvantage in Very Close." },
+            { name: "Mana Bolt", type: "Action", description: "Spend Fear. Area in Far Agility React. Fail: 2d8+20 mag + Knockback." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Vault Guardian Turret",
+        tier: 3,
+        type: "Ranged",
+        difficulty: 16,
+        thresholds: { major: 20, severe: 32 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Magitech Cannon", range: "Far", damage: "3d10+3 mag" },
+        motives: "Concentrate fire, lock down, mark, protect",
+        features: [
+            { name: "Slow Firing", type: "Passive", description: "Needs token to attack." },
+            { name: "Mark Target", type: "Action", description: "Spend Fear. Mark target in Far. Evasion halved." },
+            { name: "Concentrate Fire", type: "Reaction", description: "Mark Stress to add attack dmg to ally's attack." },
+            { name: "Detonation", type: "Reaction", description: "On destruction, explode (3d20 phy)." }
+        ]
+    },
+    {
+        originalName: "Young Ice Dragon",
+        tier: 3,
+        type: "Solo",
+        difficulty: 18,
+        thresholds: { major: 21, severe: 41 },
+        hp: { max: 10, current: 10 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 7, name: "Bite and Claws", range: "Close", damage: "4d10 phy" },
+        motives: "Avalanche, defend lair, fly, freeze, maul",
+        features: [
+            { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
+            { name: "Rend and Crush", type: "Passive", description: "If armor not used, target marks Stress." },
+            { name: "No Hope", type: "Passive", description: "Failure with Fear in Far loses Hope." },
+            { name: "Blizzard Breath", type: "Action", description: "Spend 2 Fear. Cone Close Agility React. Fail: 4d6+5 mag + Restrained (Ice). Success: 2 Stress or Half Dmg." },
+            { name: "Avalanche", type: "Action", description: "Spend Fear. Area Far Instinct React. Fail: Buried/Vulnerable. Gain Fear/PC fail." },
+            { name: "Frozen Scales", type: "Reaction", description: "Melee attacker marks Stress + Chilled (Disadvantage)." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
         ]
     },
 
     // --- TIER 4 (LEVELS 8-10) ---
     {
-        originalName: "Cephilith Priest",
+        originalName: "Arch-Necromancer",
+        tier: 4,
+        type: "Leader",
+        difficulty: 21,
+        thresholds: { major: 33, severe: 66 },
+        hp: { max: 9, current: 9 },
+        stress: { max: 8, current: 0 },
+        attack: { modifier: 6, name: "Necrotic Blast", range: "Far", damage: "4d12+8 mag" },
+        motives: "Corrupt, decay, flee to fight another day, resurrect",
+        features: [
+            { name: "Dance of Death", type: "Action", description: "Mark Stress to spotlight 1d4 allies. Half dmg (or Full if spend Fear)." },
+            { name: "Beam of Decay", type: "Action", description: "Mark 2 Stress. Strength React in Far. Fail: 2d20+12 mag + Fear. High dmg Vulnerable." },
+            { name: "Open the Gates of Death", type: "Action", description: "Spend Fear to summon Zombie Legion." },
+            { name: "Not Today", type: "Reaction", description: "At 7+ marked HP, Spend Fear to teleport away." },
+            { name: "Your Life Is Mine", type: "Reaction", description: "Countdown (Loop 2d6). Trigger: 2d10+6 direct mag to target, Necromancer heals." }
+        ]
+    },
+    {
+        originalName: "Fallen Shock Troop",
+        tier: 4,
+        type: "Minion",
+        difficulty: 18,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 1, current: 0 },
+        attack: { modifier: 2, name: "Cursed Axe", range: "Very Close", damage: "12 phy" },
+        motives: "Crush, dominate, earn relief, punish",
+        features: [
+            { name: "Minion (12)", type: "Passive", description: "Defeated on any damage. Every 12 damage defeats additional minion." },
+            { name: "Aura of Doom", type: "Passive", description: "When PC marks HP from Troop attack, they lose a Hope." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 12 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "Fallen Sorcerer",
+        tier: 4,
+        type: "Support",
+        difficulty: 19,
+        thresholds: { major: 26, severe: 42 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 4, name: "Corrupted Staff", range: "Far", damage: "4d6+10 mag" },
+        motives: "Acquire, dishearten, dominate, torment",
+        features: [
+            { name: "Conflagration", type: "Action", description: "Spend Fear. Attack all in Close. Success: 2d10+6 direct mag." },
+            { name: "Nightmare Tableau", type: "Action", description: "Mark Stress. Illusion traps target (Restrained/Vulnerable)." },
+            { name: "Slippery", type: "Reaction", description: "Teleport to Far when taking damage." },
+            { name: "Shackles of Guilt", type: "Reaction", description: "Countdown (Loop 2d6). Trigger: All in Far Vulnerable + Mark Stress (Presence/Strength break)." }
+        ]
+    },
+    {
+        originalName: "Fallen Warlord: Realm-Breaker",
+        tier: 4,
+        type: "Solo",
+        difficulty: 20,
+        thresholds: { major: 36, severe: 66 },
+        hp: { max: 8, current: 8 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 7, name: "Barbed Whip", range: "Close", damage: "4d8+7 phy" },
+        motives: "Corrupt, dominate, punish, break the weak",
+        features: [
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Firespite Plate", type: "Passive", description: "Reduce damage by 2d10." },
+            { name: "Tormenting Lash", type: "Action", description: "Mark Stress. Attack all in Very Close. Armor costs 2 slots." },
+            { name: "All-Consuming Rage", type: "Reaction", description: "Countdown (Decr 8). Trigger: Presence React in Far (2d6+10 direct mag). Summons Shock Troop. At 0, Death Move." },
+            { name: "Doombringer", type: "Reaction", description: "When target marks HP, all PCs in Far lose Hope." },
+            { name: "Phase Change", type: "Reaction", description: "At last HP, become Undefeated Champion." }
+        ]
+    },
+    {
+        originalName: "Fallen Warlord: Undefeated Champion",
+        tier: 4,
+        type: "Solo",
+        difficulty: 18,
+        thresholds: { major: 35, severe: 58 },
+        hp: { max: 11, current: 11 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 8, name: "Heart-Shattering Sword", range: "Very Close", damage: "4d12+13 phy" },
+        motives: "Dispatch death, punish defiant, victory at any cost",
+        features: [
+            { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
+            { name: "Faltering Armor", type: "Passive", description: "Reduce damage by 1d10." },
+            { name: "Shattering Strike", type: "Action", description: "Mark Stress. Attack all in Very Close. PC loses Hope equal to marked HP." },
+            { name: "Endless Legions", type: "Action", description: "Spend Fear. Summon Shock Troops (2x PCs)." },
+            { name: "Circle of Defilement", type: "Reaction", description: "Countdown (1d8). Trigger: Area Vulnerable." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." },
+            { name: "Doombringer", type: "Reaction", description: "When target marks HP, all PCs in Far lose Hope." }
+        ]
+    },
+    {
+        originalName: "Hallowed Archer",
+        tier: 4,
+        type: "Ranged",
+        difficulty: 19,
+        thresholds: { major: 25, severe: 45 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 2, current: 0 },
+        attack: { modifier: 4, name: "Sanctified Longbow", range: "Far", damage: "4d8+8 phy" },
+        motives: "Focus fire, obey, reposition, volley",
+        features: [
+            { name: "Punish the Guilty", type: "Passive", description: "Double damage to Guilty targets." },
+            { name: "Divine Volley", type: "Action", description: "Mark Stress to attack 3 targets." }
+        ]
+    },
+    {
+        originalName: "Hallowed Soldier",
+        tier: 4,
+        type: "Minion",
+        difficulty: 18,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 2, current: 0 },
+        attack: { modifier: 2, name: "Sword and Shield", range: "Melee", damage: "10 phy" },
+        motives: "Obey, outmaneuver, punish, swarm",
+        features: [
+            { name: "Minion (13)", type: "Passive", description: "Defeated on any damage. Every 13 damage defeats additional minion." },
+            { name: "Divine Flight", type: "Passive", description: "Spend Fear to move Far." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 10 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "High Seraph",
         tier: 4,
         type: "Leader",
         difficulty: 20,
         thresholds: { major: 37, severe: 70 },
         hp: { max: 7, current: 7 },
         stress: { max: 5, current: 0 },
-        attack: { modifier: 8, name: "Psychic Strike", range: "Far", damage: "4d10+10 mag" },
-        motives: "Attack the weak-minded, avoid melee, lord over, oppress",
+        attack: { modifier: 8, name: "Holy Sword", range: "Very Close", damage: "4d10+10 phy" },
+        motives: "Enforce dogma, fly, pronounce judgment, smite",
         features: [
-            { name: "Psychic Blast", type: "Action", description: "Spend Fear. 3 targets in Close make Knowledge/Instinct Reaction (20). Fail: 4d10+10 direct mag dmg + Vulnerable." },
-            { name: "Cerebral Suction", type: "Action", description: "Spend Fear. Attack Vulnerable target in Melee. Strength Reaction or mark 1d6 Stress (Priest clears equal Stress)." },
-            { name: "Telekinetic Grasp", type: "Reaction", description: "On successful attack, mark Stress to Restrain target (needs Hope to clear)." }
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Divine Flight", type: "Passive", description: "Spend Fear to move Far." },
+            { name: "Judgment", type: "Action", description: "Spend Fear. Mark target Guilty (No Hope gain, take Severe dmg)." },
+            { name: "God Rays", type: "Action", description: "Mark Stress. 20 targets in Very Far Presence React. Fail: 4d6+12 mag." },
+            { name: "We Are One", type: "Action", description: "1/scene: Spend Fear. Spotlight all allies. Half dmg." }
         ]
     },
     {
-        originalName: "Hallowed Choir",
-        tier: 4,
-        type: "Horde (6/HP)",
-        difficulty: 17,
-        thresholds: { major: 24, severe: 48 },
-        hp: { max: 7, current: 7 },
-        stress: { max: 6, current: 0 },
-        attack: { modifier: 2, name: "Choral Blast", range: "Far", damage: "4d10 mag" },
-        motives: "Drown out disbelief, raise voices",
-        features: [
-            { name: "Horde (2d8+3)", type: "Passive", description: "At half HP, attack deals 2d8+3 damage." },
-            { name: "Aural Assault", type: "Action", description: "Spend Fear. Remove Coda tokens. Deal 1d12 direct mag dmg per token to all in Close." },
-            { name: "Celestial Coda", type: "Reaction", description: "Countdown (Loop 3). Ticks on action roll. Triggers: Add token. Tokens add +1 to Diff and Dmg." }
-        ]
-    },
-    {
-        originalName: "Owl Witch",
-        tier: 4,
-        type: "Social",
-        difficulty: 19,
-        thresholds: { major: 27, severe: 47 },
-        hp: { max: 4, current: 4 },
-        stress: { max: 3, current: 0 },
-        attack: { modifier: 7, name: "Razor Talons", range: "Very Close", damage: "4d8+5 phy" },
-        motives: "Consume essence, curse, predict death",
-        features: [
-            { name: "Ill Omen", type: "Passive", description: "PC in Close adds GM Fear count to their Fear Die result." },
-            { name: "Witch Barrier", type: "Passive", description: "Resistant to magic damage." },
-            { name: "Alluring Voice", type: "Action", description: "Spend Fear. Target in earshot makes Instinct Reaction or moves Far toward Witch." },
-            { name: "Nightmare Stare", type: "Action", description: "Spend Fear. Target Afflicted (cannot clear HP/Stress) until comforted." },
-            { name: "Visions of a Violent End", type: "Reaction", description: "When targeted, Spend Fear. Attacker makes Presence Reaction. Fail: Mark 1d4 Stress." }
-        ]
-    },
-    {
-        originalName: "Xero, Castle Killer",
+        originalName: "Kraken",
         tier: 4,
         type: "Solo",
         difficulty: 20,
         thresholds: { major: 35, severe: 70 },
-        hp: { max: 12, current: 12 },
-        stress: { max: 10, current: 0 },
-        attack: { modifier: 8, name: "Tail Swipe", range: "Close", damage: "4d12+6 phy" },
-        motives: "Leave a wake of destruction, level buildings, stomp through settlements",
+        hp: { max: 11, current: 11 },
+        stress: { max: 8, current: 0 },
+        attack: { modifier: 7, name: "Tentacles", range: "Close", damage: "4d12+10 phy" },
+        motives: "Consume, crush, drown, grapple",
         features: [
-            { name: "Relentless (X)", type: "Passive", description: "Spotlighted X times per GM turn (X = number of PCs)." },
-            { name: "Collateral Damage", type: "Passive", description: "Movement destroys terrain/obstacles. Cannot be impeded." },
-            { name: "Gigaton Stomp", type: "Action", description: "Spend Fear. Melee: 4d12 phy + Restrained. Close: Instinct Reaction or knockback to Far (Armor Slot or 4d12 dmg)." },
-            { name: "Power Slide", type: "Action", description: "Mark Stress to move Close. Creatures in path Strength Reaction. Fail: 2 Armor Slots or Severe Dmg." },
-            { name: "Radioactive Breath", type: "Action", description: "Spend Fear to charge. Next turn: Line (Close width) to edge of map. Agility Reaction. Fail: 4d12+12 direct mag dmg. Success: Half." },
-            { name: "Regeneration", type: "Action", description: "3/scene: Spend Fear to clear equal HP." }
+            { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
+            { name: "Many Tentacles", type: "Passive", description: "Attack 2 targets if HP <= 7." },
+            { name: "Grapple and Drown", type: "Action", description: "Attack in Close. Success: Mark Stress. Drag underwater (Restrained/Vulnerable + Stress on action)." },
+            { name: "Boiling Blast", type: "Action", description: "Spend Fear. Line Agility React. Fail: 4d6+9 phy + Armor costs Stress." },
+            { name: "Momentum", type: "Reaction", description: "Gain Fear on successful attack against PC." }
+        ]
+    },
+    {
+        originalName: "Oracle of Doom",
+        tier: 4,
+        type: "Solo",
+        difficulty: 20,
+        thresholds: { major: 38, severe: 68 },
+        hp: { max: 11, current: 11 },
+        stress: { max: 10, current: 0 },
+        attack: { modifier: 8, name: "Psychic Attack", range: "Far", damage: "4d8+9 mag" },
+        motives: "Change environment, condemn, dishearten, toss aside",
+        features: [
+            { name: "Terrifying", type: "Passive", description: "On successful attack, PCs in Far lose Hope + GM gains Fear." },
+            { name: "Walls Closing In", type: "Passive", description: "Failure in Very Far marks Stress." },
+            { name: "Pronounce Fate", type: "Action", description: "Spend Fear. Knowledge React. Fail: Lose All Hope + 2d20+4 direct mag." },
+            { name: "Summon Tormentors", type: "Action", description: "1/day: Spend 2 Fear. Summon 2d4 Tier 2 Minions." },
+            { name: "Ominous Knowledge", type: "Reaction", description: "Instantly knows personal nightmares." },
+            { name: "Vengeful Fate", type: "Reaction", description: "Mark HP in Very Close -> Mark Stress to Knockback Far + 2d10+4 phy." }
+        ]
+    },
+    {
+        originalName: "Outer Realms Abomination",
+        tier: 4,
+        type: "Bruiser",
+        difficulty: 19,
+        thresholds: { major: 35, severe: 71 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 0, name: "Massive Pseudopod", range: "Very Close", damage: "4d6+13 mag" },
+        motives: "Demolish, devour, undermine",
+        features: [
+            { name: "Chaotic Form", type: "Passive", description: "Attack modifier is +2d4." },
+            { name: "Disorienting Presence", type: "Passive", description: "Target taking dmg Instinct React. Fail: Disadvantage + Fear." },
+            { name: "Reality Quake", type: "Action", description: "Spend Fear. Knowledge React. Fail: Unstuck (Double costs)." },
+            { name: "Unreal Form", type: "Reaction", description: "Reduce dmg by 1d20. If marking <=1 HP, gain Fear." }
+        ]
+    },
+    {
+        originalName: "Outer Realms Corruptor",
+        tier: 4,
+        type: "Support",
+        difficulty: 19,
+        thresholds: { major: 27, severe: 47 },
+        hp: { max: 4, current: 4 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 7, name: "Corroding Pseudopod", range: "Very Close", damage: "4d8+5 mag" },
+        motives: "Confuse, distract, overwhelm",
+        features: [
+            { name: "Will-Shattering Touch", type: "Passive", description: "Damage causes Hope loss." },
+            { name: "Disgorge Reality Flotsam", type: "Action", description: "Mark Stress. Targets in Close Knowledge React or mark 2 Stress." }
+        ]
+    },
+    {
+        originalName: "Outer Realms Thrall",
+        tier: 4,
+        type: "Minion",
+        difficulty: 17,
+        thresholds: { major: 100, severe: 100 },
+        hp: { max: 1, current: 1 },
+        stress: { max: 1, current: 0 },
+        attack: { modifier: 3, name: "Claws and Teeth", range: "Very Close", damage: "11 phy" },
+        motives: "Destroy, disgust, disorient, intimidate",
+        features: [
+            { name: "Minion (13)", type: "Passive", description: "Defeated on any damage. Every 13 damage defeats additional minion." },
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 11 phy dmg each." }
+        ]
+    },
+    {
+        originalName: "Volcanic Dragon: Obsidian Predator",
+        tier: 4,
+        type: "Solo",
+        difficulty: 19,
+        thresholds: { major: 33, severe: 65 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 8, name: "Obsidian Claws", range: "Close", damage: "4d10+4 phy" },
+        motives: "Defend lair, dive-bomb, fly, hunt, intimidate",
+        features: [
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Flying", type: "Passive", description: "+3 Difficulty." },
+            { name: "Obsidian Scales", type: "Passive", description: "Resistant to physical." },
+            { name: "Avalanche Tail", type: "Action", description: "Mark Stress. Attack all in Close. Success: 4d6+4 phy + Knockback Far/Vulnerable." },
+            { name: "Dive-Bomb", type: "Action", description: "Fly -> Mark Stress. Attack all Very Close. Success: 2d10+6 phy + Mark Stress/Lose Hope." },
+            { name: "Phase Change", type: "Reaction", description: "At last HP, become Molten Scourge." }
+        ]
+    },
+    {
+        originalName: "Volcanic Dragon: Molten Scourge",
+        tier: 4,
+        type: "Solo",
+        difficulty: 20,
+        thresholds: { major: 30, severe: 58 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 9, name: "Lava-Coated Claws", range: "Close", damage: "4d12+4 phy" },
+        motives: "Douse with lava, incinerate, repel Invaders, reposition",
+        features: [
+            { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
+            { name: "Cracked Scales", type: "Passive", description: "When taking damage, roll d6 per HP. 4+ Gain Fear." },
+            { name: "Shattering Might", type: "Action", description: "Mark Stress. Attack Very Close. Success: 4d8+1 phy + Lose Hope/Knockback." },
+            { name: "Eruption", type: "Action", description: "Spend Fear. Area Agility React. Fail: 4d6+6 phy + Knockback. Area deals 6 HP." },
+            { name: "Volcanic Breath", type: "Reaction", description: "On Major Dmg, roll 8+. Breath. Agility React. Fail: 2d10+4 phy + Stress + Vulnerable." },
+            { name: "Lava Splash", type: "Reaction", description: "Severe Dmg in Very Close deals 2d10+4 direct phy." },
+            { name: "Phase Change", type: "Reaction", description: "At last HP, become Ashen Tyrant." }
+        ]
+    },
+    {
+        originalName: "Volcanic Dragon: Ashen Tyrant",
+        tier: 4,
+        type: "Solo",
+        difficulty: 18,
+        thresholds: { major: 29, severe: 55 },
+        hp: { max: 8, current: 8 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 10, name: "Claws and Teeth", range: "Close", damage: "4d12+15 phy" },
+        motives: "Choke, fly, intimidate, kill or be killed",
+        features: [
+            { name: "Relentless (4)", type: "Passive", description: "Spotlight 4 times/turn." },
+            { name: "Cornered", type: "Passive", description: "Mark Stress instead of Fear to spotlight." },
+            { name: "Ashes to Ashes", type: "Passive", description: "PC fail in Close -> Lose Hope + Gain Fear." },
+            { name: "Desperate Rampage", type: "Action", description: "Mark Stress. Attack all in Close. Success: 2d20+2 phy + Knockback + Stress." },
+            { name: "Ashen Cloud", type: "Action", description: "Spend Fear. Disadvantage in Far." },
+            { name: "Apocalyptic Thrashing", type: "Action", description: "Countdown (1d12). Spend Fear. Trigger: Strength React in Far. Fail: 2d10+10 phy + Restrained." }
+        ]
+    },
+    {
+        originalName: "Perfected Zombie",
+        tier: 4,
+        type: "Bruiser",
+        difficulty: 20,
+        thresholds: { major: 40, severe: 70 },
+        hp: { max: 9, current: 9 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 4, name: "Greataxe", range: "Very Close", damage: "4d12+15 phy" },
+        motives: "Consume, hound, maim, terrify",
+        features: [
+            { name: "Terrifying", type: "Passive", description: "On successful attack, PCs in Far lose Hope + GM gains Fear." },
+            { name: "Fearsome Presence", type: "Passive", description: "PCs can't spend Hope against Zombie." },
+            { name: "Perfect Strike", type: "Action", description: "Mark Stress. Attack all in Very Close. Success: Vulnerable." },
+            { name: "Skilled Opportunist", type: "Reaction", description: "Spend Fear to add dmg to other's attack." }
         ]
     }
 ];

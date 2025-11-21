@@ -202,10 +202,86 @@ const SECONDARY_WEAPONS_T3: Weapon[] = [
     { name: 'Hand Sling', trait: 'Finesse', range: 'Very Far', damage: 'd6+4 phy', burden: 'One-Handed', tier: 3, feature: 'Versatile: This weapon can also be used with these statistics—Finesse, Close, d8+4.', type: 'Secondary' },
 ];
 
-// TODO: Add Tier 4 when needed
-const ARMORS_T4: Armor[] = [];
-const PRIMARY_WEAPONS_T4: Weapon[] = [];
-const SECONDARY_WEAPONS_T4: Weapon[] = [];
+// TIER 4
+const ARMORS_T4: Armor[] = [
+    { name: 'Legendary Gambeson Armor', baseThresholds: '11/32', baseScore: 6, tier: 4, feature: 'Flexible: +1 to Evasion' },
+    { name: 'Legendary Leather Armor', baseThresholds: '13/36', baseScore: 6, tier: 4 },
+    { name: 'Legendary Chainmail Armor', baseThresholds: '15/40', baseScore: 7, tier: 4, feature: 'Heavy: -1 to Evasion' },
+    { name: 'Legendary Full Plate Armor', baseThresholds: '17/44', baseScore: 7, tier: 4, feature: 'Very Heavy: -2 to Evasion; -1 to Agility' },
+    { name: 'Dunamis Silkchain', baseThresholds: '13/36', baseScore: 7, tier: 4, feature: 'Timeslowing: Mark an Armor Slot to roll a d4 and add its result as a bonus to your Evasion against an incoming attack.' },
+    { name: 'Channeling Armor', baseThresholds: '13/36', baseScore: 5, tier: 4, feature: 'Channeling: +1 to Spellcast Rolls' },
+    { name: 'Emberwoven Armor', baseThresholds: '13/36', baseScore: 6, tier: 4, feature: 'Burning: When an adversary attacks you within Melee range, they mark a Stress.' },
+    { name: 'Full Fortified Armor', baseThresholds: '15/40', baseScore: 4, tier: 4, feature: 'Fortified: When you mark an Armor Slot, you reduce the severity of an attack by two thresholds instead of one.' },
+    { name: 'Veritas Opal Armor', baseThresholds: '13/36', baseScore: 6, tier: 4, feature: 'Truthseeking: This armor glows when another creature within Close range tells a lie.' },
+    { name: 'Savior Chainmail', baseThresholds: '18/48', baseScore: 8, tier: 4, feature: 'Difficult: -1 to all character traits and Evasion' },
+];
+
+const PRIMARY_WEAPONS_T4: Weapon[] = [
+    // Physical
+    { name: 'Legendary Broadsword', trait: 'Agility', range: 'Melee', damage: 'd8+9 phy', burden: 'One-Handed', tier: 4, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+    { name: 'Legendary Longsword', trait: 'Agility', range: 'Melee', damage: 'd8+12 phy', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Battleaxe', trait: 'Strength', range: 'Melee', damage: 'd10+12 phy', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Greatsword', trait: 'Strength', range: 'Melee', damage: 'd10+12 phy', burden: 'Two-Handed', tier: 4, feature: 'Massive: -1 to Evasion; on a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    { name: 'Legendary Mace', trait: 'Strength', range: 'Melee', damage: 'd8+10 phy', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Warhammer', trait: 'Strength', range: 'Melee', damage: 'd12+12 phy', burden: 'Two-Handed', tier: 4, feature: 'Heavy: -1 to Evasion', type: 'Primary' },
+    { name: 'Legendary Dagger', trait: 'Finesse', range: 'Melee', damage: 'd8+10 phy', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Quarterstaff', trait: 'Instinct', range: 'Melee', damage: 'd10+12 phy', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Cutlass', trait: 'Presence', range: 'Melee', damage: 'd8+10 phy', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Rapier', trait: 'Presence', range: 'Melee', damage: 'd8+9 phy', burden: 'One-Handed', tier: 4, feature: 'Quick: When you make an attack, you can mark a Stress to target another creature within range.', type: 'Primary' },
+    { name: 'Legendary Halberd', trait: 'Strength', range: 'Very Close', damage: 'd10+11 phy', burden: 'Two-Handed', tier: 4, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    { name: 'Legendary Spear', trait: 'Finesse', range: 'Very Close', damage: 'd10+11 phy', burden: 'Two-Handed', tier: 4, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    { name: 'Legendary Shortbow', trait: 'Agility', range: 'Far', damage: 'd6+12 phy', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Crossbow', trait: 'Finesse', range: 'Far', damage: 'd6+10 phy', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Longbow', trait: 'Agility', range: 'Very Far', damage: 'd8+12 phy', burden: 'Two-Handed', tier: 4, feature: 'Cumbersome: -1 to Finesse', type: 'Primary' },
+    // Unique T4 Physical
+    { name: 'Dual-Ended Sword', trait: 'Agility', range: 'Melee', damage: 'd10+9 phy', burden: 'Two-Handed', tier: 4, feature: 'Quick: When you make an attack, you can mark a Stress to target another creature within range.', type: 'Primary' },
+    { name: 'Impact Gauntlet', trait: 'Strength', range: 'Melee', damage: 'd10+11 phy', burden: 'One-Handed', tier: 4, feature: 'Concussive: On a successful attack, you can spend a Hope to knock the target back to Far range.', type: 'Primary' },
+    { name: 'Sledge Axe', trait: 'Strength', range: 'Melee', damage: 'd12+13 phy', burden: 'Two-Handed', tier: 4, feature: 'Destructive: -1 to Agility; on a successful attack, all adversaries within Very Close range must mark a Stress.', type: 'Primary' },
+    { name: 'Curved Dagger', trait: 'Finesse', range: 'Melee', damage: 'd8+9 phy', burden: 'One-Handed', tier: 4, feature: 'Serrated: When you roll a 1 on a damage die, it deals 8 damage instead.', type: 'Primary' },
+    { name: 'Extended Polearm', trait: 'Finesse', range: 'Very Close', damage: 'd8+10 phy', burden: 'Two-Handed', tier: 4, feature: 'Long: This weapon\'s attack targets all adversaries in a line within range.', type: 'Primary' },
+    { name: 'Swinging Ropeblade', trait: 'Presence', range: 'Close', damage: 'd8+9 phy', burden: 'Two-Handed', tier: 4, feature: 'Grappling: On a successful attack, you can spend a Hope to Restrain the target or pull them into Melee range with you.', type: 'Primary' },
+    { name: 'Ricochet Axes', trait: 'Agility', range: 'Far', damage: 'd6+11 phy', burden: 'Two-Handed', tier: 4, feature: 'Bouncing: Mark 1 or more Stress to hit that many targets in range of the attack.', type: 'Primary' },
+    { name: 'Aantari Bow', trait: 'Finesse', range: 'Far', damage: 'd6+11 phy', burden: 'Two-Handed', tier: 4, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+    { name: 'Hand Cannon', trait: 'Finesse', range: 'Very Far', damage: 'd6+12 phy', burden: 'One-Handed', tier: 4, feature: 'Reloading: After you make an attack, roll a d6. On a 1, you must mark a Stress to reload this weapon before you can fire it again.', type: 'Primary' },
+    // Magic
+    { name: 'Legendary Arcane Gauntlets', trait: 'Strength', range: 'Melee', damage: 'd10+12 mag', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Hallowed Axe', trait: 'Strength', range: 'Melee', damage: 'd8+10 mag', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Glowing Rings', trait: 'Agility', range: 'Very Close', damage: 'd10+11 mag', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Hand Runes', trait: 'Instinct', range: 'Very Close', damage: 'd10+9 mag', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Returning Blade', trait: 'Finesse', range: 'Close', damage: 'd8+9 mag', burden: 'One-Handed', tier: 4, feature: 'Returning: When this weapon is thrown within its range, it appears in your hand immediately after the attack.', type: 'Primary' },
+    { name: 'Legendary Shortstaff', trait: 'Instinct', range: 'Close', damage: 'd8+10 mag', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Dualstaff', trait: 'Instinct', range: 'Far', damage: 'd8+12 mag', burden: 'Two-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Scepter', trait: 'Presence', range: 'Far', damage: 'd6+9 mag', burden: 'One-Handed', tier: 4, feature: 'Versatile: This weapon can also be used with these statistics—Presence, Melee, d8+6.', type: 'Primary' },
+    { name: 'Legendary Wand', trait: 'Knowledge', range: 'Far', damage: 'd6+10 mag', burden: 'One-Handed', tier: 4, type: 'Primary' },
+    { name: 'Legendary Greatstaff', trait: 'Knowledge', range: 'Very Far', damage: 'd6+9 mag', burden: 'Two-Handed', tier: 4, feature: 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    // Unique T4 Magic
+    { name: 'Sword of Light & Flame', trait: 'Strength', range: 'Melee', damage: 'd10+11 mag', burden: 'Two-Handed', tier: 4, feature: 'Hot: This weapon cuts through solid material.', type: 'Primary' },
+    { name: 'Siphoning Gauntlets', trait: 'Presence', range: 'Melee', damage: 'd10+9 mag', burden: 'Two-Handed', tier: 4, feature: 'Lifestealing: On a successful attack, roll a d6. On a result of 6, clear a Hit Point or clear a Stress.', type: 'Primary' },
+    { name: 'Midas Scythe', trait: 'Knowledge', range: 'Melee', damage: 'd10+9 mag', burden: 'Two-Handed', tier: 4, feature: 'Greedy: Spend a handful of gold to gain a +1 bonus to your Proficiency on a damage roll.', type: 'Primary' },
+    { name: 'Floating Bladeshards', trait: 'Instinct', range: 'Close', damage: 'd8+9 mag', burden: 'One-Handed', tier: 4, feature: 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.', type: 'Primary' },
+    { name: 'Bloodstaff', trait: 'Instinct', range: 'Far', damage: 'd20+7 mag', burden: 'Two-Handed', tier: 4, feature: 'Painful: Each time you make a successful attack, you must mark a Stress.', type: 'Primary' },
+    { name: 'Thistlebow', trait: 'Instinct', range: 'Far', damage: 'd6+13 mag', burden: 'Two-Handed', tier: 4, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+    { name: 'Wand of Essek', trait: 'Knowledge', range: 'Far', damage: 'd8+13 mag', burden: 'One-Handed', tier: 4, feature: 'Timebending: You can choose the target of your attack after making your attack roll.', type: 'Primary' },
+    { name: 'Magus Revolver', trait: 'Finesse', range: 'Very Far', damage: 'd6+13 mag', burden: 'One-Handed', tier: 4, feature: 'Reloading: After you make an attack, roll a d6. On a result of 1, you must mark a Stress to reload this weapon before you can fire it again.', type: 'Primary' },
+    { name: 'Fusion Gloves', trait: 'Knowledge', range: 'Very Far', damage: 'd6+9 mag', burden: 'Two-Handed', tier: 4, feature: 'Bonded: Gain a bonus to your damage rolls equal to your level.', type: 'Primary' },
+    // Wheelchairs
+    { name: 'Legendary Light-Frame Wheelchair', trait: 'Agility', range: 'Melee', damage: 'd8+9 phy', burden: 'One-Handed', tier: 4, feature: 'Quick: When you make an attack, you can mark a Stress to target another creature within range.', type: 'Primary' },
+    { name: 'Legendary Heavy-Frame Wheelchair', trait: 'Strength', range: 'Melee', damage: 'd12+12 phy', burden: 'Two-Handed', tier: 4, feature: 'Heavy: -1 to Evasion', type: 'Primary' },
+    { name: 'Legendary Arcane-Frame Wheelchair', trait: 'Spellcast', range: 'Far', damage: 'd6+9 mag', burden: 'One-Handed', tier: 4, feature: 'Reliable: +1 to attack rolls', type: 'Primary' },
+];
+
+const SECONDARY_WEAPONS_T4: Weapon[] = [
+    { name: 'Legendary Shortsword', trait: 'Agility', range: 'Melee', damage: 'd8+6 phy', burden: 'One-Handed', tier: 4, feature: 'Paired: +5 to primary weapon damage to targets within Melee range', type: 'Secondary' },
+    { name: 'Legendary Round Shield', trait: 'Strength', range: 'Melee', damage: 'd4+6 phy', burden: 'One-Handed', tier: 4, feature: 'Protective: +4 to Armor Score', type: 'Secondary' },
+    { name: 'Legendary Tower Shield', trait: 'Strength', range: 'Melee', damage: 'd6+6 phy', burden: 'One-Handed', tier: 4, feature: 'Barrier: +5 to Armor Score; -1 to Evasion.', type: 'Secondary' },
+    { name: 'Legendary Small Dagger', trait: 'Finesse', range: 'Melee', damage: 'd8+6 phy', burden: 'One-Handed', tier: 4, feature: 'Paired: +5 to primary weapon damage to targets within Melee range', type: 'Secondary' },
+    { name: 'Legendary Whip', trait: 'Presence', range: 'Very Close', damage: 'd6+6 phy', burden: 'One-Handed', tier: 4, feature: 'Startling: Mark a Stress to crack the whip and force all adversaries within Melee range back to Close range.', type: 'Secondary' },
+    { name: 'Legendary Grappler', trait: 'Finesse', range: 'Close', damage: 'd6+6 phy', burden: 'One-Handed', tier: 4, feature: 'Hooked: On a successful attack, you can pull the target into Melee range.', type: 'Secondary' },
+    { name: 'Legendary Hand Crossbow', trait: 'Finesse', range: 'Far', damage: 'd6+7 phy', burden: 'One-Handed', tier: 4, type: 'Secondary' },
+    { name: 'Braveshield', trait: 'Agility', range: 'Melee', damage: 'd4+6 phy', burden: 'One-Handed', tier: 4, feature: 'Sheltering: When you mark an Armor Slot, it reduces damage for you and all allies within Melee range of you who took the same damage.', type: 'Secondary' },
+    { name: 'Knuckle Claws', trait: 'Strength', range: 'Melee', damage: 'd6+8 phy', burden: 'One-Handed', tier: 4, feature: 'Doubled Up: When you make an attack with your primary weapon, you can deal damage to another target within Melee range.', type: 'Secondary' },
+    { name: 'Primer Shard', trait: 'Instinct', range: 'Very Close', damage: 'd4 phy', burden: 'One-Handed', tier: 4, feature: 'Locked On: On a successful attack, your next attack against the same target with your primary weapon automatically succeeds.', type: 'Secondary' },
+];
 
 // EXPORTS
 export const ARMORS = [...ARMORS_T1, ...ARMORS_T2, ...ARMORS_T3, ...ARMORS_T4];
