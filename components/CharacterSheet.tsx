@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Character, TraitName, Weapon, Armor, SubclassFeature, Experience, AncestryFeature, BeastForm, MartialStance, Connection } from '../types';
 import Card from './Card';
@@ -1438,22 +1437,23 @@ const EquipmentItem: React.FC<{item: (Weapon | Armor | BeastForm['attack']) | un
         );
     }
 
-    const isWeapon = 'damage' in item;
+    const equipment = item as Weapon | Armor;
+    const isWeapon = 'damage' in equipment;
     return (
         <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-700">
-            <h4 className="font-bold text-slate-100">{item.name} {isWeapon && <span className="text-xs font-light text-slate-400">({(item as Weapon).type})</span>}</h4>
+            <h4 className="font-bold text-slate-100">{equipment.name} {isWeapon && <span className="text-xs font-light text-slate-400">({(equipment as Weapon).type})</span>}</h4>
             <div className="text-sm text-slate-300">
                 {isWeapon ? (
                     <>
-                        <span>Dmg: <span className="font-mono">{(item as Weapon).damage}</span></span> | <span>Trait: <span className="font-mono">{(item as Weapon).trait}</span></span> | <span>Range: <span className="font-mono">{(item as Weapon).range}</span></span>
+                        <span>Dmg: <span className="font-mono">{(equipment as Weapon).damage}</span></span> | <span>Trait: <span className="font-mono">{(equipment as Weapon).trait}</span></span> | <span>Range: <span className="font-mono">{(equipment as Weapon).range}</span></span>
                     </>
                 ) : (
                     <>
-                         <span>Score: <span className="font-mono">{(item as Armor).baseScore}</span></span> | <span>Thresholds: <span className="font-mono">{(item as Armor).baseThresholds}</span></span>
+                         <span>Score: <span className="font-mono">{(equipment as Armor).baseScore}</span></span> | <span>Thresholds: <span className="font-mono">{(equipment as Armor).baseThresholds}</span></span>
                     </>
                 )}
             </div>
-            {item.feature && <p className="text-xs text-slate-400 mt-1 italic">{item.feature}</p>}
+            {equipment.feature && <p className="text-xs text-slate-400 mt-1 italic">{equipment.feature}</p>}
         </div>
     );
 };

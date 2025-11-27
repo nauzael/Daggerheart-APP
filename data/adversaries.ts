@@ -1383,7 +1383,6 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
             { name: "Warding Sphere", type: "Reaction", description: "When taking damage from Close, deal 2d6 mag to attacker. Must refresh to use again." }
         ]
     },
-    // --- CUSTOM ADDITIONS (SPANISH) ---
     {
         originalName: "Acechador del Vacío",
         tier: 2,
@@ -1480,17 +1479,18 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
     {
         originalName: "Tuffluck",
         tier: 2,
-        type: "Leader",
-        difficulty: 15,
-        thresholds: { major: 8, severe: 16 },
-        hp: { max: 5, current: 5 },
-        stress: { max: 4, current: 0 },
-        attack: { modifier: 3, name: "Dagas Gemelas", range: "Melee", damage: "2d6+3 físico" },
-        motives: "Liderar la banda, proteger su territorio, evitar peleas injustas",
+        type: "Solo",
+        difficulty: 16,
+        thresholds: { major: 12, severe: 22 },
+        hp: { max: 8, current: 8 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 4, name: "Garras del Caos", range: "Close", damage: "2d10+4 caos" },
+        motives: "Corromper, sembrar caos, romper voluntades, jugar con sus víctimas",
         features: [
-            { name: "Protegido por el Bruto", type: "Passive", description: "Mientras el Bruto Aplastador esté a alcance Cercano, Tuffluck tiene Resistencia al daño físico." },
-            { name: "¡A ellos!", type: "Action", description: "Marca 1 Estrés para que todos los aliados a alcance Cercano realicen un ataque básico inmediatamente." },
-            { name: "Golpe Bajo", type: "Action", description: "Gasta 1 Miedo. Realiza un ataque. Si impacta, el objetivo queda Vulnerable hasta el final de su próximo turno." }
+            { name: "Aura del Caos", type: "Passive", description: "Cuando un PJ dentro de Alcance Cercano gana Miedo, Tuffluck gana 1 Miedo adicional." },
+            { name: "Cambiante", type: "Passive", description: "Tuffluck tiene ventaja en tiradas de reacción contra efectos que impongan condiciones." },
+            { name: "Alterar la Realidad", type: "Action", description: "Tuffluck elige un PJ dentro de Alcance Lejano. Ese PJ debe hacer una Tirada de Reacción de Instinto (14). Si falla, elige una: perder 2 Esperanza o colocar una carta de dominio en su bóveda." },
+            { name: "Portal del Caos", type: "Reaction", description: "Cuando Tuffluck es atacado y recibe daño, puede gastar 1 Miedo para abrir un portal temporal y teletransportarse a un espacio desocupado dentro de Alcance Lejano." }
         ]
     },
     // --- TIER 3 (LEVELS 5-7) ---
@@ -2196,5 +2196,22 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
             { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
             { name: "Overwhelm", type: "Reaction", description: "When taking Minor dmg from Melee, Mark Stress to attack attacker with Advantage." }
         ]
-    }
+    },
+    {
+        originalName: "Tuffluck",
+        tier: 2,
+        type: "Solo",
+        difficulty: 16,
+        thresholds: { major: 12, severe: 22 },
+        hp: { max: 8, current: 8 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 4, name: "Garras del Caos", range: "Close", damage: "2d10+4 caos" },
+        motives: "Corromper, sembrar caos, romper voluntades, jugar con sus víctimas",
+        features: [
+            { name: "Aura del Caos", type: "Passive", description: "Cuando un PJ dentro de Alcance Cercano gana Miedo, Tuffluck gana 1 Miedo adicional." },
+            { name: "Cambiante", type: "Passive", description: "Tuffluck tiene ventaja en tiradas de reacción contra efectos que impongan condiciones." },
+            { name: "Alterar la Realidad", type: "Action", description: "Tuffluck elige un PJ dentro de Alcance Lejano. Ese PJ debe hacer una Tirada de Reacción de Instinto (14). Si falla, elige una: perder 2 Esperanza o colocar una carta de dominio en su bóveda." },
+            { name: "Portal del Caos", type: "Reaction", description: "Cuando Tuffluck es atacado y recibe daño, puede gastar 1 Miedo para abrir un portal temporal y teletransportarse a un espacio desocupado dentro de Alcance Lejano." }
+        ]
+    },
 ];
