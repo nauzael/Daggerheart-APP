@@ -297,7 +297,7 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         motives: "Escape, profit, throw smoke",
         features: [
             { name: "Minion (3)", type: "Passive", description: "Defeated on any damage. Every 3 damage defeats additional minion." },
-            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 2 physical damage each. Combine damage." }
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 2 phy dmg each. Combine damage." }
         ]
     },
     {
@@ -1138,7 +1138,7 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         features: [
             { name: "Relentless (3)", type: "Passive", description: "Spotlight 3 times/turn." },
             { name: "Peerless Accuracy", type: "Passive", description: "Roll d6 before attack. 4+: Target's Evasion halved." },
-            { name: "Mind Dance", type: "Action", description: "Mark Stress. Targets in Close make Instinct React. Fail: Gain Fear + Learn one fear." },
+            { name: "Mind Dance", type: "Action", description: "Mark Stress. Targets in Close Instinct React. Fail: Gain Fear + Learn one fear." },
             { name: "Hallucinatory Breath", type: "Reaction", description: "Countdown (Loop 1d6). Ticks on dmg. Trigger: Gas in Far. Instinct React or Hallucinations (Disadvantage + Mark Stress/Lose Hope)." }
         ]
     },
@@ -1475,6 +1475,22 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
             { name: "Lamento Aterrador", type: "Passive", description: "Cuando un PJ dentro de Alcance Muy Cercano gana Miedo, La Llorona gana 1 Miedo adicional." },
             { name: "Grito de la Llorona", type: "Action", description: "Todos los PJs dentro de Alcance Lejano deben hacer una Tirada de Reacción de Instinto (15). Quienes fallen quedan Asustados (desventaja en su próxima acción) y marcan 1 Estrés." },
             { name: "Abrazo Fantasmal", type: "Reaction", description: "Cuando un PJ falla un ataque contra La Llorona, ella puede responder inmediatamente con un ataque de Grito Desgarrador contra ese PJ." }
+        ]
+    },
+    {
+        originalName: "Tuffluck",
+        tier: 2,
+        type: "Leader",
+        difficulty: 15,
+        thresholds: { major: 8, severe: 16 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Dagas Gemelas", range: "Melee", damage: "2d6+3 físico" },
+        motives: "Liderar la banda, proteger su territorio, evitar peleas injustas",
+        features: [
+            { name: "Protegido por el Bruto", type: "Passive", description: "Mientras el Bruto Aplastador esté a alcance Cercano, Tuffluck tiene Resistencia al daño físico." },
+            { name: "¡A ellos!", type: "Action", description: "Marca 1 Estrés para que todos los aliados a alcance Cercano realicen un ataque básico inmediatamente." },
+            { name: "Golpe Bajo", type: "Action", description: "Gasta 1 Miedo. Realiza un ataque. Si impacta, el objetivo queda Vulnerable hasta el final de su próximo turno." }
         ]
     },
     // --- TIER 3 (LEVELS 5-7) ---
