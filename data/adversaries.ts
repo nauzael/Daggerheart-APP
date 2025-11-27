@@ -297,7 +297,7 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
         motives: "Escape, profit, throw smoke",
         features: [
             { name: "Minion (3)", type: "Passive", description: "Defeated on any damage. Every 3 damage defeats additional minion." },
-            { name: "Group Attack", type: "Action", description: "Spend a Fear to group attack. Deal 2 physical damage each. Combine damage." }
+            { name: "Group Attack", type: "Action", description: "Spend Fear to group attack. Deal 2 physical damage each. Combine damage." }
         ]
     },
     {
@@ -1383,7 +1383,100 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
             { name: "Warding Sphere", type: "Reaction", description: "When taking damage from Close, deal 2d6 mag to attacker. Must refresh to use again." }
         ]
     },
-
+    // --- CUSTOM ADDITIONS (SPANISH) ---
+    {
+        originalName: "Acechador del Vacío",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 14,
+        thresholds: { major: 8, severe: 16 },
+        hp: { max: 3, current: 3 },
+        stress: { max: 3, current: 0 },
+        attack: { modifier: 3, name: "Toque Corruptor", range: "Close", damage: "2d6+2 caos" },
+        motives: "Acechar, desgastar, aislar objetivos",
+        features: [
+            { name: "Paso Sombrío", type: "Passive", description: "El Acechador tiene ventaja en ataques si está Oculto." },
+            { name: "Desvanecer", type: "Reaction", description: "Cuando el Acechador recibe daño, puede marcar 1 Estrés para volverse Oculto hasta su próximo turno." }
+        ]
+    },
+    {
+        originalName: "Bruto Aplastador",
+        tier: 2,
+        type: "Bruiser",
+        difficulty: 13,
+        thresholds: { major: 10, severe: 18 },
+        hp: { max: 6, current: 6 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 3, name: "Maza del Abismo", range: "Close", damage: "2d8+4 físico" },
+        motives: "Aplastar, intimidar, proteger a Tuffluck",
+        features: [
+            { name: "Imponente", type: "Passive", description: "Los PJ dentro de Alcance Cercano tienen desventaja en tiradas de reacción de Fuerza o Instinto." },
+            { name: "Embestida", type: "Action", description: "El Bruto se mueve hasta Alcance Cercano de un PJ y realiza un ataque. Si impacta, el PJ queda Derribado." }
+        ]
+    },
+    {
+        originalName: "Susurrador Corruptor",
+        tier: 2,
+        type: "Social",
+        difficulty: 15,
+        thresholds: { major: 6, severe: 12 },
+        hp: { max: 2, current: 2 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 2, name: "Palabras Retorcidas", range: "Far", damage: "1d6+2 caos" },
+        motives: "Manipular, sembrar duda, romper la moral",
+        features: [
+            { name: "Palabras Venenosas", type: "Passive", description: "Cuando un PJ falla una tirada de reacción contra un efecto del Susurrador, marca 1 Estrés." },
+            { name: "Influencia Mental", type: "Action", description: "Elige un PJ dentro de Alcance Lejano. Debe hacer una Tirada de Reacción de Presencia (13). Si falla, el PJ no puede gastar Esperanza hasta el final de su próximo turno." }
+        ]
+    },
+    {
+        originalName: "Cipote",
+        tier: 2,
+        type: "Solo",
+        difficulty: 15,
+        thresholds: { major: 14, severe: 24 },
+        hp: { max: 9, current: 9 },
+        stress: { max: 4, current: 0 },
+        attack: { modifier: 4, name: "Mordisco Aplastante", range: "Close", damage: "2d10+4 físico" },
+        motives: "Defender territorio, arrastrar presas al agua, aferrar y no soltar",
+        features: [
+            { name: "Piel de Cieno", type: "Passive", description: "Cipote tiene ventaja en tiradas de reacción contra efectos que impongan condiciones." },
+            { name: "Arrastre Brutal", type: "Action", description: "Cipote hace un ataque. Si impacta, además del daño, el objetivo queda Aferrado y es movido hasta Cercano de Cipote. Para liberarse, el objetivo debe tener éxito en una Tirada de Reacción de Fuerza (14)." },
+            { name: "Revuelo de Lodo", type: "Reaction", description: "Cuando Cipote recibe daño de un ataque a distancia, puede marcar 1 Estrés para crear una nube de lodo a su alrededor. Los ataques a distancia contra él tienen desventaja hasta el final del próximo turno del GM." }
+        ]
+    },
+    {
+        originalName: "El Mohán",
+        tier: 2,
+        type: "Skulk",
+        difficulty: 16,
+        thresholds: { major: 8, severe: 16 },
+        hp: { max: 5, current: 5 },
+        stress: { max: 6, current: 0 },
+        attack: { modifier: 3, name: "Toque Helado", range: "Close", damage: "2d6+3 frío" },
+        motives: "Seducir, engañar, aislar, ahogar",
+        features: [
+            { name: "Canto del Río", type: "Passive", description: "Los PJ que empiecen su turno dentro de Alcance Cercano del Mohán deben hacer una Tirada de Reacción de Presencia (13) o quedar Hechizados hasta el final de su turno (no pueden atacar al Mohán)." },
+            { name: "Abrazo Acuático", type: "Action", description: "El Mohán elige un objetivo Hechizado o Vulnerable dentro de Cercano. El objetivo hace una Tirada de Reacción de Agilidad (14). Si falla, queda Restringido y marca 1 PV por turno hasta liberarse." },
+            { name: "Desvanecer en la Niebla", type: "Reaction", description: "Cuando el Mohán sería impactado por un ataque, puede gastar 1 Miedo para volverse Oculto hasta que realice una acción o hasta el final del próximo turno del GM." }
+        ]
+    },
+    {
+        originalName: "La Llorona",
+        tier: 3,
+        type: "Solo",
+        difficulty: 17,
+        thresholds: { major: 16, severe: 30 },
+        hp: { max: 7, current: 7 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 4, name: "Grito Desgarrador", range: "Close", damage: "2d8+4 psíquico" },
+        motives: "Aterrorizar, congelar, arrastrar a la desesperación",
+        features: [
+            { name: "Lamento Aterrador", type: "Passive", description: "Cuando un PJ dentro de Alcance Muy Cercano gana Miedo, La Llorona gana 1 Miedo adicional." },
+            { name: "Grito de la Llorona", type: "Action", description: "Todos los PJs dentro de Alcance Lejano deben hacer una Tirada de Reacción de Instinto (15). Quienes fallen quedan Asustados (desventaja en su próxima acción) y marcan 1 Estrés." },
+            { name: "Abrazo Fantasmal", type: "Reaction", description: "Cuando un PJ falla un ataque contra La Llorona, ella puede responder inmediatamente con un ataque de Grito Desgarrador contra ese PJ." }
+        ]
+    },
     // --- TIER 3 (LEVELS 5-7) ---
     {
         originalName: "Adult Flickerfly",
@@ -2069,6 +2162,23 @@ export const ADVERSARY_TEMPLATES: Omit<Adversary, 'id' | 'name'>[] = [
             { name: "Fearsome Presence", type: "Passive", description: "PCs can't spend Hope against Zombie." },
             { name: "Perfect Strike", type: "Action", description: "Mark Stress. Attack all in Very Close. Success: Vulnerable." },
             { name: "Skilled Opportunist", type: "Reaction", description: "Spend Fear to add dmg to other's attack." }
+        ]
+    },
+    {
+        originalName: "Zombie Legion",
+        tier: 4,
+        type: "Horde (3/HP)",
+        difficulty: 17,
+        thresholds: { major: 25, severe: 45 },
+        hp: { max: 8, current: 8 },
+        stress: { max: 5, current: 0 },
+        attack: { modifier: 2, name: "Tentacles", range: "Close", damage: "4d6+10 phy" },
+        motives: "Consume brain, shred flesh, surround",
+        features: [
+            { name: "Horde (2d6+5)", type: "Passive", description: "At half HP, attack deals 2d6+5 damage." },
+            { name: "Unyielding", type: "Passive", description: "Resistant to physical damage." },
+            { name: "Relentless (2)", type: "Passive", description: "Spotlight 2 times/turn." },
+            { name: "Overwhelm", type: "Reaction", description: "When taking Minor dmg from Melee, Mark Stress to attack attacker with Advantage." }
         ]
     }
 ];
