@@ -11,6 +11,8 @@ import { ADVERSARY_TEMPLATES } from '../data/adversaries';
 import { ENVIRONMENTS } from '../data/environments';
 import AdversaryCard from './AdversaryCard';
 import EnvironmentCard from './EnvironmentCard';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface GMPanelProps {
     onExit: () => void;
@@ -40,6 +42,34 @@ const GMPanel: React.FC<GMPanelProps> = ({ onExit }) => {
     const [adversaryTierFilter, setAdversaryTierFilter] = useState<number | 'All'>('All');
     const [environmentSearch, setEnvironmentSearch] = useState('');
     const [environmentTierFilter, setEnvironmentTierFilter] = useState<number | 'All'>('All');
+
+    // Handle Hardware Back Button internally to preserve state
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
+        
+        const backListener = CapacitorApp.addListener('backButton', () => {
+            if (isAdversaryModalOpen) {
+                setIsAdversaryModalOpen(false);
+            } else if (isEnvironmentModalOpen) {
+                setIsEnvironmentModalOpen(false);
+            } else if (isRuleSearchOpen) {
+                setIsRuleSearchOpen(false);
+            } else if (viewingAbility) {
+                setViewingAbility(null);
+            } else if (inspectingCharacter) {
+                setInspectingCharacter(null);
+            } else if (selectedCampaignId) {
+                // Going back to campaign selection, keep battle state but hide view
+                setSelectedCampaignId(null);
+            } else {
+                onExit();
+            }
+        });
+        
+        return () => {
+            backListener.then(h => h.remove());
+        };
+    }, [isAdversaryModalOpen, isEnvironmentModalOpen, isRuleSearchOpen, viewingAbility, inspectingCharacter, selectedCampaignId, onExit]);
 
     // Load GM's campaigns
     useEffect(() => {

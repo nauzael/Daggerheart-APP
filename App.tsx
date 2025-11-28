@@ -40,6 +40,13 @@ const App: React.FC = () => {
   useEffect(() => {
       if (Capacitor.isNativePlatform()) {
           const backListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+              // CRITICAL FIX: If in GM Panel, ignore this listener. 
+              // The GMPanel component has its own internal back listener to handle 
+              // closing modals/inspectors without unmounting the whole panel and losing state.
+              if (view === 'gm_panel') {
+                  return;
+              }
+
               if (view === 'selection' || view === 'login') {
                   CapacitorApp.exitApp();
               } else {
